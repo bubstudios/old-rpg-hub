@@ -201,9 +201,39 @@ Deno.serve(async (req) => {
 
     // Create character with computed stats
     if (op === 'createCharacter') {
-      const { campaign_id, name, race, character_class, alignment, ability_scores, equipment, appearance, background, level } = body;
+      const { campaign_id, name, race, character_class, alignment, ability_scores, equipment, appearance, background, level, game_system, skills, gold } = body;
       if (!campaign_id || !name || !race || !character_class) {
         return Response.json({ error: 'Missing required fields' }, { status: 400 });
+      }
+
+      // Star Frontiers branch: stamina = STA ability score, no THAC0/saves/spells
+      if (game_system === 'starfrontiers') {
+        const sta = Math.max(1, Math.round((ability_scores && ability_scores.sta) || 50));
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'starfrontiers',
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: sta,
+          hp_max: sta,
+          ac: 0,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
       }
 
       const cls = CLASSES[character_class];

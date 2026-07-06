@@ -5,6 +5,7 @@ import PartyOverview from '@/components/PartyOverview';
 import DMNarration from '@/components/DMNarration';
 import JournalEntryCard from '@/components/JournalEntryCard';
 import DiceRollerPanel from '@/components/DiceRollerPanel';
+import SFDiceRollerPanel from '@/components/SFDiceRollerPanel';
 import { Button } from '@/components/ui/button';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
@@ -291,13 +292,23 @@ export default function CampaignDetail() {
               </button>
             </div>
             {diceOpen && myCharacter && (
-              <DiceRollerPanel
-                myCharacter={myCharacter}
-                campaignId={campaignId}
-                chapter={campaign.current_chapter}
-                onRolled={handleRollCompleted}
-                onClose={() => setDiceOpen(false)}
-              />
+              campaign?.game_system === 'starfrontiers' ? (
+                <SFDiceRollerPanel
+                  myCharacter={myCharacter}
+                  campaignId={campaignId}
+                  chapter={campaign.current_chapter}
+                  onRolled={handleRollCompleted}
+                  onClose={() => setDiceOpen(false)}
+                />
+              ) : (
+                <DiceRollerPanel
+                  myCharacter={myCharacter}
+                  campaignId={campaignId}
+                  chapter={campaign.current_chapter}
+                  onRolled={handleRollCompleted}
+                  onClose={() => setDiceOpen(false)}
+                />
+              )
             )}
             <div className="flex gap-2">
               <textarea
@@ -307,7 +318,9 @@ export default function CampaignDetail() {
                 disabled={processing || posting}
                 placeholder={discussMode
                   ? "Discuss with your party (out of character)..."
-                  : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?")}
+                  : (campaign?.game_system === 'starfrontiers'
+                    ? (isSetup ? "e.g. We dock at the station and scan for traffic..." : "What does your operative do?")
+                    : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}
               />
@@ -335,7 +348,7 @@ export default function CampaignDetail() {
               <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">THE PARTY</h3>
               <span className="text-[10px] text-muted-foreground/50 ml-auto">{characters.length} heroes</span>
             </div>
-            <PartyOverview characters={characters} campaignId={campaignId} />
+            <PartyOverview characters={characters} campaignId={campaignId} gameSystem={campaign.game_system} />
           </div>
 
           {/* World state summary */}

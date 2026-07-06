@@ -10,12 +10,21 @@ import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Swords, Sparkles, Dia
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import SFCharacterCreation from '@/pages/SFCharacterCreation';
 
 const STEPS = ['Race', 'Class', 'Ability Scores', 'Alignment', 'Identity', 'Review'];
 
 export default function CharacterCreation() {
   const { id: campaignId } = useParams();
   const navigate = useNavigate();
+  const [gameSystem, setGameSystem] = useState(null);
+
+  useEffect(() => {
+    base44.functions.invoke('campaignData', { op: 'load', campaign_id: campaignId })
+      .then(res => setGameSystem(res.data.campaign.game_system || 'add1e'))
+      .catch(() => setGameSystem('add1e'));
+  }, [campaignId]);
+
   const [step, setStep] = useState(0);
   const [race, setRace] = useState('');
   const [characterClass, setCharacterClass] = useState('');
@@ -27,6 +36,15 @@ export default function CharacterCreation() {
   const [background, setBackground] = useState('');
   const [creating, setCreating] = useState(false);
   const [level, setLevel] = useState(1);
+
+  if (gameSystem === 'starfrontiers') return <SFCharacterCreation />;
+  if (!gameSystem) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="w-6 h-6 text-primary/50 animate-spin" />
+      </div>
+    );
+  }
 
   const adjustedScores = rawScores && race ? applyRacialAdjustments(rawScores, race) : rawScores;
   const previewHP = (() => {

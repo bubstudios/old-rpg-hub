@@ -8,7 +8,7 @@ function hpColor(current, max) {
   return 'bg-red-800';
 }
 
-export default function PartyOverview({ characters, campaignId }) {
+export default function PartyOverview({ characters, campaignId, gameSystem }) {
   if (!characters || !characters.length) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm font-body italic">
@@ -36,14 +36,18 @@ export default function PartyOverview({ characters, campaignId }) {
                   {c.name}
                 </p>
                 <p className="text-[11px] text-muted-foreground font-body">
-                  {c.race} {c.character_class} · Lvl {c.level}
+                  {gameSystem === 'starfrontiers'
+                    ? `${c.race} · ${c.character_class}`
+                    : `${c.race} ${c.character_class} · Lvl ${c.level}`}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Shield className="w-3 h-3" strokeWidth={1.5} />
-                  <span className="font-heading font-600">{c.ac}</span>
-                </div>
+                {gameSystem !== 'starfrontiers' && (
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <Shield className="w-3 h-3" strokeWidth={1.5} />
+                    <span className="font-heading font-600">{c.ac}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-1.5">

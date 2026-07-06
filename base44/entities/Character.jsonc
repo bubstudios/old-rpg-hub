@@ -9,32 +9,18 @@
     "campaign_id": {
       "type": "string"
     },
+    "game_system": {
+      "type": "string",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers)",
+      "default": "add1e"
+    },
     "race": {
       "type": "string",
-      "enum": [
-        "Human",
-        "Elf",
-        "Dwarf",
-        "Halfling",
-        "Gnome",
-        "Half-Elf",
-        "Half-Orc"
-      ]
+      "description": "Race (AD&D) or species (Star Frontiers)"
     },
     "character_class": {
       "type": "string",
-      "enum": [
-        "Fighter",
-        "Paladin",
-        "Ranger",
-        "Cleric",
-        "Druid",
-        "Magic-User",
-        "Illusionist",
-        "Thief",
-        "Assassin",
-        "Monk"
-      ]
+      "description": "Class (AD&D) or primary skill area (Star Frontiers)"
     },
     "level": {
       "type": "number",
@@ -73,6 +59,21 @@
           "type": "number"
         },
         "cha": {
+          "type": "number"
+        },
+        "log": {
+          "type": "number"
+        },
+        "rs": {
+          "type": "number"
+        },
+        "per": {
+          "type": "number"
+        },
+        "ldr": {
+          "type": "number"
+        },
+        "sta": {
           "type": "number"
         }
       }
@@ -119,7 +120,8 @@
     },
     "gold": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Gold (AD&D) or credits (Star Frontiers)"
     },
     "equipment": {
       "type": "array",
@@ -134,6 +136,21 @@
           },
           "notes": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Star Frontiers skills (name + level); unused in AD&D",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "number"
           }
         }
       }

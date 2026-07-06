@@ -7,6 +7,7 @@ import {
   Star, Sparkles, Loader2, BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
+import SFCharacterSheet from '@/pages/SFCharacterSheet';
 
 export default function CharacterSheet() {
   const { id: campaignId, charId } = useParams();
@@ -57,6 +58,10 @@ export default function CharacterSheet() {
 
   if (!character) {
     return <div className="text-center py-20 text-muted-foreground">Character not found.</div>;
+  }
+
+  if (campaign?.game_system === 'starfrontiers') {
+    return <SFCharacterSheet character={character} campaignId={campaignId} />;
   }
 
   const scores = character.ability_scores || {};
