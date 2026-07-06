@@ -96,7 +96,7 @@ export default function CharacterSheet() {
               {character.race} {character.character_class} · Level {character.level} · {character.alignment}
             </p>
             {character.background && (
-              <p className="text-xs text-muted-foreground/70 font-body italic mt-2 max-w-md leading-relaxed">
+              <p className="text-sm text-foreground/80 font-body italic mt-2 max-w-xl leading-relaxed">
                 {character.background}
               </p>
             )}
