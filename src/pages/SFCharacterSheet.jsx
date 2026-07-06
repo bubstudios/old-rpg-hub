@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import {
   ChevronLeft, Heart, Rocket, Coins, Package, Activity,
-  Loader2, BookOpen, Sparkles
+  Loader2, BookOpen, Sparkles, Download
 } from 'lucide-react';
 import { ABILITIES, getInitiative } from '@/lib/sfRules';
+import { exportCharacterSheet } from '@/lib/exportCharacterSheet';
 import { toast } from 'sonner';
 
 export default function SFCharacterSheet({ character: initialCharacter, campaignId }) {
@@ -25,6 +26,15 @@ export default function SFCharacterSheet({ character: initialCharacter, campaign
       toast.error('Could not rest');
     } finally {
       setResting(false);
+    }
+  }
+
+  function handleExport() {
+    try {
+      exportCharacterSheet(character);
+      toast.success('Operative sheet exported.');
+    } catch (e) {
+      toast.error('Could not export sheet');
     }
   }
 
@@ -61,7 +71,13 @@ export default function SFCharacterSheet({ character: initialCharacter, campaign
               </p>
             )}
           </div>
-          <div className="text-right">
+          <div className="text-right flex flex-col items-end gap-2">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Download className="w-3 h-3" /> Export PDF
+            </button>
             <span className={`text-[10px] font-heading tracking-[0.15em] px-2 py-1 rounded ${
               character.status === 'active' ? 'bg-emerald-900/30 text-emerald-400' :
               character.status === 'dead' ? 'bg-red-950/50 text-red-400' : 'bg-secondary text-muted-foreground'

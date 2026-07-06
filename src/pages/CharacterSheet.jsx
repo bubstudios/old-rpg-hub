@@ -4,10 +4,11 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import {
   ChevronLeft, Heart, Shield, Swords, ScrollText, Coins, Package,
-  Star, Sparkles, Loader2, BookOpen
+  Star, Sparkles, Loader2, BookOpen, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import SFCharacterSheet from '@/pages/SFCharacterSheet';
+import { exportCharacterSheet } from '@/lib/exportCharacterSheet';
 
 export default function CharacterSheet() {
   const { id: campaignId, charId } = useParams();
@@ -45,6 +46,15 @@ export default function CharacterSheet() {
       toast.error('Could not rest');
     } finally {
       setResting(false);
+    }
+  }
+
+  function handleExport() {
+    try {
+      exportCharacterSheet(character, campaign);
+      toast.success('Character sheet exported.');
+    } catch (e) {
+      toast.error('Could not export sheet');
     }
   }
 
@@ -91,7 +101,13 @@ export default function CharacterSheet() {
               </p>
             )}
           </div>
-          <div className="text-right">
+          <div className="text-right flex flex-col items-end gap-2">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Download className="w-3 h-3" /> Export PDF
+            </button>
             <span className={`text-[10px] font-heading tracking-[0.15em] px-2 py-1 rounded ${
               character.status === 'active' ? 'bg-emerald-900/30 text-emerald-400' :
               character.status === 'dead' ? 'bg-red-950/50 text-red-400' : 'bg-secondary text-muted-foreground'
