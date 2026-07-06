@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Swords, Compass, Map, Drama, Scale, Globe, Sparkles, Library, Rocket, Crosshair, Radar, Users } from 'lucide-react';
+import { Loader2, Swords, Compass, Map, Drama, Scale, Globe, Sparkles, Library, Rocket, Crosshair, Radar, Users, Atom } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DND_TONES = [
@@ -57,6 +57,30 @@ const SF_SETUP = {
   forgeLabel: 'Launch Campaign'
 };
 
+const GW_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Atom, desc: 'A mix of exploration, combat, survival, and discovery' },
+  { id: 'combat_heavy', label: 'Combat-Heavy', icon: Swords, desc: 'Frequent mutant brawls and salvage firefights' },
+  { id: 'dungeon_crawler', label: 'Ruin Crawler', icon: Compass, desc: 'Irradiated ruins, bunkers, and lost installations' },
+  { id: 'sandbox', label: 'Blasted Wastes', icon: Map, desc: 'Open wasteland, roam where you dare' },
+  { id: 'character_driven', label: 'Survivor Saga', icon: Users, desc: 'Faction politics, survival, and personal arcs' }
+];
+
+const GW_WORLDS = [
+  'Gamma Terra',
+  'The Bonelands',
+  'The Glowing Sea',
+  'Old Earth',
+  'A custom wasteland of my own'
+];
+
+const GW_SETUP = {
+  worldLabel: 'NAME YOUR WASTELAND',
+  worldPlaceholder: 'Name the region or wasteland (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A sprawling dead arcology where rival mutant clans war over a functioning water purifier, and the party are scavengers who just found a map to the lower levels.'",
+  namePlaceholder: 'e.g. Ashes of the Ancients',
+  forgeLabel: 'Venture Forth'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -69,9 +93,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const [loadingModules, setLoadingModules] = useState(false);
 
   const isSF = gameSystem === 'starfrontiers';
-  const tones = isSF ? SF_TONES : DND_TONES;
-  const worlds = isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isSF ? SF_SETUP : DND_SETUP;
+  const isGW = gameSystem === 'gammaworld';
+  const tones = isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
+  const worlds = isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -87,7 +112,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -209,7 +234,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

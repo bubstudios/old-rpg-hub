@@ -30,6 +30,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/01d170085_generated_image.png",
     icon: "rocket",
     enterLabel: "Board Your Ship"
+  },
+  {
+    id: "gammaworld",
+    name: "Gamma World",
+    short: "Gamma World",
+    tagline: "Post-apocalyptic mutant mayhem",
+    description:
+      "Scavenge the irradiated ruins of a fallen civilization as a mutated survivor of the biogenetic apocalypse. Ancient artifacts, deadly mutations, and gonzo science-fantasy danger await in this classic 1978 TSR role-playing game, ruled by an AI Game Master.",
+    dashboardTitle: "GAMMA TERRA",
+    dashboardSubtitle:
+      "A classic Gamma World post-apocalyptic campaign, ruled by an AI Game Master. Emerge from the wastes as a mutant survivor, scavenge the ruins of the Ancients, and brave a world remade by fire and mutation — where survival is written in radioactive ink that cannot be unwritten.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/edaad6b2b_generated_image.png",
+    icon: "atom",
+    enterLabel: "Emerge into the Wastes"
   }
 ];
 

@@ -37,6 +37,8 @@ Deno.serve(async (req) => {
     const rolls = [];
     let summary = '';
     const isSF = body.game_system === 'starfrontiers';
+    const isGW = body.game_system === 'gammaworld';
+    const GW_ABILITY_LABELS = { ps: 'PS', ms: 'MS', dx: 'DX', cn: 'CN', in: 'IN', ch: 'CH', sn: 'SN' };
 
     // --- Star Frontiers roll types (percentile, roll-under) ---
     if (isSF && roll_type === 'attack') {
@@ -79,6 +81,58 @@ Deno.serve(async (req) => {
         target: `RS/10 = ${initMod}`
       });
       summary = `${char.name} initiative: RS/10 ${initMod} + d10 ${d10} = ${total}.`;
+    }
+    // --- Gamma World roll types (d20 system) ---
+    else if (isGW && roll_type === 'attack') {
+      const ranged = !!body.ranged;
+      const ability = ranged ? (scores.dx || 10) : (scores.ps || 10);
+      const mod = abilityMod(ability);
+      const d20 = rollDie(20);
+      const total = d20 + mod;
+      rolls.push({
+        description: ranged ? 'Ranged attack' : 'Melee attack',
+        die: 'd20', roll: d20, modifier: mod, total,
+        target: `${ranged ? 'DX' : 'PS'} mod ${mod >= 0 ? '+' : ''}${mod}`
+      });
+      summary = `${char.name} attacks (${ranged ? 'ranged' : 'melee'}): d20${mod >= 0 ? '+' : ''}${mod} = ${total}.`;
+    }
+    else if (isGW && roll_type === 'ability') {
+      const ability = body.ability;
+      if (!GW_ABILITY_LABELS[ability]) return Response.json({ error: 'Invalid ability' }, { status: 400 });
+      const score = scores[ability] || 10;
+      const d20 = rollDie(20);
+      const success = d20 <= score;
+      rolls.push({
+        description: `${GW_ABILITY_LABELS[ability]} check`,
+        die: 'd20', roll: d20, modifier: 0, total: d20,
+        result: success ? 'Success' : 'Failure',
+        target: `need ≤ ${score}`
+      });
+      summary = `${char.name} ${GW_ABILITY_LABELS[ability]} check: d20 = ${d20} vs ${score} — ${success ? 'SUCCESS' : 'FAILURE'}.`;
+    }
+    else if (isGW && roll_type === 'initiative') {
+      const dx = scores.dx || 10;
+      const initMod = abilityMod(dx);
+      const d10 = rollDie(10);
+      const total = d10 + initMod;
+      rolls.push({
+        description: 'Initiative',
+        die: 'd10', roll: d10, modifier: initMod, total,
+        target: `DX mod ${initMod >= 0 ? '+' : ''}${initMod}`
+      });
+      summary = `${char.name} initiative: DX ${initMod >= 0 ? '+' : ''}${initMod} + d10 ${d10} = ${total}.`;
+    }
+    else if (isGW && roll_type === 'morale') {
+      const ch = scores.ch || 10;
+      const moraleMod = abilityMod(ch);
+      const d10 = rollDie(10);
+      const total = d10 + moraleMod;
+      rolls.push({
+        description: 'Morale check',
+        die: 'd10', roll: d10, modifier: moraleMod, total,
+        target: `CH mod ${moraleMod >= 0 ? '+' : ''}${moraleMod}`
+      });
+      summary = `${char.name} morale check: d10${moraleMod >= 0 ? '+' : ''}${moraleMod} = ${total}.`;
     }
     // --- AD&D roll types ---
     else if (roll_type === 'attack') {

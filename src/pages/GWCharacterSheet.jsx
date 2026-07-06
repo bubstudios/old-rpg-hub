@@ -1,47 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
 import {
-  ChevronLeft, Heart, Shield, Swords, ScrollText, Coins, Package,
-  Star, Sparkles, Loader2, BookOpen, Download
+  ChevronLeft, Heart, Shield, Atom, Coins, Package, Activity,
+  Loader2, BookOpen, Sparkles, Download, Dna, AlertTriangle
 } from 'lucide-react';
-import { toast } from 'sonner';
-import SFCharacterSheet from '@/pages/SFCharacterSheet';
-import GWCharacterSheet from '@/pages/GWCharacterSheet';
+import { ABILITIES, getInitiativeMod } from '@/lib/gwRules';
 import { exportCharacterSheet } from '@/lib/exportCharacterSheet';
+import { toast } from 'sonner';
 
-export default function CharacterSheet() {
-  const { id: campaignId, charId } = useParams();
+export default function GWCharacterSheet({ character: initialCharacter, campaignId }) {
   const navigate = useNavigate();
-  const [character, setCharacter] = useState(null);
-  const [campaign, setCampaign] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { charId } = useParams();
+  const [character, setCharacter] = useState(initialCharacter);
   const [resting, setResting] = useState(false);
-
-  useEffect(() => {
-    load();
-  }, [campaignId, charId]);
-
-  async function load() {
-    try {
-      setLoading(true);
-      const res = await base44.functions.invoke('campaignData', { op: 'load', campaign_id: campaignId });
-      setCampaign(res.data.campaign);
-      setCharacter(res.data.characters.find(c => c.id === charId));
-    } catch (e) {
-      toast.error('Failed to load character');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleRest() {
     if (!character) return;
     setResting(true);
     try {
       await base44.entities.Character.update(character.id, { hp_current: character.hp_max });
-      toast.success(`${character.name} rests and recovers to full health.`);
+      toast.success(`${character.name} recovers to full health.`);
       setCharacter({ ...character, hp_current: character.hp_max });
     } catch (e) {
       toast.error('Could not rest');
@@ -52,36 +31,24 @@ export default function CharacterSheet() {
 
   function handleExport() {
     try {
-      exportCharacterSheet(character, campaign);
+      exportCharacterSheet(character);
       toast.success('Character sheet exported.');
     } catch (e) {
       toast.error('Could not export sheet');
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 text-primary/50 animate-spin" />
-      </div>
-    );
-  }
-
   if (!character) {
-    return <div className="text-center py-20 text-muted-foreground">Character not found.</div>;
-  }
-
-  if (campaign?.game_system === 'starfrontiers') {
-    return <SFCharacterSheet character={character} campaignId={campaignId} />;
-  }
-
-  if (campaign?.game_system === 'gammaworld') {
-    return <GWCharacterSheet character={character} campaignId={campaignId} />;
+    return <div className="text-center py-20 text-muted-foreground">Mutant not found.</div>;
   }
 
   const scores = character.ability_scores || {};
-  const saves = character.saving_throws || {};
+  const mutations = character.mutations || [];
+  const equipment = character.equipment || [];
   const hpPct = character.hp_max > 0 ? (character.hp_current / character.hp_max) * 100 : 0;
+  const initMod = getInitiativeMod(scores);
+  const physicalMuts = mutations.filter(m => m.type === 'physical');
+  const mentalMuts = mutations.filter(m => m.type === 'mental');
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -98,7 +65,7 @@ export default function CharacterSheet() {
           <div>
             <h1 className="font-heading font-700 text-2xl text-foreground tracking-wide">{character.name}</h1>
             <p className="text-sm text-muted-foreground font-body mt-0.5">
-              {character.race} {character.character_class} · Level {character.level} · {character.alignment}
+              {character.race}
             </p>
             {character.background && (
               <p className="text-sm text-foreground/80 font-body italic mt-2 max-w-xl leading-relaxed">
@@ -134,10 +101,10 @@ export default function CharacterSheet() {
 
       {/* Core stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <StatBox icon={Heart} label="HP" value={`${character.hp_current}/${character.hp_max}`} sub={`${Math.round(hpPct)}%`} accent="red" />
+        <StatBox icon={Heart} label="HP" value={`${character.hp_current}/${character.hp_max}`} sub="Hit Points" accent="red" />
         <StatBox icon={Shield} label="AC" value={character.ac} sub="Armor Class" />
-        <StatBox icon={Swords} label="THAC0" value={character.thaco} sub="To Hit" />
-        <StatBox icon={Star} label="XP" value={character.xp} sub={`Lvl ${character.level}`} />
+        <StatBox icon={Activity} label="INIT" value={`${initMod >= 0 ? '+' : ''}${initMod}`} sub="DX Modifier" />
+        <StatBox icon={Coins} label="DOMARS" value={character.gold || 0} sub="Currency" />
       </div>
 
       {/* HP bar */}
@@ -158,43 +125,45 @@ export default function CharacterSheet() {
         {/* Ability Scores */}
         <div className="border border-border/50 rounded-lg bg-card/40 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
+            <Atom className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">ABILITY SCORES</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {Object.entries(scores).map(([ab, val]) => {
-              const mod = Math.floor((val - 10) / 2);
-              return (
-                <div key={ab} className="text-center p-2 rounded-lg bg-secondary/30 border border-border/30">
-                  <p className="text-[9px] font-heading tracking-[0.1em] text-muted-foreground">{ab.toUpperCase()}</p>
-                  <p className="font-heading font-700 text-xl text-foreground tabular-nums">{val}</p>
-                  <p className="text-[9px] text-muted-foreground/70 font-heading">{mod >= 0 ? '+' : ''}{mod}</p>
+          <div className="grid grid-cols-2 gap-2">
+            {ABILITIES.map((a) => (
+              <div key={a.key} className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/30">
+                <div>
+                  <p className="text-[9px] font-heading tracking-[0.1em] text-muted-foreground">{a.name.toUpperCase()}</p>
+                  <p className="font-heading font-700 text-lg text-foreground tabular-nums">{scores[a.key] ?? '—'}</p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Saving Throws */}
-        <div className="border border-border/50 rounded-lg bg-card/40 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-            <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">SAVING THROWS</h3>
-          </div>
-          <div className="space-y-1.5">
-            {[
-              ['Poison / Death', saves.poison_death],
-              ['Rod / Staff / Wand', saves.wand],
-              ['Petrification / Poly', saves.petrification],
-              ['Breath Weapon', saves.breath],
-              ['Spell', saves.spell]
-            ].map(([label, val]) => (
-              <div key={label} className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-body">{label}</span>
-                <span className="font-heading font-600 text-foreground tabular-nums">{val}+</span>
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Mutations */}
+        <div className="border border-border/50 rounded-lg bg-card/40 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Dna className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
+            <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">MUTATIONS</h3>
+          </div>
+          {mutations.length ? (
+            <div className="space-y-1.5 max-h-52 overflow-y-auto scrollbar-thin pr-1">
+              {mutations.map((m, i) => (
+                <div key={i} className={`p-2 rounded border ${m.defect ? 'border-red-900/30 bg-red-950/10' : m.type === 'physical' ? 'border-amber-900/30 bg-amber-950/5' : 'border-violet-900/30 bg-violet-950/5'}`}>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[8px] font-heading tracking-wide px-1 py-0.5 rounded ${m.type === 'physical' ? 'bg-amber-900/30 text-amber-400' : 'bg-violet-900/30 text-violet-400'}`}>
+                      {m.type === 'physical' ? 'PHY' : 'MEN'}
+                    </span>
+                    {m.defect && <AlertTriangle className="w-2.5 h-2.5 text-red-400" />}
+                    <span className={`text-[11px] font-heading font-600 ${m.defect ? 'text-red-300' : 'text-foreground'}`}>{m.name}</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground font-body mt-0.5 leading-snug">{m.description}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground/50 italic font-body">No mutations — a Pure Strain Human, untouched by the storms.</p>
+          )}
         </div>
 
         {/* Equipment */}
@@ -203,9 +172,9 @@ export default function CharacterSheet() {
             <Package className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">EQUIPMENT</h3>
           </div>
-          {character.equipment && character.equipment.length ? (
+          {equipment.length ? (
             <div className="space-y-1.5">
-              {character.equipment.map((e, i) => (
+              {equipment.map((e, i) => (
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground font-body">
                     {e.qty > 1 ? `${e.qty}× ` : ''}{e.name}
@@ -219,44 +188,23 @@ export default function CharacterSheet() {
           )}
           <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border/30">
             <Coins className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-            <span className="text-xs font-heading text-foreground">{character.gold || 0} gp</span>
+            <span className="text-xs font-heading text-foreground">{character.gold || 0} domars</span>
           </div>
         </div>
 
-        {/* Spells */}
+        {/* Appearance */}
         <div className="border border-border/50 rounded-lg bg-card/40 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <ScrollText className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-            <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">SPELLS</h3>
-          </div>
-          {character.spells && character.spells.length ? (
-            <div className="flex gap-1.5 flex-wrap">
-              {character.spells.map((s, i) => (
-                <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/40 text-muted-foreground font-body border border-border/30">
-                  {s}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground/50 italic font-body">
-              {['Magic-User', 'Illusionist', 'Cleric', 'Druid'].includes(character.character_class)
-                ? 'No spells known yet'
-                : 'This class does not cast spells'}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Appearance */}
-      {character.appearance && (
-        <div className="border border-border/50 rounded-lg bg-card/40 p-4 mt-5">
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">APPEARANCE</h3>
           </div>
-          <p className="text-sm text-muted-foreground font-body italic leading-relaxed">{character.appearance}</p>
+          {character.appearance ? (
+            <p className="text-sm text-muted-foreground font-body italic leading-relaxed">{character.appearance}</p>
+          ) : (
+            <p className="text-xs text-muted-foreground/50 italic font-body">No description recorded.</p>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

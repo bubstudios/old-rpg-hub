@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
 
     // Create character with computed stats
     if (op === 'createCharacter') {
-      const { campaign_id, name, race, character_class, alignment, ability_scores, equipment, appearance, background, level, game_system, skills, gold } = body;
+      const { campaign_id, name, race, character_class, alignment, ability_scores, equipment, appearance, background, level, game_system, skills, gold, mutations } = body;
       if (!campaign_id || !name || !race || !character_class) {
         return Response.json({ error: 'Missing required fields' }, { status: 400 });
       }
@@ -227,6 +227,37 @@ Deno.serve(async (req) => {
           gold: Number(gold) || 0,
           equipment: equipment || [],
           skills: skills || [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
+      // Gamma World branch: HP = CN, AC from mutations/armor, mutations stored, no THAC0/saves/spells
+      if (game_system === 'gammaworld') {
+        const cn = Math.max(1, Math.round((ability_scores && ability_scores.cn) || 10));
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'gammaworld',
+          race,
+          character_class: character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: cn,
+          hp_max: cn,
+          ac: Number(body.ac) || 10,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: [],
+          mutations: mutations || [],
           spells: [],
           spell_slots: {},
           appearance: appearance || '',
@@ -277,10 +308,13 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : 'add1e';
       const isSF = sys === 'starfrontiers';
+      const isGW = sys === 'gammaworld';
       const systemContext = isSF
         ? 'a Star Frontiers sci-fi role-playing campaign (percentile d100 skills, stamina, species like Human/Yazirian/Vrusk/Dralasite, the Frontier)'
+        : isGW
+        ? 'a Gamma World post-apocalyptic science-fantasy role-playing campaign (7 attributes 3-18, mutations physical and mental, genotypes like Pure Strain Human/Altered Human/Mutated Animal/Sentient Plant, domars, Gamma Terra ruins)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
@@ -372,6 +406,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       if (existing.length) return Response.json({ error: 'You already have a character in this campaign' }, { status: 400 });
 
       const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
+      const isGW = (campaign.game_system || 'add1e') === 'gammaworld';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -384,6 +419,24 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
           hp_max: { type: "number" },
           gold: { type: "number" },
           skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isGW ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { ps: { type: "number" }, ms: { type: "number" }, dx: { type: "number" }, cn: { type: "number" }, in: { type: "number" }, ch: { type: "number" }, sn: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          ac: { type: "number" },
+          gold: { type: "number" },
+          mutations: { type: "array", items: { type: "object", properties: { name: { type: "string" }, type: { type: "string" }, defect: { type: "boolean" }, description: { type: "string" } } } },
           equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
           appearance: { type: "string" },
           background: { type: "string" }
@@ -428,6 +481,22 @@ Extract:
 - equipment: array of {name, qty}
 - appearance: physical description if present
 - background: backstory if present`
+        : isGW
+        ? `You are reading a Gamma World character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the mutant's name
+- race: genotype (Pure Strain Human, Altered Human, Mutated Animal, or Sentient Plant)
+- character_class: same as race/genotype
+- level: experience level (default 1)
+- ability_scores: the seven Gamma World abilities — ps (Physical Strength), ms (Mental Strength), dx (Dexterity), cn (Constitution), in (Intelligence), ch (Charisma), sn (Senses), 3-18
+- hp_current and hp_max: current and max hit points (equals Constitution)
+- ac: armor class (descending, 10 = unarmored)
+- gold: domars (ancient currency)
+- mutations: array of {name, type ("physical" or "mental"), defect (true/false), description}
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -469,25 +538,27 @@ Extract:
       const charName = (name && name.trim()) || sheetName || 'Unknown Hero';
       const ability_scores = (ext && ext.ability_scores) || {};
       const staFallback = (ability_scores.sta && Number(ability_scores.sta)) || 50;
+      const cnFallback = (ability_scores.cn && Number(ability_scores.cn)) || 10;
 
       const character = await base44.entities.Character.create({
         name: charName.trim(),
         campaign_id,
-        game_system: isSF ? 'starfrontiers' : 'add1e',
-        race: (ext && ext.race) || 'Human',
-        character_class: (ext && ext.character_class) || (isSF ? 'Military' : 'Fighter'),
+        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : 'add1e',
+        race: (ext && ext.race) || (isGW ? 'Altered Human' : 'Human'),
+        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',
         ability_scores,
         level: Math.max(1, Number(ext && ext.level) || 1),
-        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : 1),
-        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : 1),
+        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : 1),
+        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : 1),
         ac: Number(ext && ext.ac) || (isSF ? 0 : 10),
-        thaco: Number(ext && ext.thaco) || (isSF ? 0 : 20),
+        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : 20),
         xp: Number(ext && ext.xp) || 0,
         saving_throws: (ext && ext.saving_throws) || {},
         gold: Number(ext && ext.gold) || 0,
         equipment: (ext && ext.equipment) || [],
         skills: isSF ? (ext && ext.skills) || [] : [],
+        mutations: isGW ? (ext && ext.mutations) || [] : [],
         spells: isSF ? [] : (ext && ext.spells) || [],
         spell_slots: {},
         appearance: (ext && ext.appearance) || '',

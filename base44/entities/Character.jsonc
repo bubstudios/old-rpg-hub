@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D) or species (Star Frontiers)"
+      "description": "Race (AD&D), species (Star Frontiers), or genotype (Gamma World)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D) or primary skill area (Star Frontiers)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), or genotype (Gamma World)"
     },
     "level": {
       "type": "number",
@@ -75,6 +75,27 @@
         },
         "sta": {
           "type": "number"
+        },
+        "ps": {
+          "type": "number"
+        },
+        "ms": {
+          "type": "number"
+        },
+        "dx": {
+          "type": "number"
+        },
+        "cn": {
+          "type": "number"
+        },
+        "in": {
+          "type": "number"
+        },
+        "ch": {
+          "type": "number"
+        },
+        "sn": {
+          "type": "number"
         }
       }
     },
@@ -121,7 +142,7 @@
     "gold": {
       "type": "number",
       "default": 0,
-      "description": "Gold (AD&D) or credits (Star Frontiers)"
+      "description": "Gold (AD&D), credits (Star Frontiers), or domars (Gamma World)"
     },
     "equipment": {
       "type": "array",
@@ -142,7 +163,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Star Frontiers skills (name + level); unused in AD&D",
+      "description": "Star Frontiers skills (name + level); unused in AD&D and Gamma World",
       "items": {
         "type": "object",
         "properties": {
@@ -151,6 +172,27 @@
           },
           "level": {
             "type": "number"
+          }
+        }
+      }
+    },
+    "mutations": {
+      "type": "array",
+      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D and Star Frontiers",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "defect": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
           }
         }
       }
