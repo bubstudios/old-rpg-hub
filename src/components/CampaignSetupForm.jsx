@@ -23,7 +23,7 @@ const WORLD_PRESETS = [
   'A custom world of my own'
 ];
 
-export default function CampaignSetupForm({ onCreated, onCancel }) {
+export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
   const [tone, setTone] = useState('balanced');
@@ -58,7 +58,8 @@ export default function CampaignSetupForm({ onCreated, onCancel }) {
         tone,
         world_setting: worldSetting.trim(),
         setting_notes: settingNotes.trim(),
-        module_id: moduleId
+        module_id: moduleId,
+        game_system: gameSystem
       });
       toast.success('Campaign forged!');
       onCreated(res.data.campaign);

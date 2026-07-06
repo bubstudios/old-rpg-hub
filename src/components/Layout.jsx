@@ -1,9 +1,14 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { ScrollText, Home as HomeIcon, Library } from 'lucide-react';
+import { getGameSystem } from '@/lib/gameSystems';
 
 export default function Layout() {
   const location = useLocation();
   const inCampaign = location.pathname.includes('/campaign/');
+  const gameMatch = location.pathname.match(/^\/game\/([^/]+)/);
+  const activeGameId = gameMatch ? gameMatch[1] : null;
+  const activeGame = activeGameId ? getGameSystem(activeGameId) : null;
+  const campaignsPath = activeGameId ? `/game/${activeGameId}` : '/';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -18,15 +23,15 @@ export default function Layout() {
                 THE IRON REALM
               </span>
               <span className="hidden sm:block text-[10px] font-heading tracking-[0.2em] text-primary/70 mt-0.5">
-                AD&amp;D 1ST EDITION · AI DUNGEON MASTER
+                {activeGame ? `${activeGame.short.toUpperCase()} · AI GAME MASTER` : 'CHOOSE YOUR REALM'}
               </span>
             </div>
           </Link>
           <nav className="flex items-center gap-1">
             <Link
-              to="/"
+              to={campaignsPath}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
-                location.pathname === '/' ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                location.pathname === '/' || location.pathname.startsWith('/game/') ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
               }`}
             >
               <HomeIcon className="w-3.5 h-3.5" strokeWidth={1.5} />

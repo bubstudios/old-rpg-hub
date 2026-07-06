@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
 
     // List campaigns the user is part of
     if (op === 'list') {
+      const { game_system } = body;
       const myChars = await admin.entities.Character.filter({ created_by_id: user.id }, '-updated_date', 100);
       const campaignIds = [...new Set(myChars.map(c => c.campaign_id))];
       const createdCampaigns = await admin.entities.Campaign.filter({ created_by_id: user.id }, '-updated_date', 100);
@@ -101,8 +102,12 @@ Deno.serve(async (req) => {
           });
         } catch (e) { /* campaign may be deleted */ }
       }
-      campaigns.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
-      return Response.json({ campaigns });
+      let result = campaigns;
+      if (game_system) {
+        result = campaigns.filter(c => (c.game_system || 'add1e') === game_system);
+      }
+      result.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+      return Response.json({ campaigns: result });
     }
 
     // Load full campaign data
@@ -173,7 +178,7 @@ Deno.serve(async (req) => {
 
     // Create campaign
     if (op === 'createCampaign') {
-      const { name, mode, tone, world_setting, setting_notes, module_id } = body;
+      const { name, mode, tone, world_setting, setting_notes, module_id, game_system } = body;
       if (!name) return Response.json({ error: 'name required' }, { status: 400 });
       const campaign = await base44.entities.Campaign.create({
         name: name.trim(),
@@ -184,6 +189,7 @@ Deno.serve(async (req) => {
         world_setting: (world_setting || '').trim(),
         setting_notes: (setting_notes || '').trim(),
         module_id: module_id || null,
+        game_system: game_system || 'add1e',
         current_chapter: 1,
         current_scene: '',
         combat_active: false,

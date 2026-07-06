@@ -199,7 +199,7 @@ export default function CampaignDetail() {
       <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-heading tracking-wide mb-1">
-            <Link to="/" className="hover:text-foreground transition-colors">Campaigns</Link>
+            <Link to={`/game/${campaign.game_system || 'add1e'}`} className="hover:text-foreground transition-colors">Campaigns</Link>
             <ChevronLeft className="w-3 h-3 rotate-180" />
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Chapter {campaign.current_chapter}</span>
             {campaign.combat_active && (

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight, Settings2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import CampaignSetupForm from '@/components/CampaignSetupForm';
+import { getGameSystem } from '@/lib/gameSystems';
 import { toast } from 'sonner';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { gameId } = useParams();
+  const game = getGameSystem(gameId);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -23,7 +26,7 @@ export default function Home() {
   async function loadCampaigns() {
     try {
       setLoading(true);
-      const res = await base44.functions.invoke('campaignData', { op: 'list' });
+      const res = await base44.functions.invoke('campaignData', { op: 'list', game_system: game.id });
       setCampaigns(res.data.campaigns || []);
     } catch (e) {
       toast.error('Failed to load campaigns');
@@ -75,12 +78,10 @@ export default function Home() {
           <ScrollText className="w-7 h-7 text-primary-foreground" strokeWidth={1.2} />
         </div>
         <h1 className="font-heading font-900 text-3xl sm:text-5xl tracking-[0.08em] text-foreground mb-3">
-          THE IRON REALM
+          {game.dashboardTitle}
         </h1>
         <p className="font-tome text-base sm:text-lg text-muted-foreground italic max-w-xl mx-auto leading-relaxed">
-          An old-school AD&amp;D 1st Edition campaign, ruled by an AI Dungeon Master.
-          Gather your party, roll your stats, and venture into the darkness —
-          where every choice is written in ink that cannot be unwritten.
+          {game.dashboardSubtitle}
         </p>
         <div className="divider-rune max-w-xs mx-auto mt-6">
           <span className="text-xs tracking-[0.3em]">⚔</span>
@@ -95,7 +96,7 @@ export default function Home() {
             <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">BEGIN A CAMPAIGN</h2>
           </div>
           {showCreate ? (
-            <CampaignSetupForm onCreated={handleCreated} onCancel={() => setShowCreate(false)} />
+            <CampaignSetupForm gameSystem={game.id} onCreated={handleCreated} onCancel={() => setShowCreate(false)} />
           ) : (
             <Button onClick={() => setShowCreate(true)} variant="outline" className="w-full border-primary/40 text-primary hover:bg-primary/10">
               <Settings2 className="w-4 h-4 mr-1.5" /> Create New Campaign

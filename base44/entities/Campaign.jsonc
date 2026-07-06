@@ -10,6 +10,11 @@
       "type": "string",
       "description": "Shareable join code"
     },
+    "game_system": {
+      "type": "string",
+      "description": "The RPG system this campaign uses (e.g. add1e, starfrontiers)",
+      "default": "add1e"
+    },
     "status": {
       "type": "string",
       "enum": [

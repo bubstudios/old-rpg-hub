@@ -10,6 +10,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 // Add page imports here
 import Home from '@/pages/Home';
+import GameSelection from '@/pages/GameSelection';
 import CampaignDetail from '@/pages/CampaignDetail';
 import CharacterCreation from '@/pages/CharacterCreation';
 import CharacterSheet from '@/pages/CharacterSheet';
@@ -39,7 +40,8 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<GameSelection />} />
+        <Route path="/game/:gameId" element={<Home />} />
         <Route path="/campaign/:id" element={<CampaignDetail />} />
         <Route path="/campaign/:id/create-character" element={<CharacterCreation />} />
         <Route path="/campaign/:id/character/:charId" element={<CharacterSheet />} />
