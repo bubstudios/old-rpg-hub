@@ -125,6 +125,7 @@ You MUST respond as a JSON object with this structure:
   "hp_changes": [{"character_name": "name", "change": -4, "reason": "goblin sword strike"}, ...],
   "xp_awarded": [{"character_name": "name", "amount": 25, "reason": "defeating goblins"}, ...],
   "loot": [{"item": "Silver dagger", "gold": 15, "source": "goblin corpse"}, ...],
+  "spells_learned": [{"character_name": "name", "spells": ["Magic Missile", "Shield"], "source": "found in a spellbook"}],
   "deaths": [{"character_name": "name", "cause": "slain by goblin chief's axe"}, ...],
   "world_updates": {
     "locations_explored": ["new location name"],
@@ -145,6 +146,7 @@ Rules for the JSON:
 - Only include hp_changes if HP actually changed (damage taken or healing). change is positive for healing, negative for damage.
 - Only include xp_awarded if XP was awarded.
 - Only include loot if treasure/gold was found.
+- Only include spells_learned if a spellcaster learned, copied, or was granted new spells this turn (e.g. from a found spellbook, a mentor, divine revelation, or leveling up). Each entry lists the character and the spell names.
 - Only include deaths if a character died (HP reached 0).
 - Only include world_updates if something about the world changed.
 - If combat begins or continues, set combat_active true and provide combat_initiative (d10 per combatant, higher goes first).
@@ -188,6 +190,7 @@ Respond as the DM with the JSON object. Resolve the action using AD&D 1st Editio
           hp_changes: { type: "array", items: { type: "object" } },
           xp_awarded: { type: "array", items: { type: "object" } },
           loot: { type: "array", items: { type: "object" } },
+          spells_learned: { type: "array", items: { type: "object" } },
           deaths: { type: "array", items: { type: "object" } },
           world_updates: { type: "object" },
           new_scene: { type: "string" },
@@ -264,6 +267,22 @@ Respond as the DM with the JSON object. Resolve the action using AD&D 1st Editio
           const share = Math.floor(item.gold / characters.length);
           for (const c of characters) {
             await base44.asServiceRole.entities.Character.update(c.id, { gold: (c.gold || 0) + share });
+          }
+        }
+      }
+    }
+
+    // Apply spells learned
+    if (result.spells_learned && result.spells_learned.length) {
+      for (const learned of result.spells_learned) {
+        const target = characters.find(c => c.name === learned.character_name);
+        if (target && Array.isArray(learned.spells)) {
+          const existing = new Set(target.spells || []);
+          const clean = learned.spells.filter(s => typeof s === 'string' && s.trim() && !existing.has(s));
+          if (clean.length) {
+            await base44.asServiceRole.entities.Character.update(target.id, {
+              spells: [...(target.spells || []), ...clean]
+            });
           }
         }
       }
@@ -367,6 +386,7 @@ Respond as the DM with the JSON object. Resolve the action using AD&D 1st Editio
       hp_changes: result.hp_changes || [],
       xp_awarded: result.xp_awarded || [],
       loot: result.loot || [],
+      spells_learned: result.spells_learned || [],
       deaths: result.deaths || [],
       world_updates: result.world_updates || null,
       combat_active: result.combat_active || false,
