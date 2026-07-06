@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight, Settings2 } from 'lucide-react';
+import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight, Settings2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import CampaignSetupForm from '@/components/CampaignSetupForm';
@@ -14,6 +14,7 @@ export default function Home() {
   const [showCreate, setShowCreate] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joining, setJoining] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     loadCampaigns();
@@ -49,6 +50,20 @@ export default function Home() {
       toast.error('No campaign found with that code');
     } finally {
       setJoining(false);
+    }
+  }
+
+  async function handleDelete(campaignId, campaignName) {
+    if (!confirm(`Delete "${campaignName}"? This permanently removes the campaign and all its characters, journal entries, loot, and death records. This cannot be undone.`)) return;
+    setDeletingId(campaignId);
+    try {
+      await base44.functions.invoke('campaignData', { op: 'deleteCampaign', campaign_id: campaignId });
+      setCampaigns(campaigns.filter(c => c.id !== campaignId));
+      toast.success('Campaign deleted');
+    } catch (e) {
+      toast.error('Failed to delete campaign');
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -131,17 +146,20 @@ export default function Home() {
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {campaigns.map((c) => (
-              <button
+              <div
                 key={c.id}
-                onClick={() => navigate(`/campaign/${c.id}`)}
-                className="group text-left p-4 rounded-lg border border-border/50 bg-card/40 hover:border-primary/40 hover:bg-secondary/20 transition-all"
+                className="group relative text-left p-4 rounded-lg border border-border/50 bg-card/40 hover:border-primary/40 hover:bg-secondary/20 transition-all"
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-heading font-600 text-base text-foreground group-hover:text-primary transition-colors">
-                    {c.name}
-                  </h3>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5" />
-                </div>
+                <button
+                  onClick={() => navigate(`/campaign/${c.id}`)}
+                  className="block w-full text-left"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-heading font-600 text-base text-foreground group-hover:text-primary transition-colors">
+                      {c.name}
+                    </h3>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5" />
+                  </div>
                 <div className="flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground font-body">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> Ch. {c.current_chapter}
@@ -172,7 +190,18 @@ export default function Home() {
                     </span>
                   )}
                 </div>
-              </button>
+                </button>
+                {c.is_owner && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.name); }}
+                    disabled={deletingId === c.id}
+                    title="Delete campaign"
+                    className="absolute top-2 right-2 p-1.5 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                  >
+                    {deletingId === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         )}

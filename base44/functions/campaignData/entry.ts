@@ -96,7 +96,8 @@ Deno.serve(async (req) => {
           campaigns.push({
             ...camp,
             party_count: partyCount.length,
-            has_character: myChars.some(c => c.campaign_id === cid)
+            has_character: myChars.some(c => c.campaign_id === cid),
+            is_owner: camp.created_by_id === user.id
           });
         } catch (e) { /* campaign may be deleted */ }
       }
@@ -221,6 +222,38 @@ Deno.serve(async (req) => {
       });
 
       return Response.json({ character });
+    }
+
+    // Delete campaign and all related data (creator only)
+    if (op === 'deleteCampaign') {
+      const { campaign_id } = body;
+      if (!campaign_id) return Response.json({ error: 'campaign_id required' }, { status: 400 });
+
+      const campaign = await admin.entities.Campaign.get(campaign_id);
+      if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
+      if (campaign.created_by_id !== user.id) {
+        return Response.json({ error: 'Only the campaign creator can delete it' }, { status: 403 });
+      }
+
+      // Remove all related records in parallel
+      const [characters, entries, loot, deaths, sessions] = await Promise.all([
+        admin.entities.Character.filter({ campaign_id }),
+        admin.entities.JournalEntry.filter({ campaign_id }),
+        admin.entities.LootRecord.filter({ campaign_id }),
+        admin.entities.DeathRecord.filter({ campaign_id }),
+        admin.entities.Session.filter({ campaign_id })
+      ]);
+
+      await Promise.all([
+        base44.entities.Campaign.delete(campaign_id),
+        ...characters.map(c => base44.entities.Character.delete(c.id)),
+        ...entries.map(e => base44.entities.JournalEntry.delete(e.id)),
+        ...loot.map(l => base44.entities.LootRecord.delete(l.id)),
+        ...deaths.map(d => base44.entities.DeathRecord.delete(d.id)),
+        ...sessions.map(s => base44.entities.Session.delete(s.id))
+      ]);
+
+      return Response.json({ success: true });
     }
 
     return Response.json({ error: 'Unknown operation: ' + op }, { status: 400 });
