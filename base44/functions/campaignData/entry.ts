@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
 
     // Create character with computed stats
     if (op === 'createCharacter') {
-      const { campaign_id, name, race, character_class, alignment, ability_scores, equipment, appearance, background } = body;
+      const { campaign_id, name, race, character_class, alignment, ability_scores, equipment, appearance, background, level } = body;
       if (!campaign_id || !name || !race || !character_class) {
         return Response.json({ error: 'Missing required fields' }, { status: 400 });
       }
@@ -180,8 +180,11 @@ Deno.serve(async (req) => {
       if (!cls) return Response.json({ error: 'Invalid class' }, { status: 400 });
 
       // HP: max die at level 1 + CON modifier
+      const startLevel = Math.min(Math.max(Number(level) || 1, 1), 20);
       const conMod = Math.floor((ability_scores.con - 10) / 2);
-      const hpMax = cls.hitDie + Math.max(0, conMod);
+      const avgPerLevel = Math.floor(cls.hitDie / 2) + 1;
+      let hpMax = Math.max(1, cls.hitDie + conMod);
+      for (let l = 2; l <= startLevel; l++) hpMax += Math.max(1, avgPerLevel + conMod);
       const ac = computeAC(equipment);
 
       const character = await base44.entities.Character.create({
@@ -191,12 +194,13 @@ Deno.serve(async (req) => {
         character_class,
         alignment: alignment || 'True Neutral',
         ability_scores,
+        level: startLevel,
         hp_current: hpMax,
         hp_max: hpMax,
         ac,
-        thaco: getTHAC0(character_class, 1),
-        xp: 0,
-        saving_throws: getSavingThrows(character_class, 1),
+        thaco: getTHAC0(character_class, startLevel),
+        xp: getNextXP(character_class, startLevel),
+        saving_throws: getSavingThrows(character_class, startLevel),
         gold: body.gold || 0,
         equipment: equipment || [],
         spells: body.spells || [],

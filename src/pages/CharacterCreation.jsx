@@ -26,8 +26,18 @@ export default function CharacterCreation() {
   const [appearance, setAppearance] = useState('');
   const [background, setBackground] = useState('');
   const [creating, setCreating] = useState(false);
+  const [level, setLevel] = useState(1);
 
   const adjustedScores = rawScores && race ? applyRacialAdjustments(rawScores, race) : rawScores;
+  const previewHP = (() => {
+    if (!adjustedScores || !characterClass) return 0;
+    const conMod = Math.floor((adjustedScores.con - 10) / 2);
+    const hitDie = CLASSES[characterClass]?.hitDie || 6;
+    const avg = Math.floor(hitDie / 2) + 1;
+    let hp = Math.max(1, hitDie + conMod);
+    for (let l = 2; l <= level; l++) hp += Math.max(1, avg + conMod);
+    return hp;
+  })();
 
   function handleRollScores() {
     setRawScores(rollAbilityScores());
@@ -60,6 +70,7 @@ export default function CharacterCreation() {
         race,
         character_class: characterClass,
         alignment,
+        level,
         ability_scores: adjustedScores,
         equipment,
         gold,
@@ -278,7 +289,23 @@ export default function CharacterCreation() {
         {step === 4 && (
           <div className="animate-ink space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">NAME YOUR HERO</h2>
+              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">IDENTITY &amp; EXPERIENCE</h2>
+            </div>
+            <div>
+              <label className="text-[11px] font-heading tracking-wide text-muted-foreground">STARTING LEVEL</label>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <div className="flex items-center border border-input rounded-md bg-background/60">
+                  <button type="button" onClick={() => setLevel(Math.max(1, level - 1))} className="px-3 py-1.5 text-muted-foreground hover:text-primary text-sm">−</button>
+                  <input type="number" min={1} max={20} value={level} onChange={(e) => setLevel(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} className="w-12 text-center bg-transparent font-heading font-700 text-foreground focus:outline-none" />
+                  <button type="button" onClick={() => setLevel(Math.min(20, level + 1))} className="px-3 py-1.5 text-muted-foreground hover:text-primary text-sm">+</button>
+                </div>
+                <div className="flex gap-1.5">
+                  {[1, 3, 5, 10].map((lv) => (
+                    <button key={lv} type="button" onClick={() => setLevel(lv)} className={`px-2.5 py-1 rounded text-[11px] font-heading border transition-colors ${level === lv ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}>L{lv}</button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 font-body mt-1.5">Begin at level 1 for a classic crawl, or start higher for seasoned heroes. Hit points, THAC0, and saves scale to your chosen level.</p>
             </div>
             <div>
               <label className="text-[11px] font-heading tracking-wide text-muted-foreground">CHARACTER NAME</label>
@@ -344,7 +371,7 @@ export default function CharacterCreation() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-lg bg-secondary/30 border border-border/40 text-center">
                   <p className="text-[10px] font-heading tracking-wide text-muted-foreground">HP</p>
-                  <p className="font-heading font-700 text-lg text-foreground">{(CLASSES[characterClass]?.hitDie || 6) + Math.max(0, Math.floor((adjustedScores.con - 10) / 2))}</p>
+                  <p className="font-heading font-700 text-lg text-foreground">{previewHP}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-secondary/30 border border-border/40 text-center">
                   <p className="text-[10px] font-heading tracking-wide text-muted-foreground">AC</p>
@@ -352,7 +379,7 @@ export default function CharacterCreation() {
                 </div>
                 <div className="p-3 rounded-lg bg-secondary/30 border border-border/40 text-center">
                   <p className="text-[10px] font-heading tracking-wide text-muted-foreground">THAC0</p>
-                  <p className="font-heading font-700 text-lg text-foreground">{getTHAC0(characterClass, 1)}</p>
+                  <p className="font-heading font-700 text-lg text-foreground">{getTHAC0(characterClass, level)}</p>
                 </div>
               </div>
               <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
