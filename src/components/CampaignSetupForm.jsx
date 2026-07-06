@@ -46,13 +46,14 @@ export default function CampaignSetupForm({ onCreated, onCancel }) {
     })();
   }, []);
 
-  async function handleCreate() {
-    if (!name.trim() || creating) return;
+  async function handleCreate(overrideName) {
+    const finalName = (overrideName || name).trim();
+    if (!finalName || creating) return;
     setCreating(true);
     try {
       const res = await base44.functions.invoke('campaignData', {
         op: 'createCampaign',
-        name: name.trim(),
+        name: finalName,
         mode,
         tone,
         world_setting: worldSetting.trim(),
@@ -201,6 +202,19 @@ export default function CampaignSetupForm({ onCreated, onCancel }) {
             ))}
           </div>
         )}
+        {moduleId && (() => {
+          const mod = modules.find(m => m.id === moduleId);
+          if (!mod) return null;
+          return (
+            <Button
+              onClick={() => handleCreate(mod.title)}
+              disabled={creating}
+              className="w-full mt-3 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Compass className="w-4 h-4" /> Begin This Adventure</>}
+            </Button>
+          );
+        })()}
       </div>
 
       {/* Setting notes / vision */}
