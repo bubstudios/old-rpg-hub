@@ -164,6 +164,12 @@ Rules:
       if (ext && ext.response && typeof ext.response === 'object') ext = ext.response;
       if (ext && ext.brief && typeof ext.brief === 'object') ext = ext.brief;
 
+      const brief = (ext && ext.brief) || '';
+      const unreadable = !brief || /too large|exceeds|could not read|cannot be read|unable to read|file size/i.test(brief.slice(0, 400));
+      if (unreadable) {
+        return Response.json({ error: 'The DM could not read that document. PDFs and text files must be under 10 MB and contain selectable text (not just scanned images).' }, { status: 400 });
+      }
+
       const finalTitle = (title && title.trim()) || (ext && ext.title) || 'Untitled Module';
 
       const module = await base44.entities.AdventureModule.create({

@@ -14,6 +14,10 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
 
   async function handleUpload() {
     if (!file || uploading) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('That file is over 10 MB — the DM can\'t read documents larger than 10 MB. Try compressing it or splitting it into smaller files.');
+      return;
+    }
     setUploading(true);
     try {
       // 1. Upload the source file
@@ -61,7 +65,7 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
         <label className="flex items-center gap-2 px-3 py-3 rounded-lg border border-dashed border-border/60 bg-background/40 cursor-pointer hover:border-primary/40 transition-colors">
           <Upload className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.5} />
           <span className="text-xs font-body text-muted-foreground truncate">
-            {file ? file.name : 'Choose a file...'}
+            {file ? `${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)` : 'Choose a file... (max 10 MB)'}
           </span>
           <input
             type="file"
