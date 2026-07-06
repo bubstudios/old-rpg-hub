@@ -161,6 +161,7 @@ Rules:
 
       let ext = extraction;
       if (typeof ext === 'string') { try { ext = JSON.parse(ext); } catch { ext = {}; } }
+      if (ext && ext.response && typeof ext.response === 'object') ext = ext.response;
       if (ext && ext.brief && typeof ext.brief === 'object') ext = ext.brief;
 
       const finalTitle = (title && title.trim()) || (ext && ext.title) || 'Untitled Module';

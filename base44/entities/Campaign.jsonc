@@ -57,6 +57,10 @@
       "type": "string",
       "description": "Linked adventure module, if any"
     },
+    "chronicle": {
+      "type": "string",
+      "description": "Imported ongoing-campaign history brief the DM uses as established memory to continue the story"
+    },
     "current_chapter": {
       "type": "number",
       "default": 1

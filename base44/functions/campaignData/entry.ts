@@ -273,6 +273,231 @@ Deno.serve(async (req) => {
       return Response.json({ character });
     }
 
+    // Import an ongoing campaign from an uploaded document — DM studies it and takes over
+    if (op === 'importCampaign') {
+      const { file_url, game_system, name, mode, tone, setting_notes } = body;
+      if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : 'add1e';
+      const isSF = sys === 'starfrontiers';
+      const systemContext = isSF
+        ? 'a Star Frontiers sci-fi role-playing campaign (percentile d100 skills, stamina, species like Human/Yazirian/Vrusk/Dralasite, the Frontier)'
+        : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
+
+      const extraction = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are reading a document that chronicles an ONGOING tabletop role-playing campaign — ${systemContext}. The party has already been playing and wants an AI ${isSF ? 'Game Master' : 'Dungeon Master'} to take over and continue seamlessly from where they left off.
+
+Read the document in full and extract the campaign's established state.
+
+Extract:
+- campaign_name: a fitting title for this campaign (use the document's name if present, otherwise craft a concise evocative one)
+- world_setting: the world, realm, region, or planet the campaign is set in
+- current_scene: a 1-2 sentence summary of exactly where the party is right now and what they're doing
+- locations_explored: notable locations the party has already visited
+- npcs_met: named NPCs encountered, each with disposition (friendly/neutral/hostile) and brief notes
+- quest_flags: an object capturing key story/quest states (e.g. {"rescued_mayor": true, "debt_to_guild": "500gp"})
+- chapter_log: a chronological list of the major beats/events that have happened so far
+- reputation: the party's general standing in the world (-100 to 100; 0 if neutral/unknown)
+- brief: a COMPREHENSIVE narrative summary of everything that has happened — the full story so far, key NPCs and their relationships to the party, accomplishments, active quests, looming threats, and unresolved threads. This is the DM's memory. Be thorough; do not summarize away important details.
+
+If the document is sparse, extract what you can and infer reasonable defaults. Never invent major events that contradict the document.`,
+        file_urls: [file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            campaign_name: { type: "string" },
+            world_setting: { type: "string" },
+            current_scene: { type: "string" },
+            locations_explored: { type: "array", items: { type: "string" } },
+            npcs_met: { type: "array", items: { type: "object", properties: { name: { type: "string" }, disposition: { type: "string" }, notes: { type: "string" } } } },
+            quest_flags: { type: "object" },
+            chapter_log: { type: "array", items: { type: "string" } },
+            reputation: { type: "number" },
+            brief: { type: "string" }
+          },
+          required: ["brief"]
+        },
+        model: "claude_sonnet_4_6"
+      });
+
+      let ext = extraction;
+      if (typeof ext === 'string') { try { ext = JSON.parse(ext); } catch { ext = {}; } }
+      if (ext && ext.response && typeof ext.response === 'object') ext = ext.response;
+      if (ext && ext.brief && typeof ext.brief === 'object') ext = ext.brief;
+
+      const brief = (ext && ext.brief) || '';
+      const unreadable = !brief || /too large|exceeds|could not read|cannot be read|unable to read|file size/i.test(brief.slice(0, 400));
+      if (unreadable) {
+        return Response.json({ error: 'The DM could not read that document. If it is a PDF, ensure it is under 10 MB and contains selectable text (not just scanned images).' }, { status: 400 });
+      }
+
+      const finalName = (name && name.trim()) || (ext && ext.campaign_name) || 'Imported Campaign';
+
+      const campaign = await base44.entities.Campaign.create({
+        name: finalName.trim(),
+        invite_code: generateInviteCode(),
+        status: 'active',
+        mode: mode || 'async',
+        tone: tone || 'balanced',
+        world_setting: (ext && ext.world_setting) || '',
+        setting_notes: (setting_notes || '').trim(),
+        module_id: null,
+        game_system: sys,
+        current_chapter: 1,
+        current_scene: (ext && ext.current_scene) || '',
+        combat_active: false,
+        combat_round: 0,
+        chronicle: (ext && ext.brief) || '',
+        world_state: {
+          locations_explored: (ext && ext.locations_explored) || [],
+          npcs_met: (ext && ext.npcs_met) || [],
+          quest_flags: (ext && ext.quest_flags) || {},
+          reputation: typeof (ext && ext.reputation) === 'number' ? ext.reputation : 0,
+          chapter_log: (ext && ext.chapter_log) || []
+        }
+      });
+
+      return Response.json({ campaign });
+    }
+
+    // Import a character from an uploaded character sheet PDF/image
+    if (op === 'importCharacterSheet') {
+      const { file_url, campaign_id, name } = body;
+      if (!file_url || !campaign_id) return Response.json({ error: 'file_url and campaign_id required' }, { status: 400 });
+
+      const campaign = await admin.entities.Campaign.get(campaign_id);
+      if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
+
+      // One active character per user per campaign
+      const existing = await admin.entities.Character.filter({ campaign_id, created_by_id: user.id, status: 'active' });
+      if (existing.length) return Response.json({ error: 'You already have a character in this campaign' }, { status: 400 });
+
+      const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
+      const charSchema = isSF ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { str: { type: "number" }, int: { type: "number" }, log: { type: "number" }, dex: { type: "number" }, rs: { type: "number" }, per: { type: "number" }, ldr: { type: "number" }, sta: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          alignment: { type: "string" },
+          ability_scores: { type: "object", properties: { str: { type: "number" }, int: { type: "number" }, wis: { type: "number" }, dex: { type: "number" }, con: { type: "number" }, cha: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          ac: { type: "number" },
+          thaco: { type: "number" },
+          xp: { type: "number" },
+          gold: { type: "number" },
+          saving_throws: { type: "object", properties: { poison_death: { type: "number" }, wand: { type: "number" }, petrification: { type: "number" }, breath: { type: "number" }, spell: { type: "number" } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          spells: { type: "array", items: { type: "string" } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      };
+
+      const charPrompt = isSF
+        ? `You are reading a Star Frontiers character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the operative's name
+- race: species (Human, Yazirian, Vrusk, or Dralasite)
+- character_class: primary skill area (Military, Technological, or Biosocial)
+- level: experience level
+- ability_scores: percentile abilities 1-100 — str, int, log, dex, rs, per, ldr, sta
+- hp_current and hp_max: current and max stamina
+- gold: credits
+- skills: array of {name, level}
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
+        : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the character's name
+- race: race (Human, Elf, Dwarf, Halfling, Gnome, Half-Elf, Half-Orc)
+- character_class: class (Fighter, Paladin, Ranger, Cleric, Druid, Magic-User, Illusionist, Thief, Assassin, Monk)
+- level: experience level
+- alignment: alignment (e.g. Lawful Good, Chaotic Neutral)
+- ability_scores: str, int, wis, dex, con, cha (3-18)
+- hp_current and hp_max: current and max hit points
+- ac: armor class
+- thaco: THAC0 (To Hit Armor Class 0)
+- xp: experience points
+- gold: gold pieces
+- saving_throws: poison_death, wand, petrification, breath, spell
+- equipment: array of {name, qty}
+- spells: array of spell names
+- appearance: physical description if present
+- background: backstory if present`;
+
+      const extraction = await base44.integrations.Core.InvokeLLM({
+        prompt: charPrompt,
+        file_urls: [file_url],
+        response_json_schema: charSchema,
+        model: "claude_sonnet_4_6"
+      });
+
+      let ext = extraction;
+      if (typeof ext === 'string') { try { ext = JSON.parse(ext); } catch { ext = {}; } }
+      if (ext && ext.response && typeof ext.response === 'object') ext = ext.response;
+      if (ext && ext.name && typeof ext.name === 'object') ext = ext.name;
+
+      const sheetName = (ext && ext.name) || '';
+      const unreadable = /too large|could not read|cannot be read|unable to read/i.test(sheetName.slice(0, 200));
+      if (unreadable || (!sheetName && !(name && name.trim()))) {
+        return Response.json({ error: 'The DM could not read that character sheet. Ensure it is under 10 MB and the text is selectable (not a scanned image).' }, { status: 400 });
+      }
+
+      const charName = (name && name.trim()) || sheetName || 'Unknown Hero';
+      const ability_scores = (ext && ext.ability_scores) || {};
+      const staFallback = (ability_scores.sta && Number(ability_scores.sta)) || 50;
+
+      const character = await base44.entities.Character.create({
+        name: charName.trim(),
+        campaign_id,
+        game_system: isSF ? 'starfrontiers' : 'add1e',
+        race: (ext && ext.race) || 'Human',
+        character_class: (ext && ext.character_class) || (isSF ? 'Military' : 'Fighter'),
+        alignment: (ext && ext.alignment) || 'True Neutral',
+        ability_scores,
+        level: Math.max(1, Number(ext && ext.level) || 1),
+        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : 1),
+        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : 1),
+        ac: Number(ext && ext.ac) || (isSF ? 0 : 10),
+        thaco: Number(ext && ext.thaco) || (isSF ? 0 : 20),
+        xp: Number(ext && ext.xp) || 0,
+        saving_throws: (ext && ext.saving_throws) || {},
+        gold: Number(ext && ext.gold) || 0,
+        equipment: (ext && ext.equipment) || [],
+        skills: isSF ? (ext && ext.skills) || [] : [],
+        spells: isSF ? [] : (ext && ext.spells) || [],
+        spell_slots: {},
+        appearance: (ext && ext.appearance) || '',
+        background: (ext && ext.background) || '',
+        status: 'active'
+      });
+
+      return Response.json({ character });
+    }
+
     // Delete campaign and all related data (creator only)
     if (op === 'deleteCampaign') {
       const { campaign_id } = body;

@@ -5,10 +5,11 @@ import {
   SPECIES, ABILITIES, SKILL_AREAS, STARTING_KITS,
   rollAbilityScores, applySpeciesAdjustments, computeStamina, getInitiative
 } from '@/lib/sfRules';
-import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Rocket, Sparkles } from 'lucide-react';
+import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Rocket, Sparkles, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import ImportCharacterSheetForm from '@/components/ImportCharacterSheetForm';
 
 const STEPS = ['Species', 'Abilities', 'Skills', 'Identity', 'Review'];
 
@@ -26,6 +27,27 @@ export default function SFCharacterCreation() {
   const [appearance, setAppearance] = useState('');
   const [background, setBackground] = useState('');
   const [creating, setCreating] = useState(false);
+  const [importMode, setImportMode] = useState(false);
+
+  if (importMode) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        <button
+          onClick={() => setImportMode(false)}
+          className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to Operative Builder
+        </button>
+        <div className="flex items-center gap-2 mb-6">
+          <FileText className="w-5 h-5 text-primary" strokeWidth={1.5} />
+          <h1 className="font-heading font-700 text-lg text-foreground tracking-wide">IMPORT OPERATIVE SHEET</h1>
+        </div>
+        <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-6 sm:p-8">
+          <ImportCharacterSheetForm campaignId={campaignId} onCreated={() => navigate(`/campaign/${campaignId}`)} onCancel={() => setImportMode(false)} />
+        </div>
+      </div>
+    );
+  }
 
   const isHuman = species === 'Human';
   const adjustedScores = rawScores && species
@@ -78,12 +100,20 @@ export default function SFCharacterCreation() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <button
-        onClick={() => navigate(`/campaign/${campaignId}`)}
-        className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ChevronLeft className="w-3.5 h-3.5" /> Back to Campaign
-      </button>
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate(`/campaign/${campaignId}`)}
+          className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to Campaign
+        </button>
+        <button
+          onClick={() => setImportMode(true)}
+          className="flex items-center gap-1 text-[11px] font-heading tracking-wide text-primary/70 hover:text-primary transition-colors"
+        >
+          <FileText className="w-3.5 h-3.5" /> Import a sheet instead
+        </button>
+      </div>
 
       <div className="flex items-center gap-2 mb-6">
         <Rocket className="w-5 h-5 text-primary" strokeWidth={1.5} />

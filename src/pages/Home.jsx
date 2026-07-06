@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight, Settings2, Trash2 } from 'lucide-react';
+import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight, Settings2, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import CampaignSetupForm from '@/components/CampaignSetupForm';
+import ImportCampaignForm from '@/components/ImportCampaignForm';
 import { getGameSystem } from '@/lib/gameSystems';
 import { toast } from 'sonner';
 
@@ -15,6 +16,7 @@ export default function Home() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joining, setJoining] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
@@ -37,6 +39,11 @@ export default function Home() {
 
   function handleCreated(campaign) {
     setShowCreate(false);
+    navigate(`/campaign/${campaign.id}/create-character`);
+  }
+
+  function handleImported(campaign) {
+    setShowImport(false);
     navigate(`/campaign/${campaign.id}/create-character`);
   }
 
@@ -97,10 +104,17 @@ export default function Home() {
           </div>
           {showCreate ? (
             <CampaignSetupForm gameSystem={game.id} onCreated={handleCreated} onCancel={() => setShowCreate(false)} />
+          ) : showImport ? (
+            <ImportCampaignForm gameSystem={game.id} onCreated={handleImported} onCancel={() => setShowImport(false)} />
           ) : (
-            <Button onClick={() => setShowCreate(true)} variant="outline" className="w-full border-primary/40 text-primary hover:bg-primary/10">
-              <Settings2 className="w-4 h-4 mr-1.5" /> Create New Campaign
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={() => setShowCreate(true)} variant="outline" className="w-full border-primary/40 text-primary hover:bg-primary/10">
+                <Settings2 className="w-4 h-4 mr-1.5" /> Create New Campaign
+              </Button>
+              <Button onClick={() => setShowImport(true)} variant="ghost" className="w-full border-border/50 text-muted-foreground hover:text-foreground">
+                <Upload className="w-4 h-4 mr-1.5" /> Import Ongoing Campaign
+              </Button>
+            </div>
           )}
         </div>
 

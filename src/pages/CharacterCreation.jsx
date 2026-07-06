@@ -6,11 +6,12 @@ import {
   rollAbilityScores, applyRacialAdjustments, classAvailableToRace,
   meetsClassRequirements, validAlignmentForClass, computeAC, getTHAC0
 } from '@/lib/dndRules';
-import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Swords, Sparkles, Diamond } from 'lucide-react';
+import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Swords, Sparkles, Diamond, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import SFCharacterCreation from '@/pages/SFCharacterCreation';
+import ImportCharacterSheetForm from '@/components/ImportCharacterSheetForm';
 
 const STEPS = ['Race', 'Class', 'Ability Scores', 'Alignment', 'Identity', 'Review'];
 
@@ -36,12 +37,33 @@ export default function CharacterCreation() {
   const [background, setBackground] = useState('');
   const [creating, setCreating] = useState(false);
   const [level, setLevel] = useState(1);
+  const [importMode, setImportMode] = useState(false);
 
   if (gameSystem === 'starfrontiers') return <SFCharacterCreation />;
   if (!gameSystem) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader2 className="w-6 h-6 text-primary/50 animate-spin" />
+      </div>
+    );
+  }
+
+  if (importMode) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        <button
+          onClick={() => setImportMode(false)}
+          className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to Character Builder
+        </button>
+        <div className="flex items-center gap-2 mb-6">
+          <FileText className="w-5 h-5 text-primary" strokeWidth={1.5} />
+          <h1 className="font-heading font-700 text-lg text-foreground tracking-wide">IMPORT CHARACTER SHEET</h1>
+        </div>
+        <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-6 sm:p-8">
+          <ImportCharacterSheetForm campaignId={campaignId} onCreated={() => navigate(`/campaign/${campaignId}`)} onCancel={() => setImportMode(false)} />
+        </div>
       </div>
     );
   }
@@ -108,12 +130,20 @@ export default function CharacterCreation() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <button
-        onClick={() => navigate(`/campaign/${campaignId}`)}
-        className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ChevronLeft className="w-3.5 h-3.5" /> Back to Campaign
-      </button>
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={() => navigate(`/campaign/${campaignId}`)}
+          className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to Campaign
+        </button>
+        <button
+          onClick={() => setImportMode(true)}
+          className="flex items-center gap-1 text-[11px] font-heading tracking-wide text-primary/70 hover:text-primary transition-colors"
+        >
+          <FileText className="w-3.5 h-3.5" /> Import a sheet instead
+        </button>
+      </div>
 
       {/* Stepper */}
       <div className="flex items-center justify-between mb-8">

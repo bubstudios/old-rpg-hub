@@ -87,6 +87,12 @@ Deno.serve(async (req) => {
       } catch (e) { /* module not found — proceed without it */ }
     }
 
+    // Load an imported ongoing-campaign chronicle (if any) so the DM continues the established story
+    let chronicleBrief = '';
+    if (campaign.chronicle) {
+      chronicleBrief = `\n## Campaign Chronicle\nThis campaign was imported from an ongoing game the party was already playing. The document below is their established story — everything in it is canon and already happened. Pick up EXACTLY where they left off: honor all past events, NPCs, loot, and world state. Do NOT restart the adventure or re-introduce completed events. Continue forward from the current scene.\n\n${campaign.chronicle}`;
+    }
+
     const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
 
     const dndToneLabels = {
@@ -119,7 +125,7 @@ You are the ONLY Dungeon Master. There is no human DM. You handle ALL rulings, n
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}${moduleBrief}
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}
 
 ## AD&D 1st Edition Rules (Core)
 - Ability scores: STR, INT, WIS, DEX, CON, CHA (3-18, rolled 3d6 in order)
@@ -184,7 +190,7 @@ You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narr
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}${moduleBrief}
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}
 
 ## Star Frontiers Rules (Core)
 - Species: Human (adaptable), Dralasite (amoeba-like, lie detection), Vrusk (insectoid, high logic), Yazirian (ape-like, battle rage).
