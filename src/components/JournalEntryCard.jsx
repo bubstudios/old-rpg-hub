@@ -1,4 +1,4 @@
-import { Coins, Package } from 'lucide-react';
+import { Coins, Package, MessageCircle } from 'lucide-react';
 import DiceRoller from '@/components/DiceRoller';
 
 export default function JournalEntryCard({ entry }) {
@@ -14,6 +14,21 @@ export default function JournalEntryCard({ entry }) {
               {entry.acting_character_name || 'A Hero'}
             </p>
             <p className="text-sm text-foreground font-body italic">"{entry.player_action}"</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (entry.entry_type === 'discussion') {
+    return (
+      <div className="flex justify-start animate-ink">
+        <div className="max-w-[80%]">
+          <div className="bg-sky-950/40 border border-sky-800/40 rounded-lg rounded-tl-sm px-4 py-2.5">
+            <p className="text-[10px] font-heading tracking-wider text-sky-400/80 mb-1 flex items-center gap-1">
+              <MessageCircle className="w-3 h-3" /> {entry.acting_character_name || 'A Hero'} · Discuss
+            </p>
+            <p className="text-sm text-foreground/90 font-body">{entry.narration}</p>
           </div>
         </div>
       </div>

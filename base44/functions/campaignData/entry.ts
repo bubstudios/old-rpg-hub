@@ -149,6 +149,19 @@ Deno.serve(async (req) => {
       return Response.json({ entries: entries.reverse() });
     }
 
+    // Post an out-of-character discussion message (does NOT trigger the DM)
+    if (op === 'postDiscussion') {
+      const { campaign_id, message, acting_character_name } = body;
+      if (!campaign_id || !message) return Response.json({ error: 'campaign_id and message required' }, { status: 400 });
+      const entry = await base44.entities.JournalEntry.create({
+        campaign_id,
+        entry_type: 'discussion',
+        narration: message.trim(),
+        acting_character_name: acting_character_name || 'A Hero'
+      });
+      return Response.json({ entry });
+    }
+
     // Join campaign by invite code
     if (op === 'join') {
       const { invite_code } = body;

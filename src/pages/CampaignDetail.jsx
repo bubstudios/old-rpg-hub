@@ -7,7 +7,7 @@ import JournalEntryCard from '@/components/JournalEntryCard';
 import DiceRollerPanel from '@/components/DiceRollerPanel';
 import { Button } from '@/components/ui/button';
 import {
-  Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users,
+  Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -24,6 +24,8 @@ export default function CampaignDetail() {
   const [processing, setProcessing] = useState(false);
   const [latestResult, setLatestResult] = useState(null);
   const [diceOpen, setDiceOpen] = useState(false);
+  const [discussMode, setDiscussMode] = useState(false);
+  const [posting, setPosting] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -35,6 +37,16 @@ export default function CampaignDetail() {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
   }, [entries, latestResult, processing]);
+
+  // Live-sync out-of-character discussion messages so party members see each other's chat
+  useEffect(() => {
+    const unsubscribe = base44.entities.JournalEntry.subscribe((event) => {
+      if (event.data?.campaign_id === campaignId && event.data?.entry_type === 'discussion') {
+        reloadEntries();
+      }
+    });
+    return () => unsubscribe();
+  }, [campaignId]);
 
   async function loadData() {
     try {
@@ -90,9 +102,37 @@ export default function CampaignDetail() {
   }
 
   async function handleAction() {
-    if (!action.trim() || processing) return;
+    if (!action.trim() || processing || posting) return;
     const submittedAction = action.trim();
     setAction('');
+
+    // Discuss mode: post an out-of-character message to the party (DM is NOT triggered)
+    if (discussMode) {
+      setPosting(true);
+      const tempEntry = {
+        entry_type: 'discussion',
+        narration: submittedAction,
+        acting_character_name: myCharacter.name
+      };
+      setEntries(prev => [...prev, tempEntry]);
+      try {
+        await base44.functions.invoke('campaignData', {
+          op: 'postDiscussion',
+          campaign_id: campaignId,
+          message: submittedAction,
+          acting_character_name: myCharacter.name
+        });
+        await reloadEntries();
+      } catch (e) {
+        toast.error('Failed to post message');
+        setEntries(prev => prev.slice(0, -1));
+        setAction(submittedAction);
+      } finally {
+        setPosting(false);
+      }
+      return;
+    }
+
     setProcessing(true);
     setLatestResult(null);
 
@@ -237,8 +277,15 @@ export default function CampaignDetail() {
                 {myCharacter?.name?.toUpperCase()} · {myCharacter?.race} {myCharacter?.character_class} · LVL {myCharacter?.level}
               </span>
               <button
+                onClick={() => setDiscussMode((m) => !m)}
+                className={`ml-auto flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${discussMode ? 'border-sky-500/50 text-sky-400 bg-sky-500/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
+                title={discussMode ? 'Discussing — the DM will not respond. Click to switch to actions.' : 'Switch to out-of-character party discussion (the DM will not respond).'}
+              >
+                <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} /> {discussMode ? 'Discussing' : 'Discuss'}
+              </button>
+              <button
                 onClick={() => setDiceOpen((o) => !o)}
-                className={`ml-auto flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
+                className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
               >
                 <Dices className="w-3.5 h-3.5" strokeWidth={1.5} /> Dice
               </button>
@@ -257,19 +304,26 @@ export default function CampaignDetail() {
                 value={action}
                 onChange={(e) => setAction(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={processing}
-                placeholder={isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"}
-                className="flex-1 bg-card/60 border border-input rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-ring min-h-[44px] max-h-32"
+                disabled={processing || posting}
+                placeholder={discussMode
+                  ? "Discuss with your party (out of character)..."
+                  : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?")}
+                className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}
               />
               <Button
                 onClick={handleAction}
-                disabled={!action.trim() || processing}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 self-stretch px-4"
+                disabled={!action.trim() || processing || posting}
+                className={`self-stretch px-4 ${discussMode ? 'bg-sky-700 text-white hover:bg-sky-600' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
               >
-                {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {(processing || posting) ? <Loader2 className="w-4 h-4 animate-spin" /> : (discussMode ? <MessageCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />)}
               </Button>
             </div>
+            {discussMode && (
+              <p className="mt-1.5 text-[10px] font-body italic text-sky-400/70">
+                Out-of-character discussion — your message will be seen by the party, but the Dungeon Master will not respond.
+              </p>
+            )}
           </div>
         </div>
 

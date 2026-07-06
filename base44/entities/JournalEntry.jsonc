@@ -17,7 +17,8 @@
         "combat",
         "level_up",
         "event",
-        "system"
+        "system",
+        "discussion"
       ]
     },
     "narration": {
