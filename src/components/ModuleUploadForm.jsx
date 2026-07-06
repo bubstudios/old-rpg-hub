@@ -15,7 +15,7 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
   async function handleUpload() {
     if (!file || uploading) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('That file is over 10 MB — the DM can\'t read documents larger than 10 MB. Try compressing it or splitting it into smaller files.');
+      toast.error(`That file is ${(file.size / 1024 / 1024).toFixed(1)} MB — the DM can't read documents larger than 10 MB. Compress the PDF, split it into parts, or save it as a .txt file and upload that instead.`);
       return;
     }
     setUploading(true);
@@ -74,6 +74,9 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
             onChange={(e) => setFile(e.target.files[0])}
           />
         </label>
+        <p className="text-[10px] text-muted-foreground/60 font-body mt-1.5 leading-snug">
+          Scanned or image-based PDFs work — the DM reads them by sight. But files must be under 10 MB. Scanned PDFs are large, so if yours won't upload, compress it, split it into parts, or save it as a .txt file.
+        </p>
       </div>
 
       <div>
