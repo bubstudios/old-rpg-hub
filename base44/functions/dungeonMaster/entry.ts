@@ -87,15 +87,27 @@ Deno.serve(async (req) => {
       } catch (e) { /* module not found — proceed without it */ }
     }
 
-    const toneLabels = {
+    const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
+
+    const dndToneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
       combat_heavy: 'combat-heavy, with frequent tactical battles, skirmishes, and martial challenge',
       dungeon_crawler: 'a dungeon-crawler, centered on trap-filled ruins, puzzles, resource management, and deep delves',
       sandbox: 'a sandbox, with an open world the party freely explores at their own pace and direction',
       character_driven: 'character-driven, focused on story, roleplay, personal arcs, and NPC relationships'
     };
+    const sfToneLabels = {
+      balanced: 'a balanced blend of combat, exploration, roleplay, and story',
+      combat_heavy: 'combat-heavy, with frequent firefights, skirmishes, and tactical challenge',
+      dungeon_crawler: 'a deep-delve campaign, centered on derelict stations, alien ruins, hidden facilities, and resource management',
+      sandbox: 'a sandbox, with an open frontier the party freely explores at their own pace and direction',
+      character_driven: 'character-driven, focused on story, roleplay, personal arcs, and alien relationships'
+    };
+    const toneLabels = isSF ? sfToneLabels : dndToneLabels;
     const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
-    const worldSetting = campaign.world_setting ? `The campaign is set in: ${campaign.world_setting}.` : 'The setting is an original fantasy world of your devising.';
+    const worldSetting = campaign.world_setting
+      ? `The campaign is set in: ${campaign.world_setting}.`
+      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : 'The setting is an original fantasy world of your devising.');
     const settingNotes = campaign.setting_notes
       ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
       : '';
@@ -172,7 +184,7 @@ You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narr
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${settingNotes}${moduleBrief}
+${worldSetting}${settingNotes}${moduleBrief}
 
 ## Star Frontiers Rules (Core)
 - Species: Human (adaptable), Dralasite (amoeba-like, lie detection), Vrusk (insectoid, high logic), Yazirian (ape-like, battle rage).

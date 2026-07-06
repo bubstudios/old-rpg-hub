@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Swords, Compass, Map, Drama, Scale, Globe, Sparkles, Library } from 'lucide-react';
+import { Loader2, Swords, Compass, Map, Drama, Scale, Globe, Sparkles, Library, Rocket, Crosshair, Radar, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
-const TONES = [
+const DND_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of combat, exploration, and story' },
   { id: 'combat_heavy', label: 'Combat-Heavy', icon: Swords, desc: 'Frequent battles and tactical fights' },
   { id: 'dungeon_crawler', label: 'Dungeon Crawler', icon: Compass, desc: 'Trap-filled ruins and deep delves' },
@@ -13,7 +13,7 @@ const TONES = [
   { id: 'character_driven', label: 'Character-Driven', icon: Drama, desc: 'Story, roleplay, and personal arcs' }
 ];
 
-const WORLD_PRESETS = [
+const DND_WORLDS = [
   'Greyhawk',
   'Forgotten Realms',
   'Blackmoor',
@@ -22,6 +22,40 @@ const WORLD_PRESETS = [
   'The Iron Realm',
   'A custom world of my own'
 ];
+
+const SF_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Rocket, desc: 'A mix of combat, exploration, and story' },
+  { id: 'combat_heavy', label: 'Combat-Heavy', icon: Crosshair, desc: 'Frequent firefights and tactical skirmishes' },
+  { id: 'dungeon_crawler', label: 'Derelict Delve', icon: Radar, desc: 'Abandoned stations, alien ruins, and hidden facilities' },
+  { id: 'sandbox', label: 'Free Frontier', icon: Globe, desc: 'Open space, go where you please' },
+  { id: 'character_driven', label: 'Character-Driven', icon: Users, desc: 'Story, roleplay, and personal arcs' }
+];
+
+const SF_WORLDS = [
+  'Mars',
+  'Aqualand',
+  'Volturnus',
+  'Gran Quivera',
+  'Clarion',
+  'Outer Reach',
+  'A custom world of my own'
+];
+
+const DND_SETUP = {
+  worldLabel: 'WORLD SETTING',
+  worldPlaceholder: 'Name your realm (or pick a preset above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or any details you want the DM to weave in. e.g. 'A grim low-magic frontier town besieged by winter wolves, where the party are the only defenders.'",
+  namePlaceholder: 'e.g. Shadows of Greyhawk',
+  forgeLabel: 'Forge Campaign'
+};
+
+const SF_SETUP = {
+  worldLabel: 'NAME YOUR WORLD',
+  worldPlaceholder: 'Name a world (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A 95% waterworld of floating cities and deep-sea leviathans, where the party are salvage divers.'",
+  namePlaceholder: 'e.g. Voyage to Volturnus',
+  forgeLabel: 'Launch Campaign'
+};
 
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
@@ -33,6 +67,11 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const [modules, setModules] = useState([]);
   const [moduleId, setModuleId] = useState(null);
   const [loadingModules, setLoadingModules] = useState(false);
+
+  const isSF = gameSystem === 'starfrontiers';
+  const tones = isSF ? SF_TONES : DND_TONES;
+  const worlds = isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -47,7 +86,9 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   }, []);
 
   async function handleCreate(overrideName) {
-    const finalName = (overrideName || name).trim();
+    const world = worldSetting.trim();
+    const fallbackName = world ? (isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
     try {
@@ -78,7 +119,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Shadows of Greyhawk"
+          placeholder={setup.namePlaceholder}
           className="bg-background/60 font-body"
         />
       </div>
@@ -110,7 +151,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
       <div>
         <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-2">CAMPAIGN STYLE</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {TONES.map((t) => (
+          {tones.map((t) => (
             <button
               key={t.id}
               onClick={() => setTone(t.id)}
@@ -131,10 +172,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
       {/* World setting */}
       <div>
         <label className="flex items-center gap-1.5 text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-2">
-          <Globe className="w-3 h-3" /> WORLD SETTING
+          <Globe className="w-3 h-3" /> {setup.worldLabel}
         </label>
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {WORLD_PRESETS.map((w) => (
+          {worlds.map((w) => (
             <button
               key={w}
               onClick={() => setWorldSetting(w === 'A custom world of my own' ? '' : w)}
@@ -149,7 +190,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
         <Input
           value={worldSetting}
           onChange={(e) => setWorldSetting(e.target.value)}
-          placeholder="Name your realm (or pick a preset above)"
+          placeholder={setup.worldPlaceholder}
           className="bg-background/60 font-body"
         />
       </div>
@@ -226,15 +267,15 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
         <textarea
           value={settingNotes}
           onChange={(e) => setSettingNotes(e.target.value)}
-          placeholder="Describe the tone, themes, starting situation, or any details you want the DM to weave in. e.g. 'A grim low-magic frontier town besieged by winter wolves, where the party are the only defenders.'"
+          placeholder={setup.visionPlaceholder}
           rows={3}
           className="w-full bg-background/60 border border-input rounded-lg px-3 py-2 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
 
       <div className="flex gap-2 pt-1">
-        <Button onClick={handleCreate} disabled={creating || !name.trim()} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-          {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Forge Campaign'}
+        <Button onClick={handleCreate} disabled={creating || (!name.trim() && !worldSetting.trim())} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+          {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : setup.forgeLabel}
         </Button>
         <Button onClick={onCancel} variant="ghost" className="text-muted-foreground">Cancel</Button>
       </div>
