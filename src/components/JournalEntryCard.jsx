@@ -1,4 +1,5 @@
 import { Coins, Package } from 'lucide-react';
+import DiceRoller from '@/components/DiceRoller';
 
 export default function JournalEntryCard({ entry }) {
   const isAction = entry.entry_type === 'action';
@@ -41,6 +42,24 @@ export default function JournalEntryCard({ entry }) {
               <span>{entry.xp_awarded} XP awarded</span>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (entry.entry_type === 'dice_roll') {
+    return (
+      <div className="flex justify-end animate-ink">
+        <div className="max-w-[85%]">
+          <div className="bg-secondary/50 border border-border/50 rounded-lg rounded-tr-sm px-4 py-2.5">
+            <p className="text-[10px] font-heading tracking-wider text-primary/70 mb-1.5">
+              {entry.acting_character_name || 'A Hero'} · Roll
+            </p>
+            <DiceRoller rolls={entry.dice_rolls} />
+            {entry.narration && (
+              <p className="text-[11px] text-muted-foreground/60 mt-2 italic">{entry.narration}</p>
+            )}
+          </div>
         </div>
       </div>
     );

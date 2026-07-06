@@ -4,10 +4,11 @@ import { base44 } from '@/api/base44Client';
 import PartyOverview from '@/components/PartyOverview';
 import DMNarration from '@/components/DMNarration';
 import JournalEntryCard from '@/components/JournalEntryCard';
+import DiceRollerPanel from '@/components/DiceRollerPanel';
 import { Button } from '@/components/ui/button';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame
+  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,6 +23,7 @@ export default function CampaignDetail() {
   const [action, setAction] = useState('');
   const [processing, setProcessing] = useState(false);
   const [latestResult, setLatestResult] = useState(null);
+  const [diceOpen, setDiceOpen] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -55,6 +57,13 @@ export default function CampaignDetail() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function reloadEntries() {
+    try {
+      const entriesRes = await base44.functions.invoke('campaignData', { op: 'recentEntries', campaign_id: campaignId, limit: 30 });
+      setEntries(entriesRes.data.entries || []);
+    } catch (e) { /* ignore */ }
   }
 
   async function handleAction() {
@@ -204,10 +213,22 @@ export default function CampaignDetail() {
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
                 {myCharacter?.name?.toUpperCase()} · {myCharacter?.race} {myCharacter?.character_class} · LVL {myCharacter?.level}
               </span>
-              <span className="text-[10px] text-muted-foreground/50 ml-auto">
-                ⌘+Enter to send
-              </span>
+              <button
+                onClick={() => setDiceOpen((o) => !o)}
+                className={`ml-auto flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
+              >
+                <Dices className="w-3.5 h-3.5" strokeWidth={1.5} /> Dice
+              </button>
             </div>
+            {diceOpen && myCharacter && (
+              <DiceRollerPanel
+                myCharacter={myCharacter}
+                campaignId={campaignId}
+                chapter={campaign.current_chapter}
+                onRolled={reloadEntries}
+                onClose={() => setDiceOpen(false)}
+              />
+            )}
             <div className="flex gap-2">
               <textarea
                 value={action}
