@@ -48,6 +48,10 @@
       "type": "string",
       "description": "Player's vision, themes, and details for the campaign world"
     },
+    "module_id": {
+      "type": "string",
+      "description": "Linked adventure module, if any"
+    },
     "current_chapter": {
       "type": "number",
       "default": 1

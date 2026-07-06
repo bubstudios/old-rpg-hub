@@ -115,10 +115,19 @@ Deno.serve(async (req) => {
       const characters = await admin.entities.Character.filter({ campaign_id }, '-created_date', 50);
       const myCharacter = characters.find(c => c.created_by_id === user.id && c.status === 'active');
 
+      let module_title = null;
+      if (campaign.module_id) {
+        try {
+          const mod = await admin.entities.AdventureModule.get(campaign.module_id);
+          if (mod) module_title = mod.title;
+        } catch (e) { /* module may be deleted */ }
+      }
+
       return Response.json({
         campaign,
         characters,
-        my_character: myCharacter || null
+        my_character: myCharacter || null,
+        module_title
       });
     }
 
@@ -150,7 +159,7 @@ Deno.serve(async (req) => {
 
     // Create campaign
     if (op === 'createCampaign') {
-      const { name, mode, tone, world_setting, setting_notes } = body;
+      const { name, mode, tone, world_setting, setting_notes, module_id } = body;
       if (!name) return Response.json({ error: 'name required' }, { status: 400 });
       const campaign = await base44.entities.Campaign.create({
         name: name.trim(),
@@ -160,6 +169,7 @@ Deno.serve(async (req) => {
         tone: tone || 'balanced',
         world_setting: (world_setting || '').trim(),
         setting_notes: (setting_notes || '').trim(),
+        module_id: module_id || null,
         current_chapter: 1,
         current_scene: '',
         combat_active: false,

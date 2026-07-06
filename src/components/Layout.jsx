@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { ScrollText, Home as HomeIcon } from 'lucide-react';
+import { ScrollText, Home as HomeIcon, Library } from 'lucide-react';
 
 export default function Layout() {
   const location = useLocation();
@@ -31,6 +31,15 @@ export default function Layout() {
             >
               <HomeIcon className="w-3.5 h-3.5" strokeWidth={1.5} />
               Campaigns
+            </Link>
+            <Link
+              to="/modules"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
+                location.pathname === '/modules' ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+              }`}
+            >
+              <Library className="w-3.5 h-3.5" strokeWidth={1.5} />
+              Library
             </Link>
           </nav>
         </div>

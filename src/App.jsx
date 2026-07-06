@@ -14,6 +14,7 @@ import CampaignDetail from '@/pages/CampaignDetail';
 import CharacterCreation from '@/pages/CharacterCreation';
 import CharacterSheet from '@/pages/CharacterSheet';
 import CampaignJournal from '@/pages/CampaignJournal';
+import ModuleLibrary from '@/pages/ModuleLibrary';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -43,6 +44,7 @@ const AuthenticatedApp = () => {
         <Route path="/campaign/:id/create-character" element={<CharacterCreation />} />
         <Route path="/campaign/:id/character/:charId" element={<CharacterSheet />} />
         <Route path="/campaign/:id/journal" element={<CampaignJournal />} />
+        <Route path="/modules" element={<ModuleLibrary />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

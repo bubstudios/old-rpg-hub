@@ -1,0 +1,45 @@
+{
+  "name": "AdventureModule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short summary for the library listing"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to the uploaded source file"
+    },
+    "content": {
+      "type": "string",
+      "description": "Extracted detailed brief the DM uses to run the module faithfully"
+    },
+    "author": {
+      "type": "string"
+    },
+    "recommended_levels": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "private",
+        "shared"
+      ],
+      "default": "shared"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "title",
+    "file_url"
+  ]
+}

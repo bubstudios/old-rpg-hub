@@ -76,6 +76,17 @@ Deno.serve(async (req) => {
       chapter_log: []
     };
 
+    // Load the linked adventure module (if any) so the DM can run it faithfully
+    let moduleBrief = '';
+    if (campaign.module_id) {
+      try {
+        const module = await base44.asServiceRole.entities.AdventureModule.get(campaign.module_id);
+        if (module && module.content) {
+          moduleBrief = `\n## Adventure Module: ${module.title}\nThe party is playing through a published/module adventure. Use the reference below to run it faithfully — keep locations, NPCs, traps, treasures, and encounters consistent with the module. Adapt pacing and react to the party's choices, but do not change the module's key facts, layouts, or dangers.\n\n${module.content}`;
+        }
+      } catch (e) { /* module not found — proceed without it */ }
+    }
+
     const toneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
       combat_heavy: 'combat-heavy, with frequent tactical battles, skirmishes, and martial challenge',
@@ -96,7 +107,7 @@ You are the ONLY Dungeon Master. There is no human DM. You handle ALL rulings, n
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}
+${worldSetting}${settingNotes}${moduleBrief}
 
 ## AD&D 1st Edition Rules (Core)
 - Ability scores: STR, INT, WIS, DEX, CON, CHA (3-18, rolled 3d6 in order)

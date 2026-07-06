@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Swords, Compass, Map, Drama, Scale, Globe, Sparkles } from 'lucide-react';
+import { Loader2, Swords, Compass, Map, Drama, Scale, Globe, Sparkles, Library } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TONES = [
@@ -30,6 +30,21 @@ export default function CampaignSetupForm({ onCreated, onCancel }) {
   const [worldSetting, setWorldSetting] = useState('');
   const [settingNotes, setSettingNotes] = useState('');
   const [creating, setCreating] = useState(false);
+  const [modules, setModules] = useState([]);
+  const [moduleId, setModuleId] = useState(null);
+  const [loadingModules, setLoadingModules] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingModules(true);
+        const res = await base44.functions.invoke('moduleLibrary', { op: 'list' });
+        setModules(res.data.modules || []);
+      } catch (e) { /* modules optional */ } finally {
+        setLoadingModules(false);
+      }
+    })();
+  }, []);
 
   async function handleCreate() {
     if (!name.trim() || creating) return;
@@ -41,7 +56,8 @@ export default function CampaignSetupForm({ onCreated, onCancel }) {
         mode,
         tone,
         world_setting: worldSetting.trim(),
-        setting_notes: settingNotes.trim()
+        setting_notes: settingNotes.trim(),
+        module_id: moduleId
       });
       toast.success('Campaign forged!');
       onCreated(res.data.campaign);
@@ -134,6 +150,57 @@ export default function CampaignSetupForm({ onCreated, onCancel }) {
           placeholder="Name your realm (or pick a preset above)"
           className="bg-background/60 font-body"
         />
+      </div>
+
+      {/* Adventure module */}
+      <div>
+        <label className="flex items-center gap-1.5 text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-2">
+          <Library className="w-3 h-3" /> ADVENTURE MODULE (OPTIONAL)
+        </label>
+        <p className="text-[10px] text-muted-foreground/70 font-body mb-2 leading-snug">
+          Pick a module from the Library and the DM will study it to run the adventure faithfully. Upload new modules from the Library page.
+        </p>
+        {loadingModules ? (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Loader2 className="w-3 h-3 animate-spin" /> Loading library...
+          </div>
+        ) : modules.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground/60 font-body italic">
+            No modules uploaded yet. Visit the Library to add one.
+          </p>
+        ) : (
+          <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">
+            <button
+              onClick={() => setModuleId(null)}
+              className={`w-full text-left px-3 py-2 rounded-lg border text-xs font-body transition-colors ${
+                !moduleId ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border/50 text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              None — an original adventure
+            </button>
+            {modules.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setModuleId(m.id)}
+                className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                  moduleId === m.id ? 'border-primary/60 bg-primary/10' : 'border-border/50 hover:border-primary/30'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-heading tracking-wide ${moduleId === m.id ? 'text-primary' : 'text-foreground'}`}>
+                    {m.title}
+                  </span>
+                  {m.recommended_levels && (
+                    <span className="text-[9px] text-muted-foreground/60 font-heading shrink-0">{m.recommended_levels}</span>
+                  )}
+                </div>
+                {m.description && (
+                  <p className="text-[10px] text-muted-foreground/70 font-body mt-0.5 line-clamp-2">{m.description}</p>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Setting notes / vision */}
