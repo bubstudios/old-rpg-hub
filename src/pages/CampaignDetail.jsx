@@ -81,8 +81,9 @@ export default function CampaignDetail() {
       const result = res.data;
       setLatestResult(result);
 
-      // Reload campaign + characters to reflect changes
+      // Reload campaign + characters to reflect changes (narration now lives in entries)
       await loadData();
+      setLatestResult(null);
     } catch (e) {
       toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
       setEntries(prev => prev.slice(0, -1));
