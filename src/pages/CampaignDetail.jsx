@@ -66,6 +66,29 @@ export default function CampaignDetail() {
     } catch (e) { /* ignore */ }
   }
 
+  async function handleRollCompleted(rollResult) {
+    await reloadEntries();
+    if (!rollResult?.summary || processing) return;
+    setDiceOpen(false);
+    setProcessing(true);
+    setLatestResult(null);
+    try {
+      const res = await base44.functions.invoke('dungeonMaster', {
+        campaign_id: campaignId,
+        action: rollResult.summary,
+        acting_character_id: myCharacter.id,
+        is_roll_result: true
+      });
+      setLatestResult(res.data);
+      await loadData();
+      setLatestResult(null);
+    } catch (e) {
+      toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   async function handleAction() {
     if (!action.trim() || processing) return;
     const submittedAction = action.trim();
@@ -225,7 +248,7 @@ export default function CampaignDetail() {
                 myCharacter={myCharacter}
                 campaignId={campaignId}
                 chapter={campaign.current_chapter}
-                onRolled={reloadEntries}
+                onRolled={handleRollCompleted}
                 onClose={() => setDiceOpen(false)}
               />
             )}

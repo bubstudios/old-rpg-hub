@@ -34,8 +34,8 @@ export default function DiceRollerPanel({ myCharacter, campaignId, chapter, onRo
   async function roll(payload) {
     setRolling(true);
     try {
-      await base44.functions.invoke('rollDice', payload);
-      onRolled?.();
+      const res = await base44.functions.invoke('rollDice', payload);
+      onRolled?.(res.data);
     } catch (e) {
       toast.error('Roll failed: ' + (e.response?.data?.error || e.message));
     } finally {

@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { campaign_id, action, acting_character_id } = body;
+    const { campaign_id, action, acting_character_id, is_roll_result } = body;
 
     if (!campaign_id || !action) {
       return Response.json({ error: 'campaign_id and action are required' }, { status: 400 });
@@ -41,6 +41,10 @@ Deno.serve(async (req) => {
       campaign_id: campaign_id
     }, '-created_date', 8);
     const history = recentEntries.reverse().map(e => {
+      if (e.entry_type === 'dice_roll') {
+        const rolls = (e.dice_rolls || []).map(r => `${r.description || r.die}: ${r.total}${r.result ? ' (' + r.result + ')' : ''}`).join(', ');
+        return `Player (${e.acting_character_name || 'Party'}) rolled: ${rolls || e.narration}`;
+      }
       if (e.player_action) return `Player (${e.acting_character_name || 'Party'}): ${e.player_action}`;
       if (e.narration) return `DM: ${e.narration.substring(0, 500)}`;
       return '';
@@ -148,6 +152,10 @@ Rules for the JSON:
 
 Remember: be the DM. Make rulings. Roll dice. Narrate. Keep the world alive and dangerous.`;
 
+    const actionBlock = is_roll_result
+      ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max}) just made a dice roll.\nRoll result: "${action}"\n\nInterpret this roll result according to AD&D 1st Edition rules and continue the scene — narrate what happens next based on the outcome of this roll.`
+      : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max}) declares:\n"${action}"`;
+
     const userPrompt = `## Campaign: ${campaign.name}
 Current Chapter: ${campaign.current_chapter}
 Current Scene: ${campaign.current_scene || 'The campaign is just beginning.'}
@@ -166,10 +174,9 @@ Party Reputation: ${worldState.reputation || 0}
 ${history || 'The adventure has just begun.'}
 
 ## Current Action
-${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max}) declares:
-"${action}"
+${actionBlock}
 
-Respond as the DM with the JSON object. Resolve the action using AD&D 1st Edition rules. If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.`;
+Respond as the DM with the JSON object. Resolve the action using AD&D 1st Edition rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt: userPrompt,
@@ -332,14 +339,16 @@ Respond as the DM with the JSON object. Resolve the action using AD&D 1st Editio
     }
     await base44.asServiceRole.entities.Campaign.update(campaign_id, campaignUpdates);
 
-    // Create journal entries: one for the player action, one for the DM narration
-    await base44.asServiceRole.entities.JournalEntry.create({
-      campaign_id: campaign_id,
-      entry_type: 'action',
-      player_action: action,
-      acting_character_name: actingChar.name,
-      chapter: campaign.current_chapter
-    });
+    // Create journal entries: skip the action entry for roll results (already recorded as a dice_roll entry); always create the DM narration
+    if (!is_roll_result) {
+      await base44.asServiceRole.entities.JournalEntry.create({
+        campaign_id: campaign_id,
+        entry_type: 'action',
+        player_action: action,
+        acting_character_name: actingChar.name,
+        chapter: campaign.current_chapter
+      });
+    }
 
     await base44.asServiceRole.entities.JournalEntry.create({
       campaign_id: campaign_id,
