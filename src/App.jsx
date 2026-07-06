@@ -6,12 +6,18 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/Layout';
 // Add page imports here
+import Home from '@/pages/Home';
+import CampaignDetail from '@/pages/CampaignDetail';
+import CharacterCreation from '@/pages/CharacterCreation';
+import CharacterSheet from '@/pages/CharacterSheet';
+import CampaignJournal from '@/pages/CampaignJournal';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -20,21 +26,24 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/campaign/:id" element={<CampaignDetail />} />
+        <Route path="/campaign/:id/create-character" element={<CharacterCreation />} />
+        <Route path="/campaign/:id/character/:charId" element={<CharacterSheet />} />
+        <Route path="/campaign/:id/journal" element={<CampaignJournal />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

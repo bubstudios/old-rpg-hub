@@ -1,0 +1,40 @@
+{
+  "name": "Session",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "session_number": {
+      "type": "number"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "ended_at": {
+      "type": "string"
+    },
+    "xp_awarded": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "campaign_id",
+    "session_number"
+  ]
+}

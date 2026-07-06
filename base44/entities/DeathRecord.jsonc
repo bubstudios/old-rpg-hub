@@ -1,0 +1,37 @@
+{
+  "name": "DeathRecord",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "character_name": {
+      "type": "string"
+    },
+    "character_class": {
+      "type": "string"
+    },
+    "race": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number"
+    },
+    "cause_of_death": {
+      "type": "string"
+    },
+    "epitaph": {
+      "type": "string"
+    },
+    "chapter": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "character_name"
+  ]
+}

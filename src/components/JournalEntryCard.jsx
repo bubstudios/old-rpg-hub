@@ -1,0 +1,59 @@
+import { Coins, Package } from 'lucide-react';
+
+export default function JournalEntryCard({ entry }) {
+  const isAction = entry.entry_type === 'action';
+  const isNarration = entry.entry_type === 'narration';
+
+  if (isAction) {
+    return (
+      <div className="flex justify-end animate-ink">
+        <div className="max-w-[80%]">
+          <div className="bg-secondary/60 border border-border/50 rounded-lg rounded-tr-sm px-4 py-2.5">
+            <p className="text-[10px] font-heading tracking-wider text-primary/70 mb-1">
+              {entry.acting_character_name || 'A Hero'}
+            </p>
+            <p className="text-sm text-foreground font-body italic">"{entry.player_action}"</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isNarration) {
+    return (
+      <div className="animate-ink">
+        <div className="tome-surface rounded-lg rounded-tl-sm p-5">
+          <p className="tome-text text-sm whitespace-pre-wrap">{entry.narration}</p>
+          {entry.dice_rolls && entry.dice_rolls.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-amber-900/20 space-y-1.5">
+              {entry.dice_rolls.map((r, i) => (
+                <div key={i} className="flex items-center gap-2 text-[11px] text-amber-900/70">
+                  <span className="font-heading">⚂</span>
+                  <span>{r.description}: {r.die} = <b>{r.total}</b></span>
+                  {r.result && <span className="text-amber-900/60">({r.result})</span>}
+                </div>
+              ))}
+            </div>
+          )}
+          {entry.xp_awarded > 0 && (
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-amber-900/70">
+              <span className="font-heading">✦</span>
+              <span>{entry.xp_awarded} XP awarded</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Event / system entry
+  return (
+    <div className="flex justify-center animate-ink">
+      <div className="text-center py-2">
+        <span className="text-[10px] font-heading tracking-[0.2em] text-muted-foreground/60">
+          ✦ {entry.narration} ✦
+        </span>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,57 @@
+{
+  "name": "JournalEntry",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "entry_type": {
+      "type": "string",
+      "enum": [
+        "narration",
+        "action",
+        "dice_roll",
+        "combat",
+        "level_up",
+        "event",
+        "system"
+      ]
+    },
+    "narration": {
+      "type": "string",
+      "description": "DM narration or player action text"
+    },
+    "player_action": {
+      "type": "string"
+    },
+    "acting_character_name": {
+      "type": "string"
+    },
+    "dice_rolls": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "xp_awarded": {
+      "type": "number",
+      "default": 0
+    },
+    "hp_changes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "chapter": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "entry_type"
+  ]
+}

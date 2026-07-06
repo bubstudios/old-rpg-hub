@@ -1,0 +1,175 @@
+{
+  "name": "Character",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Character name"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "race": {
+      "type": "string",
+      "enum": [
+        "Human",
+        "Elf",
+        "Dwarf",
+        "Halfling",
+        "Gnome",
+        "Half-Elf",
+        "Half-Orc"
+      ]
+    },
+    "character_class": {
+      "type": "string",
+      "enum": [
+        "Fighter",
+        "Paladin",
+        "Ranger",
+        "Cleric",
+        "Druid",
+        "Magic-User",
+        "Illusionist",
+        "Thief",
+        "Assassin",
+        "Monk"
+      ]
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "alignment": {
+      "type": "string",
+      "enum": [
+        "Lawful Good",
+        "Neutral Good",
+        "Chaotic Good",
+        "Lawful Neutral",
+        "True Neutral",
+        "Chaotic Neutral",
+        "Lawful Evil",
+        "Neutral Evil",
+        "Chaotic Evil"
+      ]
+    },
+    "ability_scores": {
+      "type": "object",
+      "properties": {
+        "str": {
+          "type": "number"
+        },
+        "int": {
+          "type": "number"
+        },
+        "wis": {
+          "type": "number"
+        },
+        "dex": {
+          "type": "number"
+        },
+        "con": {
+          "type": "number"
+        },
+        "cha": {
+          "type": "number"
+        }
+      }
+    },
+    "hp_current": {
+      "type": "number",
+      "default": 0
+    },
+    "hp_max": {
+      "type": "number",
+      "default": 0
+    },
+    "ac": {
+      "type": "number",
+      "default": 10
+    },
+    "thaco": {
+      "type": "number",
+      "default": 20
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "saving_throws": {
+      "type": "object",
+      "properties": {
+        "poison_death": {
+          "type": "number"
+        },
+        "wand": {
+          "type": "number"
+        },
+        "petrification": {
+          "type": "number"
+        },
+        "breath": {
+          "type": "number"
+        },
+        "spell": {
+          "type": "number"
+        }
+      }
+    },
+    "gold": {
+      "type": "number",
+      "default": 0
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "spells": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spell_slots": {
+      "type": "object"
+    },
+    "appearance": {
+      "type": "string"
+    },
+    "background": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "dead",
+        "retired"
+      ],
+      "default": "active"
+    },
+    "portrait_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "campaign_id",
+    "race",
+    "character_class"
+  ]
+}

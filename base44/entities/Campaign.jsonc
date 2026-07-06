@@ -1,0 +1,96 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Campaign title"
+    },
+    "invite_code": {
+      "type": "string",
+      "description": "Shareable join code"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "setup",
+        "active",
+        "completed",
+        "paused"
+      ],
+      "default": "setup"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "live",
+        "async"
+      ],
+      "default": "async"
+    },
+    "current_chapter": {
+      "type": "number",
+      "default": 1
+    },
+    "current_scene": {
+      "type": "string",
+      "description": "Summary of the current scene/location"
+    },
+    "combat_active": {
+      "type": "boolean",
+      "default": false
+    },
+    "combat_round": {
+      "type": "number",
+      "default": 0
+    },
+    "world_state": {
+      "type": "object",
+      "properties": {
+        "locations_explored": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "npcs_met": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "disposition": {
+                "type": "string"
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "quest_flags": {
+          "type": "object"
+        },
+        "reputation": {
+          "type": "number",
+          "default": 0
+        },
+        "chapter_log": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "active_session_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "invite_code"
+  ]
+}

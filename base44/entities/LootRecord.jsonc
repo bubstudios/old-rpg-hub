@@ -1,0 +1,32 @@
+{
+  "name": "LootRecord",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "item_name": {
+      "type": "string"
+    },
+    "gold": {
+      "type": "number",
+      "default": 0
+    },
+    "found_by": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "description": "Where it came from (creature, location, chest)"
+    },
+    "chapter": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "campaign_id"
+  ]
+}
