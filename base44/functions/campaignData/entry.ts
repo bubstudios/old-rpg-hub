@@ -150,13 +150,16 @@ Deno.serve(async (req) => {
 
     // Create campaign
     if (op === 'createCampaign') {
-      const { name, mode } = body;
+      const { name, mode, tone, world_setting, setting_notes } = body;
       if (!name) return Response.json({ error: 'name required' }, { status: 400 });
       const campaign = await base44.entities.Campaign.create({
         name: name.trim(),
         invite_code: generateInviteCode(),
         status: 'setup',
         mode: mode || 'async',
+        tone: tone || 'balanced',
+        world_setting: (world_setting || '').trim(),
+        setting_notes: (setting_notes || '').trim(),
         current_chapter: 1,
         current_scene: '',
         combat_active: false,

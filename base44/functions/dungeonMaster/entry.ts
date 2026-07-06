@@ -72,10 +72,27 @@ Deno.serve(async (req) => {
       chapter_log: []
     };
 
+    const toneLabels = {
+      balanced: 'a balanced blend of combat, exploration, roleplay, and story',
+      combat_heavy: 'combat-heavy, with frequent tactical battles, skirmishes, and martial challenge',
+      dungeon_crawler: 'a dungeon-crawler, centered on trap-filled ruins, puzzles, resource management, and deep delves',
+      sandbox: 'a sandbox, with an open world the party freely explores at their own pace and direction',
+      character_driven: 'character-driven, focused on story, roleplay, personal arcs, and NPC relationships'
+    };
+    const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
+    const worldSetting = campaign.world_setting ? `The campaign is set in: ${campaign.world_setting}.` : 'The setting is an original fantasy world of your devising.';
+    const settingNotes = campaign.setting_notes
+      ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
+      : '';
+
     const systemPrompt = `You are the Dungeon Master for an "old school" Advanced Dungeons & Dragons 1st Edition campaign. You narrate a persistent, atmospheric, dangerous fantasy adventure in the spirit of 1e AD&D — think Gygax, think Tomb of Horrors, think unforgiving danger and rich description.
 
 ## Your Role
 You are the ONLY Dungeon Master. There is no human DM. You handle ALL rulings, narration, NPC dialogue, combat resolution, and world state. Players are purely participants who submit actions in natural language.
+
+## Campaign Direction
+This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
+${worldSetting}${settingNotes}
 
 ## AD&D 1st Edition Rules (Core)
 - Ability scores: STR, INT, WIS, DEX, CON, CHA (3-18, rolled 3d6 in order)

@@ -28,6 +28,26 @@
       ],
       "default": "async"
     },
+    "tone": {
+      "type": "string",
+      "enum": [
+        "balanced",
+        "combat_heavy",
+        "dungeon_crawler",
+        "sandbox",
+        "character_driven"
+      ],
+      "default": "balanced",
+      "description": "Campaign play style focus"
+    },
+    "world_setting": {
+      "type": "string",
+      "description": "The world or realm the campaign is set in"
+    },
+    "setting_notes": {
+      "type": "string",
+      "description": "Player's vision, themes, and details for the campaign world"
+    },
     "current_chapter": {
       "type": "number",
       "default": 1

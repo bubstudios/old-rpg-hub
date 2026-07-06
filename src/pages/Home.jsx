@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight } from 'lucide-react';
+import { ScrollText, Plus, Users, KeyRound, Loader2, Skull, MapPin, ChevronRight, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import CampaignSetupForm from '@/components/CampaignSetupForm';
 import { toast } from 'sonner';
 
 export default function Home() {
@@ -11,10 +12,7 @@ export default function Home() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newMode, setNewMode] = useState('async');
   const [joinCode, setJoinCode] = useState('');
-  const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
 
   useEffect(() => {
@@ -33,24 +31,9 @@ export default function Home() {
     }
   }
 
-  async function handleCreate() {
-    if (!newName.trim()) return;
-    setCreating(true);
-    try {
-      const res = await base44.functions.invoke('campaignData', {
-        op: 'createCampaign',
-        name: newName.trim(),
-        mode: newMode
-      });
-      toast.success('Campaign forged!');
-      setShowCreate(false);
-      setNewName('');
-      navigate(`/campaign/${res.data.campaign.id}/create-character`);
-    } catch (e) {
-      toast.error('Failed to create campaign');
-    } finally {
-      setCreating(false);
-    }
+  function handleCreated(campaign) {
+    setShowCreate(false);
+    navigate(`/campaign/${campaign.id}/create-character`);
   }
 
   async function handleJoin() {
@@ -97,41 +80,10 @@ export default function Home() {
             <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">BEGIN A CAMPAIGN</h2>
           </div>
           {showCreate ? (
-            <div className="space-y-3">
-              <Input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Campaign name (e.g. Shadows of Greyhawk)"
-                className="bg-background/60 font-body"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setNewMode('async')}
-                  className={`flex-1 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${
-                    newMode === 'async' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground'
-                  }`}
-                >
-                  ASYNC (Play-by-post)
-                </button>
-                <button
-                  onClick={() => setNewMode('live')}
-                  className={`flex-1 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${
-                    newMode === 'live' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground'
-                  }`}
-                >
-                  LIVE SESSION
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={handleCreate} disabled={creating || !newName.trim()} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                  {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Forge Campaign'}
-                </Button>
-                <Button onClick={() => setShowCreate(false)} variant="ghost" className="text-muted-foreground">Cancel</Button>
-              </div>
-            </div>
+            <CampaignSetupForm onCreated={handleCreated} onCancel={() => setShowCreate(false)} />
           ) : (
             <Button onClick={() => setShowCreate(true)} variant="outline" className="w-full border-primary/40 text-primary hover:bg-primary/10">
-              <Plus className="w-4 h-4 mr-1.5" /> Create New Campaign
+              <Settings2 className="w-4 h-4 mr-1.5" /> Create New Campaign
             </Button>
           )}
         </div>
