@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [visibility, setVisibility] = useState('shared');
+  const [gameSystem, setGameSystem] = useState('add1e');
   const [uploading, setUploading] = useState(false);
 
   async function handleUpload() {
@@ -23,7 +24,8 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
         op: 'upload',
         file_url,
         title: title.trim(),
-        visibility
+        visibility,
+        game_system: gameSystem
       });
       toast.success('Module studied and added to the library!');
       onUploaded?.(res.data.module);
@@ -36,6 +38,24 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
 
   return (
     <div className="space-y-3">
+      <div>
+        <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">GAME SYSTEM</label>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setGameSystem('add1e')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${gameSystem === 'add1e' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Scroll className="w-3.5 h-3.5" /> AD&D 1E
+          </button>
+          <button
+            onClick={() => setGameSystem('starfrontiers')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${gameSystem === 'starfrontiers' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Rocket className="w-3.5 h-3.5" /> STAR FRONTIERS
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">MODULE FILE (PDF / TEXT)</label>
         <label className="flex items-center gap-2 px-3 py-3 rounded-lg border border-dashed border-border/60 bg-background/40 cursor-pointer hover:border-primary/40 transition-colors">

@@ -17,6 +17,11 @@
       "type": "string",
       "description": "Extracted detailed brief the DM uses to run the module faithfully"
     },
+    "game_system": {
+      "type": "string",
+      "description": "RPG system this module is for (add1e, starfrontiers)",
+      "default": "add1e"
+    },
     "author": {
       "type": "string"
     },

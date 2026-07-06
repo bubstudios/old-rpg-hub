@@ -77,7 +77,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
     (async () => {
       try {
         setLoadingModules(true);
-        const res = await base44.functions.invoke('moduleLibrary', { op: 'list' });
+        const res = await base44.functions.invoke('moduleLibrary', { op: 'list', game_system: gameSystem });
         setModules(res.data.modules || []);
       } catch (e) { /* modules optional */ } finally {
         setLoadingModules(false);
@@ -209,7 +209,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No modules uploaded yet. Visit the Library to add one.
+            No {isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

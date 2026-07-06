@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Library, Plus, Upload, Loader2, Globe, Lock, Trash2, BookOpen, X } from 'lucide-react';
 import ModuleUploadForm from '@/components/ModuleUploadForm';
+import { getGameSystem } from '@/lib/gameSystems';
 import { toast } from 'sonner';
 
 export default function ModuleLibrary() {
@@ -109,6 +110,11 @@ export default function ModuleLibrary() {
                   {m.author && <span className="text-muted-foreground/70">{m.author}</span>}
                   {m.recommended_levels && <span className="text-primary/60">{m.recommended_levels}</span>}
                   {m.is_mine && <span className="text-amber-400/80">YOUR UPLOAD</span>}
+                </div>
+                <div className="mt-1.5">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-heading tracking-wide border border-border/50 text-muted-foreground/80">
+                    {getGameSystem(m.game_system || 'add1e').short}
+                  </span>
                 </div>
                 {m.is_mine && (
                   <button onClick={() => handleDelete(m.id)} className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-destructive transition-colors">
