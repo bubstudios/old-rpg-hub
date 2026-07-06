@@ -81,6 +81,31 @@ const GW_SETUP = {
   forgeLabel: 'Venture Forth'
 };
 
+const BH_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Crosshair, desc: 'A mix of gunfights, frontier drama, and exploration' },
+  { id: 'combat_heavy', label: 'Gunfighter', icon: Swords, desc: 'Frequent shootouts and quick-draw showdowns' },
+  { id: 'dungeon_crawler', label: 'Border Patrol', icon: Compass, desc: 'Riding the range, tracking outlaws, and holding the line' },
+  { id: 'sandbox', label: 'Open Range', icon: Map, desc: 'A free-roaming territory, go where you please' },
+  { id: 'character_driven', label: 'Frontier Saga', icon: Drama, desc: 'Saloon politics, feuds, and personal legends' }
+];
+
+const BH_WORLDS = [
+  'Tombstone Territory',
+  'Dodge City',
+  'Abilene',
+  'The Dakota Badlands',
+  'Promise City',
+  'A custom frontier of my own'
+];
+
+const BH_SETUP = {
+  worldLabel: 'NAME YOUR TERRITORY',
+  worldPlaceholder: 'Name the town or territory (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A dying silver-mining town where a cattle baron hires guns to run roughshod over the locals, and the party drift in looking for work — and trouble.'",
+  namePlaceholder: 'e.g. High Noon at Promise City',
+  forgeLabel: 'Saddle Up'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -94,9 +119,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   const isSF = gameSystem === 'starfrontiers';
   const isGW = gameSystem === 'gammaworld';
-  const tones = isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
-  const worlds = isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
+  const isBH = gameSystem === 'boothill';
+  const tones = isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
+  const worlds = isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -112,7 +138,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -234,7 +260,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

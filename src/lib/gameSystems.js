@@ -45,6 +45,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/edaad6b2b_generated_image.png",
     icon: "atom",
     enterLabel: "Emerge into the Wastes"
+  },
+  {
+    id: "boothill",
+    name: "Boot Hill",
+    short: "Boot Hill",
+    tagline: "Wild West gunfighting",
+    description:
+      "Step into the dust and danger of the Old West — quick-draw showdowns, frontier justice, and saloon intrigue in this classic 1979 TSR western role-playing game, ruled by an AI Game Master. Roll your percentile stats, check your six-shooter, and see if you're quick enough to cheat Boot Hill.",
+    dashboardTitle: "BOOT HILL",
+    dashboardSubtitle:
+      "A classic Boot Hill Wild West campaign, ruled by an AI Game Master. Ride into a frontier town, check your iron, and carve out a legend — where every draw is written in smoke that cannot be unhaled.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/ed1ccd9e4_generated_image.png",
+    icon: "crosshair",
+    enterLabel: "Ride into Town"
   }
 ];
 

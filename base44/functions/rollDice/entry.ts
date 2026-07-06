@@ -38,7 +38,10 @@ Deno.serve(async (req) => {
     let summary = '';
     const isSF = body.game_system === 'starfrontiers';
     const isGW = body.game_system === 'gammaworld';
+    const isBH = body.game_system === 'boothill';
     const GW_ABILITY_LABELS = { ps: 'PS', ms: 'MS', dx: 'DX', cn: 'CN', in: 'IN', ch: 'CH', sn: 'SN' };
+    const BH_ABILITY_LABELS = { spd: 'SPD', gacc: 'GACC', tacc: 'TACC', str: 'STR', brv: 'BRV', exp: 'EXP' };
+    const BH_WEAPON_SKILLS = ['Brawling', 'Fast Draw', 'Pistol', 'Rifle', 'Shotgun'];
 
     // --- Star Frontiers roll types (percentile, roll-under) ---
     if (isSF && roll_type === 'attack') {
@@ -133,6 +136,100 @@ Deno.serve(async (req) => {
         target: `CH mod ${moraleMod >= 0 ? '+' : ''}${moraleMod}`
       });
       summary = `${char.name} morale check: d10${moraleMod >= 0 ? '+' : ''}${moraleMod} = ${total}.`;
+    }
+    // --- Boot Hill roll types (percentile d100) ---
+    else if (isBH && roll_type === 'attack') {
+      const firearm = body.firearm !== false;
+      const base = firearm ? (scores.gacc || 50) : (scores.tacc || 50);
+      const brv = Math.floor((scores.brv || 50) / 20) - 5;
+      const charWeaponSkills = (char.skills || []).filter(s => BH_WEAPON_SKILLS.includes(s.name));
+      const weaponBonus = charWeaponSkills.length ? Math.max(...charWeaponSkills.map(s => Number(s.level) || 0)) * 10 : 0;
+      const modifier = Number(body.modifier) || 0;
+      const hitNumber = Math.min(95, Math.max(5, base + brv + weaponBonus + modifier));
+      const d100 = rollDie(100);
+      const success = d100 <= hitNumber;
+      rolls.push({
+        description: firearm ? 'Firearm attack' : 'Thrown weapon attack',
+        die: 'd100', roll: d100, modifier: brv + weaponBonus + modifier, total: d100,
+        result: success ? 'Hit' : 'Miss', target: `need ≤ ${hitNumber}%`
+      });
+      summary = `${char.name} ${firearm ? 'fires' : 'throws'}: d100 = ${d100} vs ${hitNumber}% — ${success ? 'HIT' : 'MISS'}.`;
+    }
+    else if (isBH && roll_type === 'wound') {
+      const WOUND_LOCATIONS = [
+        { min: 1, max: 5, part: 'Head', mortal: true },
+        { min: 6, max: 10, part: 'Right Shoulder', mortal: false },
+        { min: 11, max: 15, part: 'Left Shoulder', mortal: false },
+        { min: 16, max: 20, part: 'Right Arm', mortal: false },
+        { min: 21, max: 25, part: 'Left Arm', mortal: false },
+        { min: 26, max: 40, part: 'Chest', mortal: true },
+        { min: 41, max: 55, part: 'Abdomen', mortal: false },
+        { min: 56, max: 70, part: 'Right Leg', mortal: false },
+        { min: 71, max: 85, part: 'Left Leg', mortal: false },
+        { min: 86, max: 100, part: 'Hand / Groin', mortal: false }
+      ];
+      const WOUND_SEVERITY = [
+        { min: 1, max: 25, severity: 'Slight', damage: 1 },
+        { min: 26, max: 50, severity: 'Light', damage: 2 },
+        { min: 51, max: 70, severity: 'Medium', damage: 4 },
+        { min: 71, max: 85, severity: 'Serious', damage: 8 },
+        { min: 86, max: 95, severity: 'Critical', damage: 16 },
+        { min: 96, max: 100, severity: 'Mortal', damage: 999 }
+      ];
+      const locRoll = rollDie(100);
+      const loc = WOUND_LOCATIONS.find(l => locRoll >= l.min && locRoll <= l.max) || WOUND_LOCATIONS[0];
+      const sevRoll = rollDie(100);
+      let sev = WOUND_SEVERITY.find(s => sevRoll >= s.min && sevRoll <= s.max) || WOUND_SEVERITY[0];
+      if (loc.mortal && sev.severity !== 'Mortal' && sevRoll >= 86) sev = WOUND_SEVERITY[5];
+      rolls.push({
+        description: 'Wound location',
+        die: 'd100', roll: locRoll, modifier: 0, total: locRoll,
+        result: loc.part + (loc.mortal ? ' (vital)' : '')
+      });
+      rolls.push({
+        description: `Wound severity — ${loc.part}`,
+        die: 'd100', roll: sevRoll, modifier: 0, total: sevRoll,
+        result: sev.severity, target: sev.damage === 999 ? 'Mortal wound' : `-${sev.damage} Grit`
+      });
+      summary = `Wound: ${loc.part} — ${sev.severity} (${sev.damage === 999 ? 'mortal wound' : '-' + sev.damage + ' Grit'}).`;
+    }
+    else if (isBH && roll_type === 'ability') {
+      const ability = body.ability;
+      if (!BH_ABILITY_LABELS[ability]) return Response.json({ error: 'Invalid ability' }, { status: 400 });
+      const score = scores[ability] || 50;
+      const d100 = rollDie(100);
+      const success = d100 <= score;
+      rolls.push({
+        description: `${BH_ABILITY_LABELS[ability]} check`,
+        die: 'd100', roll: d100, modifier: 0, total: d100,
+        result: success ? 'Success' : 'Failure',
+        target: `need ≤ ${score}`
+      });
+      summary = `${char.name} ${BH_ABILITY_LABELS[ability]} check: d100 = ${d100} vs ${score} — ${success ? 'SUCCESS' : 'FAILURE'}.`;
+    }
+    else if (isBH && roll_type === 'initiative') {
+      const spd = scores.spd || 50;
+      const initMod = Math.floor(spd / 10);
+      const d10 = rollDie(10);
+      const total = d10 + initMod;
+      rolls.push({
+        description: 'Initiative',
+        die: 'd10', roll: d10, modifier: initMod, total,
+        target: `SPD/10 = ${initMod}`
+      });
+      summary = `${char.name} initiative: SPD/10 ${initMod} + d10 ${d10} = ${total}.`;
+    }
+    else if (isBH && roll_type === 'quickdraw') {
+      const spd = scores.spd || 50;
+      const d100 = rollDie(100);
+      const success = d100 <= spd;
+      rolls.push({
+        description: 'Quick draw',
+        die: 'd100', roll: d100, modifier: 0, total: d100,
+        result: success ? 'Fast' : 'Slow',
+        target: `need ≤ ${spd} (Speed)`
+      });
+      summary = `${char.name} quick draw: d100 = ${d100} vs Speed ${spd} — ${success ? 'FAST (won the draw)' : 'SLOW (lost the draw)'}.`;
     }
     // --- AD&D roll types ---
     else if (roll_type === 'attack') {

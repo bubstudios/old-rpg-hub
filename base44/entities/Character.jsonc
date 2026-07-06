@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D), species (Star Frontiers), or genotype (Gamma World)"
+      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), or background (Boot Hill)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D), primary skill area (Star Frontiers), or genotype (Gamma World)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background (Boot Hill)"
     },
     "level": {
       "type": "number",
@@ -96,6 +96,21 @@
         },
         "sn": {
           "type": "number"
+        },
+        "spd": {
+          "type": "number"
+        },
+        "gacc": {
+          "type": "number"
+        },
+        "tacc": {
+          "type": "number"
+        },
+        "brv": {
+          "type": "number"
+        },
+        "exp": {
+          "type": "number"
         }
       }
     },
@@ -142,7 +157,7 @@
     "gold": {
       "type": "number",
       "default": 0,
-      "description": "Gold (AD&D), credits (Star Frontiers), or domars (Gamma World)"
+      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill)"
     },
     "equipment": {
       "type": "array",
@@ -163,7 +178,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Star Frontiers skills (name + level); unused in AD&D and Gamma World",
+      "description": "Skills (name + level): Star Frontiers PSA skills, or Boot Hill weapon/work skills (level = proficiency or percentile)",
       "items": {
         "type": "object",
         "properties": {
@@ -178,7 +193,7 @@
     },
     "mutations": {
       "type": "array",
-      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D and Star Frontiers",
+      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D, Star Frontiers, and Boot Hill",
       "items": {
         "type": "object",
         "properties": {

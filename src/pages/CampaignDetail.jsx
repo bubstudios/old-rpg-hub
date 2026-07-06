@@ -7,6 +7,7 @@ import JournalEntryCard from '@/components/JournalEntryCard';
 import DiceRollerPanel from '@/components/DiceRollerPanel';
 import SFDiceRollerPanel from '@/components/SFDiceRollerPanel';
 import GWDiceRollerPanel from '@/components/GWDiceRollerPanel';
+import BHDiceRollerPanel from '@/components/BHDiceRollerPanel';
 import { Button } from '@/components/ui/button';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
@@ -276,7 +277,7 @@ export default function CampaignDetail() {
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
-                {myCharacter?.name?.toUpperCase()} · {campaign?.game_system === 'gammaworld' ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
+                {myCharacter?.name?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
               </span>
               <button
                 onClick={() => setDiscussMode((m) => !m)}
@@ -309,6 +310,14 @@ export default function CampaignDetail() {
                   onRolled={handleRollCompleted}
                   onClose={() => setDiceOpen(false)}
                 />
+              ) : campaign?.game_system === 'boothill' ? (
+                <BHDiceRollerPanel
+                  myCharacter={myCharacter}
+                  campaignId={campaignId}
+                  chapter={campaign.current_chapter}
+                  onRolled={handleRollCompleted}
+                  onClose={() => setDiceOpen(false)}
+                />
               ) : (
                 <DiceRollerPanel
                   myCharacter={myCharacter}
@@ -331,6 +340,8 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We dock at the station and scan for traffic..." : "What does your operative do?")
                     : campaign?.game_system === 'gammaworld'
                     ? (isSetup ? "e.g. We pick through the ruins of an ancient store, watching for movement..." : "What does your mutant do?")
+                    : campaign?.game_system === 'boothill'
+                    ? (isSetup ? "e.g. We ride into town and hitch our horses outside the saloon..." : "What does your gunslinger do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}

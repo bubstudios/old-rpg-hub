@@ -267,6 +267,37 @@ Deno.serve(async (req) => {
         return Response.json({ character });
       }
 
+      // Boot Hill branch: HP = Strength (percentile), percentile attributes, no THAC0/saves/spells
+      if (game_system === 'boothill') {
+        const str = Math.max(1, Math.round((ability_scores && ability_scores.str) || 50));
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'boothill',
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: str,
+          hp_max: str,
+          ac: 0,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
       const cls = CLASSES[character_class];
       if (!cls) return Response.json({ error: 'Invalid class' }, { status: 400 });
 
@@ -308,17 +339,20 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
-      const systemContext = isSF
+      const isBH = sys === 'boothill';
+      const systemContext = isBH
+        ? 'a Boot Hill Wild West role-playing campaign (percentile attributes — Speed, Gun Accuracy, Throwing Accuracy, Strength, Bravery, Experience; quick-draw shootouts, wound location and severity tables, frontier towns, dollars)'
+        : isSF
         ? 'a Star Frontiers sci-fi role-playing campaign (percentile d100 skills, stamina, species like Human/Yazirian/Vrusk/Dralasite, the Frontier)'
         : isGW
         ? 'a Gamma World post-apocalyptic science-fantasy role-playing campaign (7 attributes 3-18, mutations physical and mental, genotypes like Pure Strain Human/Altered Human/Mutated Animal/Sentient Plant, domars, Gamma Terra ruins)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are reading a document that chronicles an ONGOING tabletop role-playing campaign — ${systemContext}. The party has already been playing and wants an AI ${isSF ? 'Game Master' : 'Dungeon Master'} to take over and continue seamlessly from where they left off.
+        prompt: `You are reading a document that chronicles an ONGOING tabletop role-playing campaign — ${systemContext}. The party has already been playing and wants an AI ${isSF || isBH ? 'Game Master' : 'Dungeon Master'} to take over and continue seamlessly from where they left off.
 
 Read the document in full and extract the campaign's established state.
 
@@ -407,6 +441,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
 
       const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
       const isGW = (campaign.game_system || 'add1e') === 'gammaworld';
+      const isBH = (campaign.game_system || 'add1e') === 'boothill';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -437,6 +472,23 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
           ac: { type: "number" },
           gold: { type: "number" },
           mutations: { type: "array", items: { type: "object", properties: { name: { type: "string" }, type: { type: "string" }, defect: { type: "boolean" }, description: { type: "string" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isBH ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { spd: { type: "number" }, gacc: { type: "number" }, tacc: { type: "number" }, str: { type: "number" }, brv: { type: "number" }, exp: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
           equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
           appearance: { type: "string" },
           background: { type: "string" }
@@ -497,6 +549,21 @@ Extract:
 - equipment: array of {name, qty}
 - appearance: physical description if present
 - background: backstory if present`
+        : isBH
+        ? `You are reading a Boot Hill Wild West character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the gunslinger's name
+- race: their background or occupation (Gunfighter, Lawman, Cowboy, Gambler, Outlaw, Scout)
+- character_class: same as race/background
+- level: experience level (default 1)
+- ability_scores: the six percentile attributes (1-100) — spd (Speed), gacc (Gun Accuracy), tacc (Throwing Accuracy), str (Strength), brv (Bravery), exp (Experience)
+- hp_current and hp_max: current and max grit (equals Strength)
+- gold: dollars
+- skills: array of {name, level} — weapon skills (level = proficiency 1-6) and work skills (level = percentile score)
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -539,25 +606,26 @@ Extract:
       const ability_scores = (ext && ext.ability_scores) || {};
       const staFallback = (ability_scores.sta && Number(ability_scores.sta)) || 50;
       const cnFallback = (ability_scores.cn && Number(ability_scores.cn)) || 10;
+      const strFallback = (ability_scores.str && Number(ability_scores.str)) || 50;
 
       const character = await base44.entities.Character.create({
         name: charName.trim(),
         campaign_id,
-        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : 'add1e',
-        race: (ext && ext.race) || (isGW ? 'Altered Human' : 'Human'),
-        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : 'Fighter'),
+        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : 'add1e',
+        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : 'Human'),
+        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',
         ability_scores,
         level: Math.max(1, Number(ext && ext.level) || 1),
-        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : 1),
-        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : 1),
-        ac: Number(ext && ext.ac) || (isSF ? 0 : 10),
-        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : 20),
+        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : isBH ? strFallback : 1),
+        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : isBH ? strFallback : 1),
+        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : 10),
+        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : 20),
         xp: Number(ext && ext.xp) || 0,
         saving_throws: (ext && ext.saving_throws) || {},
         gold: Number(ext && ext.gold) || 0,
         equipment: (ext && ext.equipment) || [],
-        skills: isSF ? (ext && ext.skills) || [] : [],
+        skills: (isSF || isBH) ? (ext && ext.skills) || [] : [],
         mutations: isGW ? (ext && ext.mutations) || [] : [],
         spells: isSF ? [] : (ext && ext.spells) || [],
         spell_slots: {},

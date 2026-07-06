@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import SFCharacterCreation from '@/pages/SFCharacterCreation';
 import GWCharacterCreation from '@/pages/GWCharacterCreation';
+import BHCharacterCreation from '@/pages/BHCharacterCreation';
 import ImportCharacterSheetForm from '@/components/ImportCharacterSheetForm';
 
 const STEPS = ['Race', 'Class', 'Ability Scores', 'Alignment', 'Identity', 'Review'];
@@ -42,6 +43,7 @@ export default function CharacterCreation() {
 
   if (gameSystem === 'starfrontiers') return <SFCharacterCreation />;
   if (gameSystem === 'gammaworld') return <GWCharacterCreation />;
+  if (gameSystem === 'boothill') return <BHCharacterCreation />;
   if (!gameSystem) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">

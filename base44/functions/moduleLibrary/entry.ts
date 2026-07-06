@@ -60,8 +60,9 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
+      const isBH = gameSystem === 'boothill';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -101,6 +102,46 @@ Rules:
 - Be thorough — better too much detail than too little. The GM needs area-by-area content.
 - Preserve exact numbers (damage, STA, skill check targets, credit amounts).
 - Use Star Frontiers mechanics: percentile (d100) skill checks, STA/stamina, species (Human, Yazirian, Vrusk, Dralasite), PSA skill areas (Military, Technological, Biosocial).
+- If the document is not an adventure module, still extract whatever useful content exists and note that.
+- Write in clear prose. This brief will be injected into the GM's instructions.`
+        : isBH
+        ? `You are preparing a detailed reference brief from an uploaded Boot Hill Wild West adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players.
+
+## KEY LOCATIONS & AREAS
+For EACH location, building, or area, preserve: the location name; what the party sees (description); contents (NPCs, outlaws, gear, hazards, secrets); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know.
+
+## COMBATANTS & GUNFIGHTS
+Outlaw types, stats, numbers, tactics, weapons, special abilities. Note intended gunfight locations and ambush points.
+
+## TREASURE & EQUIPMENT
+Notable gear, weapons, horses, dollars, and items, with locations.
+
+## HAZARDS & TRAPS
+Each hazard: where, what it does, how to detect/avoid, damage.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, random encounters, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be thorough — better too much detail than too little. The GM needs area-by-area content.
+- Preserve exact numbers (damage, attribute scores, dollar amounts).
+- Use Boot Hill mechanics: percentile (d100) attributes (Speed, Gun Accuracy, Throwing Accuracy, Strength, Bravery, Experience), wound location/severity tables, quick-draw, dollars.
 - If the document is not an adventure module, still extract whatever useful content exists and note that.
 - Write in clear prose. This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.
