@@ -9,6 +9,8 @@ import SFDiceRollerPanel from '@/components/SFDiceRollerPanel';
 import GWDiceRollerPanel from '@/components/GWDiceRollerPanel';
 import BHDiceRollerPanel from '@/components/BHDiceRollerPanel';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices
@@ -29,6 +31,10 @@ export default function CampaignDetail() {
   const [diceOpen, setDiceOpen] = useState(false);
   const [discussMode, setDiscussMode] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [briefOpen, setBriefOpen] = useState(false);
+  const [briefText, setBriefText] = useState('');
+  const [savingBrief, setSavingBrief] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -59,6 +65,8 @@ export default function CampaignDetail() {
       setCampaign(data.campaign);
       setCharacters(data.characters);
       setMyCharacter(data.my_character);
+      setIsOwner(!!data.is_owner);
+      setBriefText(data.campaign?.dm_brief || '');
 
       if (!data.my_character) {
         navigate(`/campaign/${campaignId}/create-character`);
@@ -181,6 +189,20 @@ export default function CampaignDetail() {
     }
   }
 
+  async function handleSaveBrief() {
+    setSavingBrief(true);
+    try {
+      await base44.functions.invoke('campaignData', { op: 'updateDmBrief', campaign_id: campaignId, dm_brief: briefText });
+      setCampaign(prev => prev ? { ...prev, dm_brief: briefText } : prev);
+      toast.success('DM Brief saved — the DM will follow it from the next turn.');
+      setBriefOpen(false);
+    } catch (e) {
+      toast.error('Failed to save DM Brief');
+    } finally {
+      setSavingBrief(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -228,6 +250,11 @@ export default function CampaignDetail() {
             <span>CODE: {campaign.invite_code}</span>
             <Copy className="w-3 h-3" />
           </button>
+          {isOwner && (
+            <Button variant="ghost" size="sm" onClick={() => setBriefOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
+              <ScrollText className="w-3.5 h-3.5 mr-1" /> DM Brief
+            </Button>
+          )}
           <Link to={`/campaign/${campaignId}/journal`}>
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-8">
               <BookOpen className="w-3.5 h-3.5 mr-1" /> Journal
@@ -414,6 +441,30 @@ export default function CampaignDetail() {
           )}
         </aside>
       </div>
+
+      {/* DM Brief editor (owner only) */}
+      <Dialog open={briefOpen} onOpenChange={setBriefOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading tracking-wide">Dungeon Master Brief</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground font-body leading-relaxed">
+            Custom instructions for how the DM runs this table — tone, pacing, narration length, dice philosophy, NPCs, and table discipline. The DM reads this every turn and follows it over its defaults.
+          </p>
+          <Textarea
+            value={briefText}
+            onChange={(e) => setBriefText(e.target.value)}
+            placeholder="Paste your DM Brief here..."
+            className="min-h-[320px] font-body text-sm"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBriefOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveBrief} disabled={savingBrief} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {savingBrief ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Brief'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

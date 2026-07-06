@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
         campaign,
         characters,
         my_character: myCharacter || null,
-        module_title
+        module_title,
+        is_owner: campaign.created_by_id === user.id
       });
     }
 
@@ -666,6 +667,19 @@ Extract:
         ...sessions.map(s => base44.entities.Session.delete(s.id))
       ]);
 
+      return Response.json({ success: true });
+    }
+
+    // Update the campaign's DM Brief (group's custom DM instructions — creator only)
+    if (op === 'updateDmBrief') {
+      const { campaign_id, dm_brief } = body;
+      if (!campaign_id) return Response.json({ error: 'campaign_id required' }, { status: 400 });
+      const campaign = await admin.entities.Campaign.get(campaign_id);
+      if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
+      if (campaign.created_by_id !== user.id) {
+        return Response.json({ error: 'Only the campaign creator can edit the DM Brief' }, { status: 403 });
+      }
+      await base44.entities.Campaign.update(campaign_id, { dm_brief: (dm_brief || '').trim() });
       return Response.json({ success: true });
     }
 

@@ -211,7 +211,7 @@ export default function Home() {
                     onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.name); }}
                     disabled={deletingId === c.id}
                     title="Delete campaign"
-                    className="absolute top-2 right-2 p-1.5 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                    className="absolute top-2 right-2 p-1.5 rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
                   >
                     {deletingId === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>

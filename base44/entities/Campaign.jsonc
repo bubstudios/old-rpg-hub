@@ -61,6 +61,10 @@
       "type": "string",
       "description": "Imported ongoing-campaign history brief the DM uses as established memory to continue the story"
     },
+    "dm_brief": {
+      "type": "string",
+      "description": "The group's custom Dungeon Master instructions \u2014 tone, pacing, narration length, dice philosophy, NPCs, and table discipline the DM follows over its defaults"
+    },
     "current_chapter": {
       "type": "number",
       "default": 1

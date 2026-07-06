@@ -94,6 +94,11 @@ Deno.serve(async (req) => {
       chronicleBrief = `\n## Campaign Chronicle\nThis campaign was imported from an ongoing game the party was already playing. The document below is their established story — everything in it is canon and already happened. Pick up EXACTLY where they left off: honor all past events, NPCs, loot, and world state. Do NOT restart the adventure or re-introduce completed events. Continue forward from the current scene.\n\n${campaign.chronicle}`;
     }
 
+    // DM Brief: the group's custom instructions for how the DM should run the table
+    const dmBriefBlock = campaign.dm_brief && String(campaign.dm_brief).trim()
+      ? `\n## DM Brief — House Style (follow this over your defaults)\nThe group has provided the following instructions for how you should run this table. Treat it as authoritative for tone, pacing, narration length, dice philosophy, NPC portrayal, and table discipline. Follow it over any generic instinct about "helpful" AI behavior. When it conflicts with your default style, the brief wins.\n\n${String(campaign.dm_brief).trim()}`
+      : '';
+
     const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
     const isGW = (campaign.game_system || 'add1e') === 'gammaworld';
     const isBH = (campaign.game_system || 'add1e') === 'boothill';
@@ -142,7 +147,7 @@ You are the ONLY Dungeon Master. There is no human DM. You handle ALL rulings, n
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
 
 ## AD&D 1st Edition Rules (Core)
 - Ability scores: STR, INT, WIS, DEX, CON, CHA (3-18, rolled 3d6 in order)
@@ -207,7 +212,7 @@ You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narr
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
 
 ## Star Frontiers Rules (Core)
 - Species: Human (adaptable), Dralasite (amoeba-like, lie detection), Vrusk (insectoid, high logic), Yazirian (ape-like, battle rage).
@@ -270,7 +275,7 @@ You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narr
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
 
 ## Gamma World Rules (Core)
 - Setting: Earth centuries after "The Social Wars" — a catastrophic conflict using biogenetic weapons, nuclear arms, and ancient technology. Civilization collapsed; the land is littered with ruins of the "Ancients," overrun by mutant plants, animals, and humans. The world is weird, dangerous, and wondrous — lost tech, radiation zones, cryptic alliances, and bizarre mutants.
@@ -340,7 +345,7 @@ You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narr
 
 ## Campaign Direction
 This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
-${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
 
 ## Boot Hill 2nd Edition Rules (Core)
 - Attributes are PERCENTILE (1-100, rolled d100). The six attributes are:
