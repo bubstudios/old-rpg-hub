@@ -60,10 +60,11 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';
+      const isIJ = gameSystem === 'indianajones';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -183,6 +184,46 @@ Rules:
 - Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: creatures, treasure, traps, secrets).
 - Preserve exact numbers (damage, HP, attribute scores, domar amounts).
 - Use Gamma World mechanics: 7 attributes 3-18 (PS Physical Strength, MS Mental Strength, DX Dexterity, CN Constitution, IN Intelligence, CH Charisma, SN Senses), mutations (physical and mental, with defects), genotypes (Pure Strain Human, Altered Human, Mutated Animal, Sentient Plant), domars (ancient currency), Tech Levels for artifacts, Gamma Terra setting.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isIJ
+        ? `You are preparing a detailed reference brief from an uploaded Indiana Jones pulp adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the 1930s time period and locale.
+
+## KEY LOCATIONS & AREAS
+For EACH location, tomb, ruin, or area, preserve: the location name; what the party sees (description); contents (NPCs, enemies, artifacts, hazards, secrets, puzzles, traps); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note rival archaeologists, Nazis, gangsters, locals, and allies.
+
+## ENEMIES & COMBAT
+Enemy types (Nazis, mercenaries, thugs, cultists, natives, wild animals), stats, numbers, tactics, weapons. Note intended fight locations, chases, and ambush points.
+
+## TREASURE & ARTIFACTS
+Notable artifacts, gear, weapons, dollars, and items, with locations. Note any ancient artifacts and their powers/curses.
+
+## HAZARDS & TRAPS
+Each hazard/trap: where, what it does, how to detect/avoid, damage. Include ancient traps, poison, environmental hazards, collapsing structures.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, chase rules, random encounters, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: enemies, treasure, traps, secrets).
+- Preserve exact numbers (damage, attribute scores, dollar amounts, wound levels).
+- Use Indiana Jones mechanics: six percentile attributes 1-100 (Strength, Movement, Prowess, Backbone, Instinct, Appeal), d100 roll-under resolution, Prowess for combat to-hit, light/medium/serious wound levels, dollars, 1930s pulp setting.
 - If the document is not an adventure module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.

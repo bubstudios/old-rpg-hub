@@ -60,6 +60,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/ed1ccd9e4_generated_image.png",
     icon: "crosshair",
     enterLabel: "Ride into Town"
+  },
+  {
+    id: "indianajones",
+    name: "Indiana Jones",
+    short: "Indiana Jones",
+    tagline: "1930s pulp adventure",
+    description:
+      "Step into the 1930s as a two-fisted archaeologist adventurer — lost temples, ancient artifacts, rival treasure hunters, and Nazis to punch, in this classic 1984 TSR pulp action-adventure role-playing game, ruled by an AI Game Master. Roll your percentile stats, check your revolver, and see if you can outrun the boulder.",
+    dashboardTitle: "THE PULP ADVENTURES",
+    dashboardSubtitle:
+      "A classic Indiana Jones pulp adventure campaign, ruled by an AI Game Master. Globe-trot for lost artifacts in the 1930s, outwit Nazis and rival archaeologists, and brave ancient traps — where every escape is written in dust that cannot be unbreathed.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/4608283ff_generated_image.png",
+    icon: "compass",
+    enterLabel: "Begin the Expedition"
   }
 ];
 

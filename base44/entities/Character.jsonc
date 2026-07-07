@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), or background (Boot Hill)"
+      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background (Boot Hill)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones)"
     },
     "level": {
       "type": "number",
@@ -111,6 +111,26 @@
         },
         "exp": {
           "type": "number"
+        },
+        "mov": {
+          "type": "number",
+          "description": "Movement (Indiana Jones) \u2014 action speed, reflexes, initiative"
+        },
+        "prw": {
+          "type": "number",
+          "description": "Prowess (Indiana Jones) \u2014 dexterity, coordination, combat to-hit"
+        },
+        "bck": {
+          "type": "number",
+          "description": "Backbone (Indiana Jones) \u2014 courage, determination, willpower"
+        },
+        "ins": {
+          "type": "number",
+          "description": "Instinct (Indiana Jones) \u2014 perception, intuition, sixth sense"
+        },
+        "app": {
+          "type": "number",
+          "description": "Appeal (Indiana Jones) \u2014 personality, charm, physical presence"
         }
       }
     },
@@ -157,7 +177,7 @@
     "gold": {
       "type": "number",
       "default": 0,
-      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill)"
+      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones)"
     },
     "equipment": {
       "type": "array",
@@ -178,7 +198,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Skills (name + level): Star Frontiers PSA skills, or Boot Hill weapon/work skills (level = proficiency or percentile)",
+      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, or Indiana Jones weapon/work skills (level = proficiency or percentile)",
       "items": {
         "type": "object",
         "properties": {
@@ -193,7 +213,7 @@
     },
     "mutations": {
       "type": "array",
-      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D, Star Frontiers, and Boot Hill",
+      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D, Star Frontiers, Boot Hill, and Indiana Jones",
       "items": {
         "type": "object",
         "properties": {

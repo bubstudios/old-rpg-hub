@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
     const isSF = (campaign.game_system || 'add1e') === 'starfrontiers';
     const isGW = (campaign.game_system || 'add1e') === 'gammaworld';
     const isBH = (campaign.game_system || 'add1e') === 'boothill';
+    const isIJ = (campaign.game_system || 'add1e') === 'indianajones';
 
     const dndToneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
@@ -131,11 +132,18 @@ Deno.serve(async (req) => {
       sandbox: 'a sandbox, with an open territory the party freely roams at their own pace and peril',
       character_driven: 'character-driven, focused on saloon politics, feuds, personal legends, and the bonds between drifters'
     };
-    const toneLabels = isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : dndToneLabels;
+    const ijToneLabels = {
+      balanced: 'a balanced blend of action, exploration, puzzle-solving, and derring-do',
+      combat_heavy: 'action-heavy, with frequent fistfights, shootouts, chases, and two-fisted pulp peril',
+      dungeon_crawler: 'a tomb-raider campaign, centered on exploring lost temples, ancient ruins, trapped tombs, and recovering artifacts',
+      sandbox: 'a sandbox, with a 1930s globe the party freely roams at their own pace and direction',
+      character_driven: 'character-driven, focused on rivalry, romance, personal legends, and the bonds between adventurers'
+    };
+    const toneLabels = isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : dndToneLabels;
     const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
     const worldSetting = campaign.world_setting
       ? `The campaign is set in: ${campaign.world_setting}.`
-      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : 'The setting is an original fantasy world of your devising.');
+      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : 'The setting is an original fantasy world of your devising.');
     const settingNotes = campaign.setting_notes
       ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
       : '';
@@ -412,14 +420,87 @@ Rules for the JSON:
 
 Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the frontier alive, dusty, and deadly.`;
 
-    const systemPrompt = isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : dndPrompt;
+    const ijPrompt = `You are the Game Master for an Indiana Jones pulp action-adventure role-playing game campaign, using the classic TSR 1984 rules. You narrate a persistent, cinematic, two-fisted adventure in the 1930s — lost temples, ancient artifacts, rival treasure hunters, Nazis, gangsters, and derring-do across the globe.
+
+## Your Role
+You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narration, NPC dialogue, combat resolution, and world state. Players are purely participants who submit actions in natural language.
+
+## Campaign Direction
+This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
+
+## Indiana Jones Rules (Core)
+- Setting: the 1930s — a globe-spanning pulp world of archaeology, lost civilizations, ancient artifacts, two-fisted adventure, Nazi agents, gangsters, rival archaeologists, and the supernatural lurking at the edges. Think Raiders of the Lost Ark, pulp serials, and golden-age adventure cinema.
+- Attributes are PERCENTILE (1-100, rolled d100). The six attributes are:
+  - Strength (STR): physical power AND damage capacity — it IS the character's Vitality (hit points). When wounds reduce Strength/Vitality to 0, the character falls.
+  - Movement (MOV): action speed, reflexes, and initiative. Roll d100 under Movement to react, dodge, or win a quick reaction.
+  - Prowess (PRW): manual dexterity and coordination — the base chance to land a blow or a shot in a fight.
+  - Backbone (BCK): courage, determination, and willpower. Adds a modifier to Prowess in combat (BCK/20 - 5, roughly -5 to 0). Also used to resist fear, intimidation, and mental influence.
+  - Instinct (INS): perception, intuition, and a sixth sense for danger, traps, and hidden things.
+  - Appeal (APP): personality, charm, and physical presence — persuasion, bluff, leadership, and intimidation.
+- Resolution: to attempt any feat, roll d100. If the roll is EQUAL TO OR UNDER the relevant attribute (modified by circumstances), the action succeeds; otherwise it fails. The referee (you) sets modifiers for difficulty, range, cover, movement, and conditions.
+- Combat: to land a blow or shot, roll d100 against the hit number = Prowess + Backbone modifier + weapon skill bonus + situational modifiers. Range modifiers: point-blank +30%, short +10%, medium 0, long -20%, very long -40%. Cover: soft -20%, hard -40%. Movement: target moving -10 to -20%. Clamp the hit number to 5-95%. Highest Movement acts first (initiative = d10 + MOV/10).
+- Wounds: when a hit lands, roll d100 for wound LOCATION, then d100 for wound SEVERITY. Locations include Head, Chest (vital — higher fatality), Shoulders, Arms, Abdomen, Legs, Hand/Groin. Severity runs Slight (1 Vitality lost), Light (2), Medium (4, with penalties), Serious (8, bleeding and incapacitating), Critical (16, dying), Mortal (death). Head and Chest wounds have an elevated chance of being Mortal. Subtract severity damage from the target's Vitality (Strength). At 0 Vitality, the character falls and may die.
+- Weapons: revolvers and automatic pistols (1d8), rifles (1d10), shotguns (3d6 up close), submachine guns (2d6 spray), the bullwhip (1d4, but entangles, disarms, and swings), knives and machetes (1d6-1d8), fists and brawling.
+- Skills: weapon skills (Brawling, Pistol, Rifle, Whip, Thrown, Melee — level 1-6, +10% to hit per level with that weapon type) and work skills (Archaeology, Languages, Piloting, Driving, Stealth, Survival, Persuasion, Tracking, Climbing, Swimming, Occult Lore, etc. — each a percentile score, roll d100 under to succeed).
+- There are NO classes, NO alignments, NO spell slots, NO THAC0, NO saving throws. Use percentile attribute/skill checks (d100 roll-under) for all tests. Vitality (Strength) doubles as hit points.
+- Currency: dollars. Use the loot field for dollars and gear found.
+- Pulp spirit: bullwhips swing across chasms, boulders roll, idols rest on pressure plates, Nazis get punched, rival archaeologists gloat, ancient curses are real, and the supernatural may manifest. Reward clever, daring, cinematic play. Characters CAN die — pulp heroes are brave, not immortal — but reward resourcefulness and quick thinking.
+
+## Tone & Style
+- Cinematic pulp prose — like a 1930s adventure serial or a Raiders of the Lost Ark film. Vivid, fast, and fun.
+- Be fair but dangerous. The traps are real and the bullets are lethal. Do not pull punches, but reward clever, daring, and heroic play.
+- Describe the dust and heat of the desert, the cold of the mountains, the hiss of torches in a lost tomb, the crack of a whip, the rumble of an approaching boulder, the snarl of a Nazi colonel.
+- NPCs have voices, motivations, and secrets — rival archaeologists, Nazi officers, sultry singers, wise locals, treacherous guides.
+- When resolving actions, show the dice rolls you make (in the dice_rolls array) and narrate the outcome.
+- Keep narration immersive — second person ("You see..."), present tense for action.
+
+## Response Format
+You MUST respond as a JSON object with this structure:
+{
+  "narration": "string — your rich GM prose describing the scene and what happens. This is the main text players read.",
+  "dice_rolls": [{"description": "what the roll is for", "die": "d100", "roll": 42, "modifier": 10, "total": 42, "result": "Hit", "target": "need ≤ 55%"}],
+  "hp_changes": [{"character_name": "name", "change": -8, "reason": "rifle shot to the chest"}],
+  "xp_awarded": [{"character_name": "name", "amount": 0, "reason": "..."}],
+  "loot": [{"item": "Golden Idol", "gold": 0, "source": "temple altar"}],
+  "deaths": [{"character_name": "name", "cause": "mortal chest wound"}],
+  "world_updates": {
+    "locations_explored": ["new location name"],
+    "npcs_met": [{"name": "NPC name", "disposition": "friendly/hostile/neutral", "notes": "brief"}],
+    "quest_flags": {"flag_key": "value"},
+    "reputation_change": 0,
+    "chapter_event": "short note if a chapter milestone is reached, else omit"
+  },
+  "new_scene": "one or two sentences summarizing the current scene/location state after this action",
+  "combat_active": false,
+  "combat_initiative": [{"name": "adventurer/nazi/etc", "initiative": 7}],
+  "ends_session": false
+}
+
+Rules for the JSON:
+- narration is the ONLY field that should always be present and non-empty.
+- Only include dice_rolls if dice were rolled this turn. Indiana Jones uses d100 (percentile) for attacks, ability checks, reactions, and wound rolls; d10 for initiative.
+- Only include hp_changes if Vitality (Strength/HP) actually changed (damage taken or healing). change is positive for healing, negative for damage. Use wound severity damage values (Slight 1, Light 2, Medium 4, Serious 8, Critical 16, Mortal = death).
+- xp_awarded is optional; award for major milestones, recovering artifacts, or surviving deadly encounters.
+- Only include loot if dollars, artifacts, or gear were found. Use the gold field for dollars.
+- Do NOT use spells_learned — Indiana Jones has no spells.
+- Only include deaths if a character died (Vitality reached 0, or a Mortal wound).
+- Only include world_updates if something about the world changed.
+- If combat begins or continues, set combat_active true and provide combat_initiative (each combatant: d10 + MOV/10, higher goes first).
+- ends_session true only if this action concludes the current session/chapter.
+
+Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the adventure thrilling, dusty, and dangerous.`;
+
+    const systemPrompt = isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : dndPrompt;
 
     const charTag = isSF
       ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} operative (STA ${actingChar.hp_current}/${actingChar.hp_max})`
       : isGW
       ? `${actingChar.name} the ${actingChar.race} (HP ${actingChar.hp_current}/${actingChar.hp_max})`
+      : isIJ
+      ? `${actingChar.name} the ${actingChar.race} (Vitality ${actingChar.hp_current}/${actingChar.hp_max})`
       : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max})`;
-    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : 'AD&D 1st Edition rules';
+    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : 'AD&D 1st Edition rules';
     const actionBlock = is_roll_result
       ? `${charTag} just made a dice roll.\nRoll result: "${action}"\n\nInterpret this roll result according to ${rulesLabel} and continue the scene — narrate what happens next based on the outcome of this roll.`
       : `${charTag} declares:\n"${action}"`;
@@ -444,7 +525,7 @@ ${history || 'The adventure has just begun.'}
 ## Current Action
 ${actionBlock}
 
-Respond as the ${isSF || isGW || isBH ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
+Respond as the ${isSF || isGW || isBH || isIJ ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt: userPrompt,

@@ -21,6 +21,14 @@ const SF_TONES = [
   { id: 'character_driven', label: 'Character-Driven', icon: Users }
 ];
 
+const IJ_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Compass },
+  { id: 'combat_heavy', label: 'Two-Fisted', icon: Swords },
+  { id: 'dungeon_crawler', label: 'Tomb Raider', icon: Map },
+  { id: 'sandbox', label: 'Globe-Trotting', icon: Globe },
+  { id: 'character_driven', label: 'Pulp Saga', icon: Drama }
+];
+
 export default function ImportCampaignForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [file, setFile] = useState(null);
   const [name, setName] = useState('');
@@ -30,7 +38,8 @@ export default function ImportCampaignForm({ gameSystem = 'add1e', onCreated, on
   const [importing, setImporting] = useState(false);
 
   const isSF = gameSystem === 'starfrontiers';
-  const tones = isSF ? SF_TONES : DND_TONES;
+  const isIJ = gameSystem === 'indianajones';
+  const tones = isIJ ? IJ_TONES : isSF ? SF_TONES : DND_TONES;
 
   async function handleImport() {
     if (!file || importing) return;

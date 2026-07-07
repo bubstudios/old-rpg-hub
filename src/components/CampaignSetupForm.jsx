@@ -106,6 +106,31 @@ const BH_SETUP = {
   forgeLabel: 'Saddle Up'
 };
 
+const IJ_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Compass, desc: 'A mix of action, exploration, puzzle-solving, and derring-do' },
+  { id: 'combat_heavy', label: 'Two-Fisted', icon: Swords, desc: 'Frequent fistfights, shootouts, chases, and pulp peril' },
+  { id: 'dungeon_crawler', label: 'Tomb Raider', icon: Map, desc: 'Lost temples, ancient ruins, trapped tombs, and artifacts' },
+  { id: 'sandbox', label: 'Globe-Trotting', icon: Globe, desc: 'A 1930s world to roam at your own pace and direction' },
+  { id: 'character_driven', label: 'Pulp Saga', icon: Drama, desc: 'Rivalry, romance, personal legends, and dashing arcs' }
+];
+
+const IJ_WORLDS = [
+  'The Lost Temple of Ikammanen',
+  'The Egyptian Desert',
+  'The Amazon',
+  'The Himalayas',
+  'The Streets of Cairo',
+  'A custom expedition of my own'
+];
+
+const IJ_SETUP = {
+  worldLabel: 'NAME YOUR EXPEDITION',
+  worldPlaceholder: 'Name the region, site, or expedition (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A 1936 race against Nazi archaeologists to reach a lost Sumerian ziggurat deep in the desert, where the party are a mismatched crew of scholars and hired guns.'",
+  namePlaceholder: 'e.g. The Ikons of Ikammanen',
+  forgeLabel: 'Begin the Expedition'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -120,9 +145,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isSF = gameSystem === 'starfrontiers';
   const isGW = gameSystem === 'gammaworld';
   const isBH = gameSystem === 'boothill';
-  const tones = isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
-  const worlds = isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
+  const isIJ = gameSystem === 'indianajones';
+  const tones = isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
+  const worlds = isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -138,7 +164,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -229,7 +255,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           {worlds.map((w) => (
             <button
               key={w}
-              onClick={() => setWorldSetting(w === 'A custom world of my own' ? '' : w)}
+              onClick={() => setWorldSetting(w.startsWith('A custom') ? '' : w)}
               className={`px-2.5 py-1 rounded-full text-[11px] font-body border transition-colors ${
                 worldSetting === w ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'
               }`}
@@ -260,7 +286,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">
