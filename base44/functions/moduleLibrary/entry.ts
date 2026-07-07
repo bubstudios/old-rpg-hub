@@ -178,10 +178,11 @@ Unique mechanics, wandering monsters, environmental rules, victory conditions.
 Tone, pacing advice, anything the DM should know.
 
 Rules:
-- Be thorough — better too much detail than too little. The DM needs room-by-room content.
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The DM needs room-by-room content (what's in each room: monsters, treasure, traps, secrets).
 - Preserve exact numbers (damage, HP, save values, treasure amounts).
-- If the document is not an adventure module, still extract whatever useful content exists and note that.
-- Write in clear prose. This brief will be injected into the DM's instructions.`;
+- Omit flowery descriptions — keep only tactical and mechanical details.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the DM's instructions.`;
 
       const extraction = await base44.integrations.Core.InvokeLLM({
         prompt: extractionPrompt,
@@ -197,18 +198,27 @@ Rules:
           },
           required: ["brief"]
         },
-        model: "claude_sonnet_4_6"
+        model: "gemini_3_flash"
       });
 
       let ext = extraction;
+      console.log('MODULE UPLOAD raw extraction type:', typeof ext, '| preview:', JSON.stringify(ext).slice(0, 600));
       if (typeof ext === 'string') { try { ext = JSON.parse(ext); } catch { ext = {}; } }
       if (ext && ext.response && typeof ext.response === 'object') ext = ext.response;
       if (ext && ext.brief && typeof ext.brief === 'object') ext = ext.brief;
 
+      // Surface API/LLM errors directly instead of masking them as "could not read"
+      if (ext && ext.error && !ext.brief) {
+        return Response.json({ error: 'The DM encountered an error reading the document: ' + ext.error }, { status: 500 });
+      }
+
       const brief = (ext && ext.brief) || '';
-      const unreadable = !brief || /too large|exceeds|could not read|cannot be read|unable to read|file size/i.test(brief.slice(0, 400));
+      console.log('MODULE UPLOAD brief length:', brief.length, '| preview:', brief.slice(0, 300));
+      // Only reject if the brief is empty or too short to be a real module brief (which is thousands of chars).
+      // Removed the aggressive keyword regex that could false-positive on legitimate briefs.
+      const unreadable = !brief || brief.trim().length < 100;
       if (unreadable) {
-        return Response.json({ error: 'The DM could not read that document. PDFs and text files must be under 10 MB and contain selectable text (not just scanned images).' }, { status: 400 });
+        return Response.json({ error: 'The DM could not extract content from that document — it may be empty, corrupted, or image-only. Try saving the content as a .txt file and uploading that instead.' }, { status: 400 });
       }
 
       const finalTitle = (title && title.trim()) || (ext && ext.title) || 'Untitled Module';

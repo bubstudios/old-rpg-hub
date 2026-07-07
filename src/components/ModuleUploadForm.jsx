@@ -119,7 +119,7 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
       </div>
       {uploading && (
         <p className="text-[10px] text-muted-foreground/70 font-body italic leading-snug">
-          The DM is reading the module in full and preparing a detailed reference brief. This can take 20-40 seconds for large documents.
+          The DM is reading the module in full and preparing a reference brief. This can take up to 3 minutes for large documents — please be patient and don't close this window.
         </p>
       )}
     </div>
