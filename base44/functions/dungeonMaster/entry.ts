@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       saving_throws: c.saving_throws,
       spells: c.spells,
       gold: c.gold,
-      equipment: (c.equipment || []).map(e => e.name),
+      equipment: (c.equipment || []).map(e => e.name + (e.qty > 1 ? ' x' + e.qty : '')),
       alignment: c.alignment,
       mutations: c.mutations
     }));
@@ -1236,6 +1236,9 @@ ${history || 'The adventure has just begun.'}
 ## Current Action
 ${actionBlock}
 
+## Equipment & Consumables
+When a character uses, throws, fires, drinks, or expends a consumable item (grenades, ammo, potions, scrolls, rations, batteries, etc.), include an "equipment_changes" array in your JSON response: [{"character_name": "name", "item": "Fragmentation Grenade", "change": -1, "reason": "thrown at enemy"}]. Use change: -1 per item consumed. Match the item name to what is in the character's equipment list above. Only include equipment_changes when items are actually used or expended this turn.
+
 Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang || isLOD ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : isGang ? 'Gangbusters (d100)' : isLOD ? 'Legion of Doom (d20)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
@@ -1249,6 +1252,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
           xp_awarded: { type: "array", items: { type: "object" } },
           loot: { type: "array", items: { type: "object" } },
           spells_learned: { type: "array", items: { type: "object" } },
+          equipment_changes: { type: "array", items: { type: "object" } },
           deaths: { type: "array", items: { type: "object" } },
           world_updates: { type: "object" },
           new_scene: { type: "string" },
@@ -1301,7 +1305,8 @@ Extract any NEW information introduced in this narration. Return a JSON object w
 {
   "locations_explored": [place names the party entered, arrived at, or discovered this turn],
   "npcs_met": [{"name": "NPC name", "disposition": "friendly|hostile|neutral", "notes": "brief note"}],
-  "spells_learned": [{"character_name": "name", "spells": ["spell names"], "source": "where from"}]
+  "spells_learned": [{"character_name": "name", "spells": ["spell names"], "source": "where from"}],
+  "equipment_consumed": [{"character_name": "name", "item": "item name", "qty": 1, "reason": "thrown/used/fired"}]
 }
 
 Rules:
@@ -1309,6 +1314,7 @@ Rules:
 - If the party entered a town, tavern, dungeon, room, or any location, add it to locations_explored.
 - If they met, spoke with, or were introduced to a named NPC, add them to npcs_met.
 - If a character learned, copied, found, or was granted a spell, add it to spells_learned.
+- If a character used, threw, fired, drank, or expended a consumable item (grenade, ammo, potion, scroll, ration, etc.), add it to equipment_consumed with the quantity used.
 - If none of these occurred, return empty arrays.
 - Use exact names as written in the narration.`,
         response_json_schema: {
@@ -1316,9 +1322,10 @@ Rules:
           properties: {
             locations_explored: { type: "array", items: { type: "string" } },
             npcs_met: { type: "array", items: { type: "object", properties: { name: { type: "string" }, disposition: { type: "string" }, notes: { type: "string" } } } },
-            spells_learned: { type: "array", items: { type: "object", properties: { character_name: { type: "string" }, spells: { type: "array", items: { type: "string" } }, source: { type: "string" } } } }
+            spells_learned: { type: "array", items: { type: "object", properties: { character_name: { type: "string" }, spells: { type: "array", items: { type: "string" } }, source: { type: "string" } } } },
+            equipment_consumed: { type: "array", items: { type: "object", properties: { character_name: { type: "string" }, item: { type: "string" }, qty: { type: "number" }, reason: { type: "string" } } } }
           },
-          required: ["locations_explored", "npcs_met", "spells_learned"]
+          required: ["locations_explored", "npcs_met", "spells_learned", "equipment_consumed"]
         }
       });
 
@@ -1342,6 +1349,18 @@ Rules:
       // Spells: merge
       if (Array.isArray(ext.spells_learned) && ext.spells_learned.length) {
         result.spells_learned = [...(result.spells_learned || []), ...ext.spells_learned];
+      }
+      // Equipment consumed: merge into equipment_changes
+      if (Array.isArray(ext.equipment_consumed) && ext.equipment_consumed.length) {
+        if (!result.equipment_changes) result.equipment_changes = [];
+        for (const ec of ext.equipment_consumed) {
+          result.equipment_changes.push({
+            character_name: ec.character_name,
+            item: ec.item,
+            change: -(ec.qty || 1),
+            reason: ec.reason || 'consumed'
+          });
+        }
       }
     } catch (extractErr) {
       console.log("Extraction pass failed:", extractErr.message);
@@ -1407,6 +1426,25 @@ Rules:
               spells: [...(target.spells || []), ...clean]
             });
           }
+        }
+      }
+    }
+
+    // Apply equipment changes (consumed items)
+    if (result.equipment_changes && result.equipment_changes.length) {
+      for (const eqChange of result.equipment_changes) {
+        const target = characters.find(c => c.name === eqChange.character_name);
+        if (target && Array.isArray(target.equipment)) {
+          const itemName = String(eqChange.item || '').trim().toLowerCase();
+          const updatedEquipment = target.equipment.map(e => {
+            if (e && typeof e.name === 'string' && e.name.trim().toLowerCase() === itemName) {
+              const newQty = Math.max(0, (e.qty || 1) + (eqChange.change || 0));
+              return newQty > 0 ? { ...e, qty: newQty } : null;
+            }
+            return e;
+          }).filter(Boolean);
+          target.equipment = updatedEquipment;
+          await base44.asServiceRole.entities.Character.update(target.id, { equipment: updatedEquipment });
         }
       }
     }
@@ -1531,6 +1569,7 @@ Rules:
       xp_awarded: result.xp_awarded || [],
       loot: result.loot || [],
       spells_learned: result.spells_learned || [],
+      equipment_changes: result.equipment_changes || [],
       deaths: result.deaths || [],
       world_updates: result.world_updates || null,
       combat_active: result.combat_active || false,
