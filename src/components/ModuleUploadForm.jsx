@@ -34,7 +34,8 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
       toast.success('Module studied and added to the library!');
       onUploaded?.(res.data.module);
     } catch (e) {
-      toast.error('Failed to study module: ' + (e.response?.data?.error || e.message));
+      const errMsg = e.response?.data?.error || e.response?.data?.message || e.message || 'Unknown error';
+      toast.error('Failed to study module: ' + errMsg, { duration: 8000 });
     } finally {
       setUploading(false);
     }
@@ -75,7 +76,7 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
           />
         </label>
         <p className="text-[10px] text-muted-foreground/60 font-body mt-1.5 leading-snug">
-          Scanned or image-based PDFs work — the DM reads them by sight. But files must be under 10 MB. Scanned PDFs are large, so if yours won't upload, compress it, split it into parts, or save it as a .txt file.
+          Text-based PDFs work best — the DM reads the actual text. Scanned or image-only PDFs often fail because the DM can't reliably read pictures of text. If yours won't process, copy the module content into a .txt file and upload that instead. Files must be under 10 MB.
         </p>
       </div>
 
