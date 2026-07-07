@@ -90,6 +90,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/e9e07d862_generated_image.png",
     icon: "orbit",
     enterLabel: "Take the Helm"
+  },
+  {
+    id: "darksun",
+    name: "Dark Sun",
+    short: "Dark Sun",
+    tagline: "Survive the dying world of Athas",
+    description:
+      "Beneath a swollen crimson sun, the dying desert world of Athas awaits — defiler magic that blights the land, psionics in every mind, gladiatorial arenas, sorcerer-kings who rule as living gods, and metal scarce as hope. A brutal AD&D 2nd Edition survival campaign, ruled by an AI Dungeon Master. Hoard your water, mind your blade, and see if you can outlive the wasteland.",
+    dashboardTitle: "DARK SUN",
+    dashboardSubtitle:
+      "A Dark Sun survival campaign on the dying world of Athas, ruled by an AI Dungeon Master. Brave the crimson sun, the blight of defiling magic, the arena bloodsport, and the sorcerer-kings — where every dawn is written in heat that cannot be unendured.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/418eb6d15_generated_image.png",
+    icon: "sun",
+    enterLabel: "Brave the Wastes"
   }
 ];
 

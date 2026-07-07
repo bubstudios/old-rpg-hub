@@ -378,6 +378,7 @@ Deno.serve(async (req) => {
       const isBH = sys === 'boothill';
       const isIJ = sys === 'indianajones';
       const isSJ = sys === 'spelljammer';
+      const isDS = sys === 'darksun';
       const systemContext = isBH
         ? 'a Boot Hill Wild West role-playing campaign (percentile attributes — Speed, Gun Accuracy, Throwing Accuracy, Strength, Bravery, Experience; quick-draw shootouts, wound location and severity tables, frontier towns, dollars)'
         : isSF
@@ -388,6 +389,8 @@ Deno.serve(async (req) => {
         ? 'an Indiana Jones pulp action-adventure role-playing campaign set in the 1930s (six percentile attributes 1-100 — Strength, Movement, Prowess, Backbone, Instinct, Appeal; d100 roll-under resolution; light/medium/serious wound levels; archaeology, lost temples, ancient artifacts, Nazis, rival treasure hunters; dollars)'
         : isSJ
         ? 'a Spelljammer science-fantasy role-playing campaign using AD&D 2nd Edition Adventures in Space rules (crystal spheres, the phlogiston, spelljamming helms powered by spellcasters, wildspace, ship combat with SR and hull points, spacefaring races like Giff/Scro/Dracon/Hadozee/Xixchil, neogi and mind flayer fleets, the Arcane traders, gold pieces)'
+        : isDS
+        ? 'a Dark Sun post-apocalyptic fantasy role-playing campaign using AD&D 2nd Edition rules set on the dying desert world of Athas (crimson sun, Sea of Silt, defiling vs preserving magic, psionics common, metal scarcity with bone/stone/obsidian weapons, sorcerer-kings and templars, gladiatorial arenas, slavery, races like Mul/Half-Giant/Thri-kreen/Athasian Elf/Dwarf/Halfling, ceramic pieces, city-states like Tyr/Urik/Balic/Gulg/Nibenay)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
@@ -483,6 +486,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       const isBH = (campaign.game_system || 'add1e') === 'boothill';
       const isIJ = (campaign.game_system || 'add1e') === 'indianajones';
       const isSJ = (campaign.game_system || 'add1e') === 'spelljammer';
+      const isDS = (campaign.game_system || 'add1e') === 'darksun';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -637,6 +641,26 @@ Extract:
 - equipment: array of {name, qty}
 - appearance: physical description if present
 - background: backstory if present`
+        : isDS
+        ? `You are reading a Dark Sun (AD&D 2nd Edition) character sheet for the world of Athas (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the character's name
+- race: Athasian race (Human, Elf, Dwarf, Halfling, Half-Elf, Mul, Half-Giant, Thri-kreen)
+- character_class: class (Fighter, Gladiator, Ranger, Cleric, Druid, Magic-User, Illusionist, Thief, Assassin, Bard, Monk, Templar, Defiler, Preserver, Psionicist)
+- level: experience level
+- alignment: alignment
+- ability_scores: str, int, wis, dex, con, cha (3-18, may exceed 18 on Athas)
+- hp_current and hp_max: current and max hit points
+- ac: armor class
+- thaco: THAC0
+- xp: experience points
+- gold: ceramic pieces (cp)
+- saving_throws: poison_death, wand, petrification, breath, spell
+- equipment: array of {name, qty} — note bone/stone/obsidian weapons vs metal
+- spells: array of spell names
+- appearance: physical description if present
+- background: backstory if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -684,7 +708,7 @@ Extract:
       const character = await base44.entities.Character.create({
         name: charName.trim(),
         campaign_id,
-        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : 'add1e',
+        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : 'add1e',
         race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Human'),
         character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',

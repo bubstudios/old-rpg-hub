@@ -7,6 +7,7 @@ import {
   meetsClassRequirements, validAlignmentForClass, computeAC, getTHAC0
 } from '@/lib/dndRules';
 import { SJ_RACES } from '@/lib/sjRules';
+import { DS_RACES } from '@/lib/dsRules';
 import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Swords, Sparkles, Diamond, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +76,7 @@ export default function CharacterCreation() {
     );
   }
 
-  const raceList = gameSystem === 'spelljammer' ? { ...RACES, ...SJ_RACES } : RACES;
+  const raceList = gameSystem === 'spelljammer' ? { ...RACES, ...SJ_RACES } : gameSystem === 'darksun' ? { ...RACES, ...DS_RACES } : RACES;
   const adjustedScores = rawScores && race ? (() => {
     const adj = raceList[race]?.abilityAdjustments || {};
     const r = { ...rawScores };

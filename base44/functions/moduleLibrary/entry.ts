@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
       const isGW = gameSystem === 'gammaworld';
       const isIJ = gameSystem === 'indianajones';
       const isSJ = gameSystem === 'spelljammer';
+      const isDS = gameSystem === 'darksun';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -265,6 +266,46 @@ Rules:
 - Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: monsters, treasure, traps, secrets).
 - Preserve exact numbers (damage, HP, save values, treasure amounts, SR, hull points).
 - Use Spelljammer (AD&D 2nd Edition) mechanics: ability scores 3-18 (STR/INT/WIS/DEX/CON/CHA), THAC0, saving throws (5 categories), hit dice by class, spell slots, spelljamming helms (powered by spellcaster spell energy), Ship Rating (SR), hull points, ship weapons (catapults, ballistae, rams), crystal spheres, the phlogiston, air envelopes, gravity planes.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isDS
+        ? `You are preparing a detailed reference brief from an uploaded Dark Sun (AD&D 2nd Edition) adventure module set on the dying desert world of Athas so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the Athasian setting (city-state, region, sorcerer-king, arena).
+
+## KEY LOCATIONS & AREAS
+For EACH location, ruin, or area, preserve: the location name; what the party sees (description); contents (creatures, NPCs, treasure, traps, secrets); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note templars, gladiators, merchant-house agents, elemental clerics, and sorcerer-kings.
+
+## MONSTERS & COMBAT
+Monster/creature types, stats, numbers, tactics, special abilities. Note the brutal Athasian ecology and psionic foes.
+
+## TREASURE & EQUIPMENT
+Notable treasures, magic items, ceramic pieces, and gear, with locations. Note whether weapons are metal (rare treasure) or bone/stone/obsidian.
+
+## TRAPS & HAZARDS
+Each trap: where, what it does, how to detect/disarm, damage. Include desert hazards, dehydration, defiler blight, and arena dangers.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, psionics, defiling vs preserving, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: monsters, treasure, traps, secrets).
+- Preserve exact numbers (damage, HP, save values, treasure amounts).
+- Use Dark Sun (AD&D 2nd Edition) mechanics: ability scores 3-18 (4d6 drop lowest, may exceed 18 with racial mods), THAC0, saving throws (5 categories), hit dice by class, spell slots, defiling vs preserving magic, psionics (PSPs, disciplines), ceramic pieces (cp), metal scarcity (bone/stone/obsidian weapons), sorcerer-kings, gladiators, slavery, the dying world of Athas beneath a crimson sun.
 - If the document is not an adventure module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.

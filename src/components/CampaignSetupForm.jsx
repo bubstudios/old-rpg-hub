@@ -156,6 +156,33 @@ const SJ_SETUP = {
   forgeLabel: 'Set Sail'
 };
 
+const DS_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of brutal combat, desert survival, and story' },
+  { id: 'combat_heavy', label: 'Arena Blood', icon: Swords, desc: 'Frequent arena fights, raids, and lethal clashes' },
+  { id: 'dungeon_crawler', label: 'Ruin Delver', icon: Compass, desc: 'Shattered Green-Age ruins and buried complexes' },
+  { id: 'sandbox', label: 'Tablelands', icon: Map, desc: 'The wastes and city-states, roam at your peril' },
+  { id: 'character_driven', label: 'Slave Revolt', icon: Drama, desc: 'Merchant-house politics, revolts, and legends' }
+];
+
+const DS_WORLDS = [
+  'Tyr (the free city)',
+  'Urik',
+  'Balic',
+  'Gulg',
+  'Nibenay',
+  'The Tablelands',
+  'The Sea of Silt',
+  'A custom Athasian city-state of my own'
+];
+
+const DS_SETUP = {
+  worldLabel: 'CITY-STATE / REGION',
+  worldPlaceholder: 'Name the city-state or region (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'Newly freed slaves escaped from the Tyr arena, fleeing across the Tablelands with a stolen defiler scroll the templars will kill to recover, racing the sun toward the Forest Ridge.'",
+  namePlaceholder: 'e.g. Blood Beneath the Crimson Sun',
+  forgeLabel: 'Brave the Wastes'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -172,9 +199,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isBH = gameSystem === 'boothill';
   const isIJ = gameSystem === 'indianajones';
   const isSJ = gameSystem === 'spelljammer';
-  const tones = isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
-  const worlds = isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
+  const isDS = gameSystem === 'darksun';
+  const tones = isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
+  const worlds = isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -190,7 +218,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -312,7 +340,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

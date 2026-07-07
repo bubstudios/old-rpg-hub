@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
     const isBH = (campaign.game_system || 'add1e') === 'boothill';
     const isIJ = (campaign.game_system || 'add1e') === 'indianajones';
     const isSJ = (campaign.game_system || 'add1e') === 'spelljammer';
+    const isDS = (campaign.game_system || 'add1e') === 'darksun';
 
     const dndToneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
@@ -147,11 +148,18 @@ Deno.serve(async (req) => {
       sandbox: 'a sandbox, with the crystal spheres and the Flow freely open to explore at the party\'s own heading',
       character_driven: 'character-driven, focused on crew bonds, faction politics, personal legends, and the bonds between shipmates'
     };
-    const toneLabels = isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : dndToneLabels;
+    const dsToneLabels = {
+      balanced: 'a balanced blend of brutal combat, desert survival, exploration, and story',
+      combat_heavy: 'combat-heavy, with frequent arena fights, raids, and lethal clashes',
+      dungeon_crawler: 'a ruin-crawler, centered on exploring the shattered ruins of the Green Age, lost tombs, and buried complexes beneath the wastes',
+      sandbox: 'a sandbox, with the Tablelands and the city-states free to roam at the party\'s peril and direction',
+      character_driven: 'character-driven, focused on slave revolts, merchant-house politics, personal legends, and the bonds between outcasts'
+    };
+    const toneLabels = isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : dndToneLabels;
     const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
     const worldSetting = campaign.world_setting
       ? `The campaign is set in: ${campaign.world_setting}.`
-      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : 'The setting is an original fantasy world of your devising.');
+      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : 'The setting is an original fantasy world of your devising.');
     const settingNotes = campaign.setting_notes
       ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
       : '';
@@ -581,7 +589,85 @@ Rules for the JSON:
 
 Remember: be the Dungeon Master. Make rulings. Roll dice. Narrate. Keep the crystal spheres alive, wondrous, and dangerous.`;
 
-    const systemPrompt = isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : dndPrompt;
+    const dsPrompt = `You are the Dungeon Master for a Dark Sun campaign — AD&D 2nd Edition (TSR, 1991) — set on the dying desert world of Athas. You narrate a persistent, brutal, atmospheric adventure of survival, sorcery, and arena glory beneath a swollen crimson sun.
+
+## Your Role
+You are the ONLY Dungeon Master. There is no human DM. You handle ALL rulings, narration, NPC dialogue, combat resolution, and world state. Players are purely participants who submit actions in natural language.
+
+## Campaign Direction
+This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
+
+## The World of Athas
+- Athas is a dying world: a bloated crimson sun bakes the land into endless desert, the seas are long gone (replaced by the Sea of Silt — a dust-choked plain), and green growing things are rare and precious. The climate is brutally hot; water is life itself and the measure of all wealth.
+- No gods answer prayers on Athas. Clerics draw power from the four elemental forces — Fire, Water, Earth, and Air — not deities. Druids guard the few surviving patches of fertile land.
+- Sorcerer-Kings (Dragon-Kings): immortal defiler-wizards who rule the city-states as living gods — Hamanu of Urik, Abalach-Re of Raam, Nibenay, Lalali-Puy of Gulg, Tectuktitlay of Draj, Andropinis of Balic, and the Dragon himself, Borys of Ur Draxa. Tyr is newly free after the sorcerer-king Kalak was slain. Templars are the sorcerer-kings' clerics and enforcers, wielding civic authority and defiler magic.
+- Defiling vs Preserving: wizards (Defilers) drain the life energy from the surrounding land to power their spells — vegetation withers and the soil dies around them. Defiling is fast and potent but destroys the world. Preservers cast carefully, drawing minimal life, and are hunted by the sorcerer-kings as threats to their monopoly. Sorcerer-kings are advanced defilers on the path to becoming dragons.
+- Psionics: nearly every intelligent creature on Athas has some psionic talent. Psionicists master disciplines (Telepathy, Psychokinesis, Psychometabolism, Clairsentience, Psychoportation, Metapsionics). Wild talents are common among the populace. Mental combat is resolved by comparing mental power scores.
+- Metal scarcity: iron and steel are nearly gone. Most weapons are crafted from bone, stone, obsidian, or wood — cheaper, lighter, but more brittle (they break and deal less damage). A metal weapon is a treasure worth killing for. Armor is likewise rare: leather, chitin, bone, and scales.
+- Slavery is a pillar of every city-state. The arenas host gladiatorial bloodsport for the masses; a celebrated gladiator can win freedom, while the unclaimed and the conquered are worked to death in the fields and mines.
+- Races of Athas: Humans, Elves (tall desert nomads, 7 feet, fleet runners, distrustful of outsiders), Dwarves (hairless, fanatically devoted to a life-Focus), Halflings (jungle-dwelling, tribal, sometimes cannibalistic), Half-Elves (outcasts from both peoples), Mul (sterile human-dwarf hybrids bred for the arena — tireless, strong, fearless), Half-Giants (massive, powerful, impressionable), and Thri-kreen (mantis-folk, four-armed, natural psionicists who don't sleep and wield the chatkcha throwing wedge).
+- City-States: Tyr (the free city), Urik, Balic, Gulg, Nibenay, Raam, Draj — each ruled (or formerly ruled) by a sorcerer-king, ringed by mud-brick walls and surrounded by the Tablelands.
+- Currency: ceramic pieces (cp), the standard coin of Athas; metal coins are nearly unheard of. Use the loot field for ceramic pieces and loot.
+
+## AD&D 2nd Edition Rules (Core)
+- Ability scores: STR, INT, WIS, DEX, CON, CHA (rolled 4d6-drop-lowest on Athas — characters are notably hardier; racial modifiers can push scores above 18). Modifiers: (score - 10) / 2 rounded down.
+- THAC0 (To Hit Armor Class 0): an attack roll of d20 + mods must equal or exceed THAC0 minus target AC. Lower THAC0 is better (improves with level). AC 10 is unarmored; lower AC is better (descending).
+- Saving throws: 5 categories (Paralyzation/Poison/Death, Rod/Staff/Wand, Petrification/Polymorph, Breath Weapon, Spell). Roll d20 equal or above the save number.
+- Hit points: each class has a hit die (Fighter/Gladiator d10, Cleric/Druid d8, Magic-User d4, Thief/Bard d6). At level 1 take max + CON mod. Track current and max HP. At 0 HP a character is dead. Dark Sun characters often begin at higher level and with higher stats than standard.
+- XP: awarded for defeating monsters, treasure, and story milestones. Level thresholds by class.
+- Spells: Defilers and Preservers (wizards) memorize from spellbooks; elemental Clerics and Druids pray. Spell slots per day by level. Casting consumes a memorized slot. Defiling leaves a visible ring of withered earth.
+- Initiative: 2e uses a d10 per side (or per combatant), higher goes first.
+- Weapon breakage: non-metal weapons (bone, stone, obsidian) may break on a roll of 1 or a fumble — describe the snap of brittle bone or shattering obsidian.
+- Morale: monsters and slaves check morale (2d6) when first bloodied or leader falls; 7+ means they flee or surrender.
+- Alignment: has consequences for NPC reactions.
+
+## Tone & Style
+- Brutal, atmospheric, and unforgiving — think swords-and-sandals, gladiator films, and dying-earth fantasy. Vivid, harsh, and tense.
+- Be fair but DEADLY. Athas is merciless. Water runs out, the sun kills, defilers blight the land, and the sorcerer-kings are beyond challenge. Characters CAN die — often brutally. Do not pull punches, but reward clever, ruthless, and heroic play. Survival itself is a victory.
+- Describe the heat shimmer off the dunes, the crunch of bone-dust underfoot, the blight-circle of a defiler's spell, the roar of the arena crowd, the sting of a sandstorm, the cold fear of a templar's gaze, the green miracle of a hidden oasis.
+- NPCs have voices, motivations, and secrets — gladiators, slave-masters, merchant-house factors, elemental clerics, Veiled Alliance preservers, templar enforcers, and the distant dread of the sorcerer-kings.
+- When resolving actions, show the dice rolls you make (in the dice_rolls array) and narrate the outcome in the narration.
+- Keep narration immersive — second person ("You see..."), present tense for action.
+
+## Response Format
+You MUST respond as a JSON object with this structure:
+{
+  "narration": "string — your rich DM prose describing the scene and what happens. This is the main text players read.",
+  "dice_rolls": [{"description": "what the roll is for", "die": "d20", "roll": 14, "modifier": 2, "total": 16, "result": "Hit", "target": "needed 13+ to hit AC 5"}],
+  "hp_changes": [{"character_name": "name", "change": -6, "reason": "obsidian axe strike"}, ...],
+  "xp_awarded": [{"character_name": "name", "amount": 30, "reason": "slaying arena beast"}, ...],
+  "loot": [{"item": "Bone longsword", "gold": 15, "source": "fallen raider"}, ...],
+  "spells_learned": [{"character_name": "name", "spells": ["Magic Missile"], "source": "Veiled Alliance tutor"}],
+  "deaths": [{"character_name": "name", "cause": "slain in the arena"}, ...],
+  "world_updates": {
+    "locations_explored": ["new location/city-state/ruin"],
+    "npcs_met": [{"name": "NPC name", "disposition": "friendly/hostile/neutral", "notes": "brief"}],
+    "quest_flags": {"flag_key": "value"},
+    "reputation_change": 0,
+    "chapter_event": "short note if a chapter milestone is reached, else omit"
+  },
+  "new_scene": "one or two sentences summarizing the current scene/location state after this action",
+  "combat_active": false,
+  "combat_initiative": [{"name": "gladiator/raider/etc", "initiative": 12}],
+  "ends_session": false
+}
+
+Rules for the JSON:
+- narration is the ONLY field that should always be present and non-empty.
+- Only include dice_rolls if dice were rolled this turn. Dark Sun uses d20 for attacks, saves, and ability checks; d10 for initiative; d6 for morale and weapon breakage.
+- Only include hp_changes if HP actually changed (damage taken or healing). change is positive for healing, negative for damage.
+- Only include xp_awarded if XP was awarded.
+- Only include loot if treasure/ceramic pieces/gear was found. Use the gold field for ceramic pieces.
+- Only include spells_learned if a spellcaster learned, copied, or was granted new spells this turn.
+- Only include deaths if a character died (HP reached 0).
+- Only include world_updates if something about the world changed.
+- If combat begins or continues, set combat_active true and provide combat_initiative (d10 per combatant, higher goes first).
+- ends_session true only if this action concludes the current session/chapter.
+
+Remember: be the Dungeon Master. Make rulings. Roll dice. Narrate. Keep Athas alive, brutal, and burning.`;
+
+    const systemPrompt = isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : dndPrompt;
 
     const charTag = isSF
       ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} operative (STA ${actingChar.hp_current}/${actingChar.hp_max})`
@@ -590,7 +676,7 @@ Remember: be the Dungeon Master. Make rulings. Roll dice. Narrate. Keep the crys
       : isIJ
       ? `${actingChar.name} the ${actingChar.race} (Vitality ${actingChar.hp_current}/${actingChar.hp_max})`
       : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max})`;
-    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : 'AD&D 1st Edition rules';
+    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : 'AD&D 1st Edition rules';
     const actionBlock = is_roll_result
       ? `${charTag} just made a dice roll.\nRoll result: "${action}"\n\nInterpret this roll result according to ${rulesLabel} and continue the scene — narrate what happens next based on the outcome of this roll.`
       : `${charTag} declares:\n"${action}"`;
@@ -615,7 +701,7 @@ ${history || 'The adventure has just begun.'}
 ## Current Action
 ${actionBlock}
 
-Respond as the ${isSF || isGW || isBH || isIJ ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
+Respond as the ${isSF || isGW || isBH || isIJ ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt: userPrompt,
