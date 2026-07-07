@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
@@ -45,18 +45,30 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
     <div className="space-y-3">
       <div>
         <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">GAME SYSTEM</label>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => setGameSystem('add1e')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${gameSystem === 'add1e' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'add1e' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
           >
             <Scroll className="w-3.5 h-3.5" /> AD&D 1E
           </button>
           <button
             onClick={() => setGameSystem('starfrontiers')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${gameSystem === 'starfrontiers' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'starfrontiers' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
           >
             <Rocket className="w-3.5 h-3.5" /> STAR FRONTIERS
+          </button>
+          <button
+            onClick={() => setGameSystem('gammaworld')}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'gammaworld' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Atom className="w-3.5 h-3.5" /> GAMMA WORLD
+          </button>
+          <button
+            onClick={() => setGameSystem('boothill')}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'boothill' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Crosshair className="w-3.5 h-3.5" /> BOOT HILL
           </button>
         </div>
       </div>
