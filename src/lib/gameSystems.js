@@ -165,6 +165,66 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/8dd161c03_generated_image.png",
     icon: "globe",
     enterLabel: "Descend Within"
+  },
+  {
+    id: "conan",
+    name: "Conan",
+    short: "Conan",
+    tagline: "Sword-and-sorcery of the Hyborian Age",
+    description:
+      "Stride into the Hyborian Age — a savage world of ancient kingdoms, dark sorcery, and steel, created by Robert E. Howard. From the hills of Cimmeria to the thrones of Aquilonia, adventure as a barbarian, mercenary, thief, or pirate in a land where civilization is thin and the sword is law. A percentile attribute system with wound tables and gritty combat, ruled by an AI Dungeon Master. By Crom, the age awaits.",
+    dashboardTitle: "CONAN",
+    dashboardSubtitle:
+      "A Hyborian Age sword-and-sorcery campaign, ruled by an AI Dungeon Master. Venture across the savage kingdoms of a world before history — where every blow is written in blood that cannot be unshed.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/1b9dc1177_generated_image.png",
+    icon: "flame",
+    enterLabel: "Stride Forth"
+  },
+  {
+    id: "redsonja",
+    name: "Red Sonja",
+    short: "Red Sonja",
+    tagline: "The She-Devil with a Sword",
+    description:
+      "Take up the blade as Red Sonja — the Hyrkanian warrior woman, mercenary, and scourge of evil sorcerers across the Hyborian kingdoms. A sword-and-sorcery percentile RPG set in the world of Robert E. Howard's Hyboria, with wound tables, dark sorcery, and two-fisted survival. Adventure as a Nomad, Mercenary, Thief, or Sorcerer across the steppes and cities of a savage age, ruled by an AI Game Master. The She-Devil rides.",
+    dashboardTitle: "RED SONJA",
+    dashboardSubtitle:
+      "A Hyborian sword-and-sorcery campaign of the She-Devil with a Sword, ruled by an AI Game Master. Ride the Hyrkanian steppes, cross blades with tyrants and sorcerers, and carve a legend — where every strike is written in steel that cannot be sheathed.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/3d20fb40f_generated_image.png",
+    icon: "swords",
+    enterLabel: "Take Up the Blade"
+  },
+  {
+    id: "buckrogers",
+    name: "Buck Rogers",
+    short: "Buck Rogers",
+    tagline: "25th century high adventure",
+    description:
+      "Rocket into the 25th century — the XXVc, where the Inner Planets are dominated by the genetic-supermen of RAM, the Asteroid Belt hungers for freedom, and Earth is a poisoned relic. Fly a rocketjockey, pilot, warrior, or medic across a solar system at war. A classic TSR sci-fi RPG using AD&D 2nd Edition rules adapted for blasters, spaceship combat, and corporate intrigue, ruled by an AI Dungeon Master. The future is now.",
+    dashboardTitle: "BUCK ROGERS XXVc",
+    dashboardSubtitle:
+      "A 25th-century sci-fi campaign of rocket packs, ray guns, and rebellion, ruled by an AI Dungeon Master. Soar between the Inner Planets and the Asteroid Belt, defy the geniocracy of RAM, and fight for the future of the solar system — where every dogfight is written in rocket-fire that cannot be recalled.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/06a3ef690_generated_image.png",
+    icon: "satellite",
+    enterLabel: "Blast Off"
+  },
+  {
+    id: "ghostbusters",
+    name: "Ghostbusters",
+    short: "Ghostbusters",
+    tagline: "Who ya gonna call?",
+    description:
+      "Suit up and wrangle the supernatural — a Ghostbusters franchise in a haunted modern city, using the classic 1986 West End Games D6 System. Four attributes (Brain, Muscle, Moves, Cool), tag skills, the Ghost Die, and Brownie Points as your hero currency and damage track. Trap Class 5 free-floating repeaters, face Gozer, and don't cross the streams. Ruled by an AI Game Master. We came, we saw, we kicked its ass.",
+    dashboardTitle: "GHOSTBUSTERS",
+    dashboardSubtitle:
+      "A supernatural comedy-horror campaign of ghost-trapping and slimy heroics, ruled by an AI Game Master. Patrol the haunted city, wrangle the paranormal, and save the world from things that go bump in the night — where every proton stream is written in slime that cannot be unslimed.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/958d3add0_generated_image.png",
+    icon: "ghost",
+    enterLabel: "Suit Up"
   }
 ];
 

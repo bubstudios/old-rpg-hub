@@ -12,6 +12,8 @@ import GWCharacterSheet from '@/pages/GWCharacterSheet';
 import BHCharacterSheet from '@/pages/BHCharacterSheet';
 import IJCharacterSheet from '@/pages/IJCharacterSheet';
 import TSCharacterSheet from '@/pages/TSCharacterSheet';
+import HyCharacterSheet from '@/pages/HyCharacterSheet';
+import GBCharacterSheet from '@/pages/GBCharacterSheet';
 import { exportCharacterSheet } from '@/lib/exportCharacterSheet';
 
 export default function CharacterSheet() {
@@ -92,6 +94,14 @@ export default function CharacterSheet() {
 
   if (campaign?.game_system === 'topsecret') {
     return <TSCharacterSheet character={character} campaignId={campaignId} />;
+  }
+
+  if (campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja') {
+    return <HyCharacterSheet character={character} campaignId={campaignId} />;
+  }
+
+  if (campaign?.game_system === 'ghostbusters') {
+    return <GBCharacterSheet character={character} campaignId={campaignId} />;
   }
 
   const scores = character.ability_scores || {};

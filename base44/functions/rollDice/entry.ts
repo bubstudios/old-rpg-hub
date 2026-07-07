@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
     const isBH = body.game_system === 'boothill';
     const isIJ = body.game_system === 'indianajones';
     const isTS = body.game_system === 'topsecret';
+    const isHY = body.game_system === 'conan' || body.game_system === 'redsonja';
+    const isGB = body.game_system === 'ghostbusters';
     const GW_ABILITY_LABELS = { ps: 'PS', ms: 'MS', dx: 'DX', cn: 'CN', in: 'IN', ch: 'CH', sn: 'SN' };
     const BH_ABILITY_LABELS = { spd: 'SPD', gacc: 'GACC', tacc: 'TACC', str: 'STR', brv: 'BRV', exp: 'EXP' };
     const BH_WEAPON_SKILLS = ['Brawling', 'Fast Draw', 'Pistol', 'Rifle', 'Shotgun'];
@@ -48,6 +50,8 @@ Deno.serve(async (req) => {
     const IJ_WEAPON_SKILLS = ['Brawling', 'Pistol', 'Rifle', 'Whip', 'Thrown', 'Melee'];
     const TS_ABILITY_LABELS = { str: 'PSTR', pbea: 'PBEA', char: 'CHAR', cour: 'COUR', know: 'KNOW', judg: 'JUDG', coor: 'COOR' };
     const TS_WEAPON_SKILLS = ['Brawling', 'Pistol', 'Rifle', 'Submachine Gun', 'Thrown', 'Melee'];
+    const HY_ABILITY_LABELS = { str: 'STR', dex: 'DEX', agi: 'AGI', end: 'END', sta: 'STA', int: 'INT', men: 'MEN', lck: 'LCK' };
+    const HY_WEAPON_SKILLS = ['Broadsword', 'Dagger', 'Bow', 'Spear', 'Shield', 'Brawling'];
 
     // --- Star Frontiers roll types (percentile, roll-under) ---
     if (isSF && roll_type === 'attack') {
@@ -422,6 +426,112 @@ Deno.serve(async (req) => {
         target: `need ≤ ${coor} (Coordination)`
       });
       summary = `${char.name} reaction: d100 = ${d100} vs Coordination ${coor} — ${success ? 'QUICK' : 'SLOW'}.`;
+    }
+    // --- Hyborian roll types (percentile d100 — Conan / Red Sonja) ---
+    else if (isHY && roll_type === 'attack') {
+      const dex = scores.dex || 50;
+      const men = Math.floor((scores.men || 50) / 20) - 5;
+      const charWeaponSkills = (char.skills || []).filter(s => HY_WEAPON_SKILLS.includes(s.name));
+      const weaponBonus = charWeaponSkills.length ? Math.max(...charWeaponSkills.map(s => Number(s.level) || 0)) * 10 : 0;
+      const modifier = Number(body.modifier) || 0;
+      const hitNumber = Math.min(95, Math.max(5, dex + men + weaponBonus + modifier));
+      const d100 = rollDie(100);
+      const success = d100 <= hitNumber;
+      rolls.push({
+        description: 'Attack',
+        die: 'd100', roll: d100, modifier: men + weaponBonus + modifier, total: d100,
+        result: success ? 'Hit' : 'Miss', target: `need ≤ ${hitNumber}%`
+      });
+      summary = `${char.name} attacks: d100 = ${d100} vs ${hitNumber}% — ${success ? 'HIT' : 'MISS'}.`;
+    }
+    else if (isHY && roll_type === 'wound') {
+      const WOUND_LOCATIONS = [
+        { min: 1, max: 5, part: 'Head', mortal: true },
+        { min: 6, max: 10, part: 'Right Shoulder', mortal: false },
+        { min: 11, max: 15, part: 'Left Shoulder', mortal: false },
+        { min: 16, max: 20, part: 'Right Arm', mortal: false },
+        { min: 21, max: 25, part: 'Left Arm', mortal: false },
+        { min: 26, max: 40, part: 'Chest', mortal: true },
+        { min: 41, max: 55, part: 'Abdomen', mortal: false },
+        { min: 56, max: 70, part: 'Right Leg', mortal: false },
+        { min: 71, max: 85, part: 'Left Leg', mortal: false },
+        { min: 86, max: 100, part: 'Hand / Groin', mortal: false }
+      ];
+      const WOUND_SEVERITY = [
+        { min: 1, max: 25, severity: 'Slight', damage: 1 },
+        { min: 26, max: 50, severity: 'Light', damage: 2 },
+        { min: 51, max: 70, severity: 'Medium', damage: 4 },
+        { min: 71, max: 85, severity: 'Serious', damage: 8 },
+        { min: 86, max: 95, severity: 'Critical', damage: 16 },
+        { min: 96, max: 100, severity: 'Mortal', damage: 999 }
+      ];
+      const locRoll = rollDie(100);
+      const loc = WOUND_LOCATIONS.find(l => locRoll >= l.min && locRoll <= l.max) || WOUND_LOCATIONS[0];
+      const sevRoll = rollDie(100);
+      let sev = WOUND_SEVERITY.find(s => sevRoll >= s.min && sevRoll <= s.max) || WOUND_SEVERITY[0];
+      if (loc.mortal && sev.severity !== 'Mortal' && sevRoll >= 86) sev = WOUND_SEVERITY[5];
+      rolls.push({ description: 'Wound location', die: 'd100', roll: locRoll, modifier: 0, total: locRoll, result: loc.part + (loc.mortal ? ' (vital)' : '') });
+      rolls.push({ description: `Wound severity — ${loc.part}`, die: 'd100', roll: sevRoll, modifier: 0, total: sevRoll, result: sev.severity, target: sev.damage === 999 ? 'Mortal wound' : `-${sev.damage} Vitality` });
+      summary = `Wound: ${loc.part} — ${sev.severity} (${sev.damage === 999 ? 'mortal wound' : '-' + sev.damage + ' Vitality'}).`;
+    }
+    else if (isHY && roll_type === 'ability') {
+      const ability = body.ability;
+      if (!HY_ABILITY_LABELS[ability]) return Response.json({ error: 'Invalid ability' }, { status: 400 });
+      const score = scores[ability] || 50;
+      const d100 = rollDie(100);
+      const success = d100 <= score;
+      rolls.push({ description: `${HY_ABILITY_LABELS[ability]} check`, die: 'd100', roll: d100, modifier: 0, total: d100, result: success ? 'Success' : 'Failure', target: `need ≤ ${score}` });
+      summary = `${char.name} ${HY_ABILITY_LABELS[ability]} check: d100 = ${d100} vs ${score} — ${success ? 'SUCCESS' : 'FAILURE'}.`;
+    }
+    else if (isHY && roll_type === 'initiative') {
+      const agi = scores.agi || 50;
+      const initMod = Math.floor(agi / 10);
+      const d10 = rollDie(10);
+      const total = d10 + initMod;
+      rolls.push({ description: 'Initiative', die: 'd10', roll: d10, modifier: initMod, total, target: `AGI/10 = ${initMod}` });
+      summary = `${char.name} initiative: AGI/10 ${initMod} + d10 ${d10} = ${total}.`;
+    }
+    else if (isHY && roll_type === 'reaction') {
+      const agi = scores.agi || 50;
+      const d100 = rollDie(100);
+      const success = d100 <= agi;
+      rolls.push({ description: 'Reaction', die: 'd100', roll: d100, modifier: 0, total: d100, result: success ? 'Quick' : 'Slow', target: `need ≤ ${agi} (Agility)` });
+      summary = `${char.name} reaction: d100 = ${d100} vs Agility ${agi} — ${success ? 'QUICK' : 'SLOW'}.`;
+    }
+    // --- Ghostbusters roll types (D6 dice pool) ---
+    else if (isGB && roll_type === 'trait') {
+      const attrKey = body.attribute || 'brain';
+      const attrDice = Math.max(1, Number(scores[attrKey]) || 3);
+      const skillDice = Math.max(0, Number(body.skill_dice) || 0);
+      const bonusDice = Math.max(0, Number(body.bonus_dice) || 0);
+      const tn = Number(body.target_number) || 10;
+      const totalCount = attrDice + skillDice + bonusDice;
+      const dice = [];
+      for (let i = 0; i < totalCount; i++) dice.push(rollDie(6));
+      const ghostRoll = rollDie(6);
+      const isGhost = ghostRoll === 6;
+      const ghostValue = isGhost ? 0 : ghostRoll;
+      dice[0] = ghostValue;
+      const total = dice.reduce((s, v) => s + v, 0);
+      const success = total >= tn;
+      rolls.push({
+        description: `${attrKey.toUpperCase()} trait roll`,
+        die: `${totalCount}d6`, roll: total, modifier: skillDice + bonusDice, total,
+        result: success ? 'Success' : 'Failure',
+        target: `TN ${tn}` + (isGhost ? ' — GHOST!' : '')
+      });
+      summary = `${char.name} rolls ${totalCount}d6 = ${total} vs TN ${tn} — ${success ? 'SUCCESS' : 'FAILURE'}${isGhost ? ' (Ghost Die triggered!)' : ''}.`;
+    }
+    else if (isGB && roll_type === 'ghost') {
+      const ghostRoll = rollDie(6);
+      const isGhost = ghostRoll === 6;
+      rolls.push({
+        description: 'Ghost Die',
+        die: 'd6', roll: ghostRoll, modifier: 0, total: isGhost ? 0 : ghostRoll,
+        result: isGhost ? 'GHOST!' : 'No ghost',
+        target: '6 = Ghost'
+      });
+      summary = `Ghost Die: ${ghostRoll} — ${isGhost ? 'A GHOST APPEARS!' : 'No ghost.'}.`;
     }
     // --- AD&D roll types ---
     else if (roll_type === 'attack') {

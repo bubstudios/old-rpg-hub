@@ -270,6 +270,84 @@ const HW_SETUP = {
   forgeLabel: 'Descend Within'
 };
 
+const HY_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of combat, exploration, sorcery, and survival' },
+  { id: 'combat_heavy', label: 'Sword & Steel', icon: Swords, desc: 'Frequent melees, raids, and lethal clashes' },
+  { id: 'dungeon_crawler', label: 'Ruins & Tombs', icon: Compass, desc: 'Lost cities, ancient ruins, and forgotten temples' },
+  { id: 'sandbox', label: 'Wanderer', icon: Map, desc: 'The Hyborian kingdoms, roam where you will' },
+  { id: 'character_driven', label: 'Legend', icon: Drama, desc: 'Kingdoms, thrones, sorcery, and personal arcs' }
+];
+
+const HY_WORLDS = [
+  'Cimmeria',
+  'Aquilonia',
+  'Nemedia',
+  'The Vilayet Sea',
+  'Turan',
+  'Stygia',
+  'Hyrkania',
+  'Zamora',
+  'A custom Hyborian kingdom'
+];
+
+const HY_SETUP = {
+  worldLabel: 'HYBORIAN KINGDOM / REGION',
+  worldPlaceholder: 'Name the kingdom, region, or city (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A band of mercenaries hired by a Nemedian lord to recover a stolen relic from a Stygian tomb, hunted across the borderlands by the sorcerer-priests of Set who want it back.'",
+  namePlaceholder: 'e.g. Blood of the Hyborian Age',
+  forgeLabel: 'Stride Forth'
+};
+
+const BR_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of space combat, intrigue, and exploration' },
+  { id: 'combat_heavy', label: 'Dogfights', icon: Swords, desc: 'Frequent ship battles, raids, and blaster fights' },
+  { id: 'dungeon_crawler', label: 'Station Delve', icon: Compass, desc: 'Derelict stations, asteroid bases, and hidden labs' },
+  { id: 'sandbox', label: 'Open System', icon: Globe, desc: 'The solar system, go where your rocket takes you' },
+  { id: 'character_driven', label: 'Rebellion', icon: Drama, desc: 'RAM vs the Belt, freedom, and personal arcs' }
+];
+
+const BR_WORLDS = [
+  'Earth (Neworg)',
+  'Mars (RAM capital)',
+  'The Asteroid Belt',
+  'Venus',
+  'Luna',
+  'A custom station or world'
+];
+
+const BR_SETUP = {
+  worldLabel: 'LOCATION / THEATRE',
+  worldPlaceholder: 'Name the planet, station, or region (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A crew of Belters running a smuggling ship between the asteroids, hired to extract a RAM defector carrying genetic secrets the geniocracy will kill to suppress.'",
+  namePlaceholder: 'e.g. Rebels of the Belt',
+  forgeLabel: 'Blast Off'
+};
+
+const GB_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of investigation, ghost-wrangling, and comedy' },
+  { id: 'combat_heavy', label: 'Slime Time', icon: Swords, desc: 'Frequent ghost-trapping, proton-blasting, and chaos' },
+  { id: 'dungeon_crawler', label: 'Haunted Sites', icon: Compass, desc: 'Spook-infested buildings, sewers, and subways' },
+  { id: 'sandbox', label: 'City Patrol', icon: Map, desc: 'The haunted city, respond to calls as they come' },
+  { id: 'character_driven', label: 'Franchise Drama', icon: Drama, desc: 'Bills, rivals, Walter Peck, and personal arcs' }
+];
+
+const GB_WORLDS = [
+  'New York City',
+  'The Firehouse (Hook & Ladder 8)',
+  'A haunted hotel',
+  'The NYC Public Library',
+  'Dana Barrett\u2019s apartment',
+  'A custom haunted city'
+];
+
+const GB_SETUP = {
+  worldLabel: 'BASE OF OPERATIONS',
+  worldPlaceholder: 'Name the city, franchise, or site (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A brand-new Ghostbusters franchise in a city where the supernatural is suddenly everywhere. The team just got a call about a Class 5 full-torso repeater haunting an old hotel — and the EPA is sniffing around too.'",
+  namePlaceholder: 'e.g. Ghostbusters: City of Phantoms',
+  forgeLabel: 'Suit Up'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -291,9 +369,12 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isGH = gameSystem === 'greyhawk';
   const isFR = gameSystem === 'forgottenrealms';
   const isHW = gameSystem === 'hollowworld';
-  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : DND_TONES;
-  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : isHW ? HW_WORLDS : isFR ? FR_WORLDS : isGH ? GH_WORLDS : DND_WORLDS;
-  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : isHW ? HW_SETUP : isFR ? FR_SETUP : isGH ? GH_SETUP : DND_SETUP;
+  const isHY = gameSystem === 'conan' || gameSystem === 'redsonja';
+  const isBR = gameSystem === 'buckrogers';
+  const isGB = gameSystem === 'ghostbusters';
+  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : isGB ? GB_TONES : isBR ? BR_TONES : isHY ? HY_TONES : DND_TONES;
+  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : isHW ? HW_WORLDS : isGB ? GB_WORLDS : isBR ? BR_WORLDS : isHY ? HY_WORLDS : isFR ? FR_WORLDS : isGH ? GH_WORLDS : DND_WORLDS;
+  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : isHW ? HW_SETUP : isGB ? GB_SETUP : isBR ? BR_SETUP : isHY ? HY_SETUP : isFR ? FR_SETUP : isGH ? GH_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -309,7 +390,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : isBR ? `Run to ${world}` : isGB ? `Ghosts of ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -431,7 +512,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : isHW ? 'Hollow World' : isFR ? 'Forgotten Realms' : isGH ? 'Greyhawk' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : isHW ? 'Hollow World' : isGB ? 'Ghostbusters' : isBR ? 'Buck Rogers' : isHY ? (gameSystem === 'redsonja' ? 'Red Sonja' : 'Conan') : isFR ? 'Forgotten Realms' : isGH ? 'Greyhawk' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

@@ -17,6 +17,8 @@ import GWCharacterCreation from '@/pages/GWCharacterCreation';
 import BHCharacterCreation from '@/pages/BHCharacterCreation';
 import IJCharacterCreation from '@/pages/IJCharacterCreation';
 import TSCharacterCreation from '@/pages/TSCharacterCreation';
+import HyCharacterCreation from '@/pages/HyCharacterCreation';
+import GBCharacterCreation from '@/pages/GBCharacterCreation';
 import ImportCharacterSheetForm from '@/components/ImportCharacterSheetForm';
 
 const STEPS = ['Race', 'Class', 'Ability Scores', 'Alignment', 'Identity', 'Review'];
@@ -50,6 +52,8 @@ export default function CharacterCreation() {
   if (gameSystem === 'boothill') return <BHCharacterCreation />;
   if (gameSystem === 'indianajones') return <IJCharacterCreation />;
   if (gameSystem === 'topsecret') return <TSCharacterCreation />;
+  if (gameSystem === 'conan' || gameSystem === 'redsonja') return <HyCharacterCreation />;
+  if (gameSystem === 'ghostbusters') return <GBCharacterCreation />;
   if (!gameSystem) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">

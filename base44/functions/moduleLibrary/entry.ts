@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : body.game_system === 'conan' ? 'conan' : body.game_system === 'redsonja' ? 'redsonja' : body.game_system === 'buckrogers' ? 'buckrogers' : body.game_system === 'ghostbusters' ? 'ghostbusters' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';
@@ -68,6 +68,9 @@ Deno.serve(async (req) => {
       const isSJ = gameSystem === 'spelljammer';
       const isDS = gameSystem === 'darksun';
       const isTS = gameSystem === 'topsecret';
+      const isHY = gameSystem === 'conan' || gameSystem === 'redsonja';
+      const isBR = gameSystem === 'buckrogers';
+      const isGB = gameSystem === 'ghostbusters';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -348,6 +351,126 @@ Rules:
 - Preserve exact numbers (damage, attribute scores, dollar amounts, wound levels).
 - Use Top Secret mechanics: seven percentile attributes 1-100 (Physical Strength, Physical Beauty, Charm, Courage, Knowledge, Judgment, Coordination), d100 roll-under resolution, Coordination for combat to-hit, Courage nerve modifier, wound location and severity tables, dollars, Cold War espionage setting.
 - If the document is not a mission module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isHY
+        ? `You are preparing a detailed reference brief from an uploaded Hyborian Age sword-and-sorcery adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the Hyborian kingdoms and locales involved.
+
+## KEY LOCATIONS & AREAS
+For EACH location, ruin, city, or area, preserve: the location name; what the party sees (description); contents (NPCs, enemies, treasure, hazards, secrets, traps); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note sorcerers, kings, warlords, merchants, and thieves.
+
+## ENEMIES & COMBAT
+Enemy types (guards, bandits, sorcerers, beasts, demons), stats, numbers, tactics, weapons.
+
+## TREASURE & EQUIPMENT
+Notable gear, weapons, gold, artifacts, and sorcerous relics, with locations.
+
+## HAZARDS & TRAPS
+Each hazard/trap: where, what it does, how to detect/avoid, damage. Include ancient traps, poison, curses, and environmental hazards.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, sorcery, random encounters, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: enemies, treasure, traps, secrets).
+- Preserve exact numbers (damage, attribute scores, gold amounts, wound levels).
+- Use Hyborian mechanics: eight percentile attributes 1-100 (Strength, Dexterity, Agility, Endurance, Stature, Intelligence, Mentation, Luck), d100 roll-under resolution, Dexterity for combat to-hit, Mentation nerve modifier, wound location and severity tables, gold pieces, dark sorcery that corrupts, the savage Hyborian kingdoms of Robert E. Howard.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isBR
+        ? `You are preparing a detailed reference brief from an uploaded Buck Rogers XXVc science-fiction adventure module so an AI Dungeon Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the 25th-century setting, planets, and factions involved.
+
+## KEY LOCATIONS & AREAS
+For EACH location, station, planet, or area, preserve: the location name; what the party sees (description); contents (NPCs, enemies, tech, hazards, secrets); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note RAM agents, Belters, pirates, and rebels.
+
+## ENEMIES & COMBAT
+Enemy types (RAM soldiers, pirates, mutants, synthetics), stats, numbers, tactics, weapons. Note ship combat encounters.
+
+## TREASURE & EQUIPMENT
+Notable gear, blasters, tech, credits, and ship upgrades, with locations.
+
+## HAZARDS & TRAPS
+Each hazard: where, what it does, how to detect/avoid, damage. Include vacuum, radiation, and tech hazards.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, ship combat, random encounters, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs.
+- Preserve exact numbers (damage, HP, save values, credits).
+- Use Buck Rogers XXVc (AD&D 2nd Edition) mechanics: ability scores 3-18 (STR/INT/WIS/DEX/CON/CHA), THAC0, saving throws (5 categories), hit dice by class, spell slots (if any), blasters and rocket ships, the geniocracy of RAM, the Asteroid Belt rebellion, genetically engineered races, 25th-century solar system.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isGB
+        ? `You are preparing a detailed reference brief from an uploaded Ghostbusters supernatural adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended experience, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the haunted locale and the nature of the supernatural threat.
+
+## KEY LOCATIONS & AREAS
+For EACH location, building, floor, or area, preserve: the location name; what the busters see (description); contents (ghosts, NPCs, hazards, secrets, clues); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed.
+
+## NPCs & GHOSTS
+Each named NPC or ghost: who they are, disposition, stats if given, goals, secrets. Note ghost classifications (Class 1-7), powers, and weaknesses.
+
+## COMBAT & ENCOUNTERS
+Ghost types, stats, powers, numbers, tactics. Note where ghosts manifest and what triggers them.
+
+## TREASURE & EQUIPMENT
+Notable gear, proton pack upgrades, tech, intel, and clues, with locations.
+
+## HAZARDS & TRAPS
+Each hazard: where, what it does, how to detect/avoid. Include slime, possession, portals, and environmental dangers.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, ghost behavior, random encounters, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs.
+- Preserve exact numbers (ghost Power, BP costs, Target Numbers, damage).
+- Use Ghostbusters (West End Games D6 System) mechanics: four attributes rated in dice (Brain, Muscle, Moves, Cool), tag skills that add bonus dice, the Ghost Die (6 = ghost, counts 0), Brownie Points as currency/hero points/damage track, Target Numbers for task resolution (Easy 5, Moderate 10, Hard 15, Very Hard 20), ghost classifications (Class 1-7), proton packs and ghost traps, modern-day haunted setting, comedy-horror tone.
+- If the document is not an adventure module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.
 

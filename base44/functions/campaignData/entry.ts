@@ -330,6 +330,68 @@ Deno.serve(async (req) => {
         return Response.json({ character });
       }
 
+      // Hyborian branch (Conan / Red Sonja): HP = Endurance (Vitality), percentile attributes, no THAC0/saves/spells
+      if (game_system === 'conan' || game_system === 'redsonja') {
+        const end = Math.max(1, Math.round((ability_scores && ability_scores.end) || 50));
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system,
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: end,
+          hp_max: end,
+          ac: 0,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
+      // Ghostbusters branch: HP = Brownie Points (D6 System), 4 attribute dice, tag skills, no THAC0/saves/spells
+      if (game_system === 'ghostbusters') {
+        const bp = Math.max(1, Number(gold) || 20);
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'ghostbusters',
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: bp,
+          hp_max: bp,
+          ac: 0,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
       // Top Secret branch: HP = Physical Strength (Vitality), percentile attributes, no THAC0/saves/spells
       if (game_system === 'topsecret') {
         const str = Math.max(1, Math.round((ability_scores && ability_scores.str) || 50));
@@ -403,7 +465,7 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : game_system === 'greyhawk' ? 'greyhawk' : game_system === 'forgottenrealms' ? 'forgottenrealms' : game_system === 'hollowworld' ? 'hollowworld' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : game_system === 'greyhawk' ? 'greyhawk' : game_system === 'forgottenrealms' ? 'forgottenrealms' : game_system === 'hollowworld' ? 'hollowworld' : game_system === 'conan' ? 'conan' : game_system === 'redsonja' ? 'redsonja' : game_system === 'buckrogers' ? 'buckrogers' : game_system === 'ghostbusters' ? 'ghostbusters' : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
       const isBH = sys === 'boothill';
@@ -431,6 +493,12 @@ Deno.serve(async (req) => {
         ? 'a Forgotten Realms fantasy role-playing campaign using AD&D rules set on the world of Toril, continent of Faerûn (Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, the Underdark, active gods, the Harpers, the Zhentarim, the Red Wizards of Thay, high magic)'
         : isHW
         ? 'a Hollow World fantasy role-playing campaign using D&D BECMI/Rules Cyclopedia rules set inside the planet Mystara (a vast inner world with its own central sun, land curving upward, the Immortals who preserved ancient civilizations — Milenian Empire, Traldar, Azcans, Oltecs, Nithians — dinosaurs in eternal jungles, marble cities and jade pyramids, the polar openings)'
+        : sys === 'conan' || sys === 'redsonja'
+        ? 'a Hyborian Age sword-and-sorcery role-playing campaign using a percentile (d100 roll-under) system with eight attributes (Strength, Dexterity, Agility, Endurance, Stature, Intelligence, Mentation, Luck), wound location and severity tables, weapon and adventuring skills, dark sorcery that corrupts, gold pieces, and the savage kingdoms of Robert E. Howard (Cimmeria, Aquilonia, Nemedia, Stygia, Turan, Hyrkania, Zamora)'
+        : sys === 'buckrogers'
+        ? 'a Buck Rogers XXVc science-fiction role-playing campaign using AD&D 2nd Edition rules adapted for the 25th century (THAC0, saving throws, hit dice, classes like Rocketjockey/Warrior/Medic/Engineer/Pilot, blasters and rocket ships, the geniocracy of RAM on Mars, the Asteroid Belt rebellion, Earth as a poisoned relic, genetically engineered races, corporate intrigue across the solar system)'
+        : sys === 'ghostbusters'
+        ? 'a Ghostbusters supernatural comedy-horror role-playing campaign using the West End Games D6 System (four attributes rated in dice — Brain, Muscle, Moves, Cool; tag skills that add bonus dice; the Ghost Die where a 6 summons a ghost; Brownie Points as currency, hero points, and the damage track; Target Numbers for task resolution; proton packs, ghost traps, PKE meters, and ghost classifications; modern-day haunted New York)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
@@ -528,6 +596,8 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       const isSJ = (campaign.game_system || 'add1e') === 'spelljammer';
       const isDS = (campaign.game_system || 'add1e') === 'darksun';
       const isTS = (campaign.game_system || 'add1e') === 'topsecret';
+      const isHY = (campaign.game_system || 'add1e') === 'conan' || (campaign.game_system || 'add1e') === 'redsonja';
+      const isGB = (campaign.game_system || 'add1e') === 'ghostbusters';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -605,6 +675,40 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
           character_class: { type: "string" },
           level: { type: "number" },
           ability_scores: { type: "object", properties: { str: { type: "number" }, pbea: { type: "number" }, char: { type: "number" }, cour: { type: "number" }, know: { type: "number" }, judg: { type: "number" }, coor: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isHY ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { str: { type: "number" }, dex: { type: "number" }, agi: { type: "number" }, end: { type: "number" }, sta: { type: "number" }, int: { type: "number" }, men: { type: "number" }, lck: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isGB ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { brain: { type: "number" }, muscle: { type: "number" }, moves: { type: "number" }, cool: { type: "number" } } },
           hp_current: { type: "number" },
           hp_max: { type: "number" },
           gold: { type: "number" },
@@ -734,6 +838,36 @@ Extract:
 - equipment: array of {name, qty}
 - appearance: physical description if present
 - background: backstory if present`
+        : isHY
+        ? `You are reading a Hyborian Age (Conan / Red Sonja) character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the warrior's name
+- race: their archetype (Barbarian, Mercenary, Thief, Pirate, Hunter, Nomad, Soldier, Sorcerer, Noble, Scholar)
+- character_class: same as archetype
+- level: experience level (default 1)
+- ability_scores: the eight percentile attributes (1-100) — str (Strength), dex (Dexterity), agi (Agility), end (Endurance), sta (Stature), int (Intelligence), men (Mentation), lck (Luck)
+- hp_current and hp_max: current and max vitality (equals Endurance)
+- gold: gold pieces
+- skills: array of {name, level} — weapon skills (level = proficiency 1-6) and adventuring skills (level = percentile score)
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
+        : isGB
+        ? `You are reading a Ghostbusters character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the buster's name
+- race: their archetype (Scientist, Technician, Blue-Collar Buster, Civil Servant, Occultist, Journalist, Maverick)
+- character_class: same as archetype
+- level: experience level (default 1)
+- ability_scores: the four attributes rated in dice (1-5) — brain (Brain), muscle (Muscle), moves (Moves), cool (Cool)
+- hp_current and hp_max: current and max Brownie Points
+- gold: Brownie Points bank
+- skills: array of {name, level} — tag skills (level = bonus dice 1-3)
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -782,22 +916,22 @@ Extract:
         name: charName.trim(),
         campaign_id,
         game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : isTS ? 'topsecret' : (campaign.game_system || 'add1e'),
-        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Human'),
-        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Fighter'),
+        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : 'Human'),
+        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',
         ability_scores,
         level: Math.max(1, Number(ext && ext.level) || 1),
-        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ) ? strFallback : 1),
-        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ) ? strFallback : 1),
-        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : 10),
-        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : 20),
+        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : 1),
+        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : 1),
+        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : 10),
+        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : 20),
         xp: Number(ext && ext.xp) || 0,
         saving_throws: (ext && ext.saving_throws) || {},
         gold: Number(ext && ext.gold) || 0,
         equipment: (ext && ext.equipment) || [],
-        skills: (isSF || isBH || isIJ) ? (ext && ext.skills) || [] : [],
+        skills: (isSF || isBH || isIJ || isTS || isHY || isGB) ? (ext && ext.skills) || [] : [],
         mutations: isGW ? (ext && ext.mutations) || [] : [],
-        spells: isSF ? [] : (ext && ext.spells) || [],
+        spells: (isSF || isGB) ? [] : (ext && ext.spells) || [],
         spell_slots: {},
         appearance: (ext && ext.appearance) || '',
         background: (ext && ext.background) || '',

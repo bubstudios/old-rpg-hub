@@ -1,8 +1,8 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { ScrollText, Rocket, ChevronRight, Library, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Globe } from 'lucide-react';
+import { ScrollText, Rocket, ChevronRight, Library, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Globe, Flame, Swords, Satellite, Ghost } from 'lucide-react';
 import { GAME_SYSTEMS } from '@/lib/gameSystems';
 
-const ICONS = { scroll: ScrollText, rocket: Rocket, atom: Atom, crosshair: Crosshair, compass: Compass, orbit: Orbit, sun: Sun, briefcase: Briefcase, landmark: Landmark, crown: Crown, globe: Globe };
+const ICONS = { scroll: ScrollText, rocket: Rocket, atom: Atom, crosshair: Crosshair, compass: Compass, orbit: Orbit, sun: Sun, briefcase: Briefcase, landmark: Landmark, crown: Crown, globe: Globe, flame: Flame, swords: Swords, satellite: Satellite, ghost: Ghost };
 
 export default function GameSelection() {
   const navigate = useNavigate();

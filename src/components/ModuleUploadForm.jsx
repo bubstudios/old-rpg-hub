@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Flame, Swords, Satellite, Ghost } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
@@ -111,6 +111,18 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
             className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'hollowworld' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
           >
             <Globe className="w-3.5 h-3.5" /> HOLLOW WORLD
+          </button>
+          <button onClick={() => setGameSystem('conan')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'conan' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
+            <Flame className="w-3.5 h-3.5" /> CONAN
+          </button>
+          <button onClick={() => setGameSystem('redsonja')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'redsonja' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
+            <Swords className="w-3.5 h-3.5" /> RED SONJA
+          </button>
+          <button onClick={() => setGameSystem('buckrogers')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'buckrogers' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
+            <Satellite className="w-3.5 h-3.5" /> BUCK ROGERS
+          </button>
+          <button onClick={() => setGameSystem('ghostbusters')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'ghostbusters' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
+            <Ghost className="w-3.5 h-3.5" /> GHOSTBUSTERS
           </button>
         </div>
       </div>
