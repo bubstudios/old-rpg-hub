@@ -529,7 +529,7 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : game_system === 'greyhawk' ? 'greyhawk' : game_system === 'forgottenrealms' ? 'forgottenrealms' : game_system === 'hollowworld' ? 'hollowworld' : game_system === 'conan' ? 'conan' : game_system === 'redsonja' ? 'redsonja' : game_system === 'buckrogers' ? 'buckrogers' : game_system === 'ghostbusters' ? 'ghostbusters' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : game_system === 'greyhawk' ? 'greyhawk' : game_system === 'forgottenrealms' ? 'forgottenrealms' : game_system === 'hollowworld' ? 'hollowworld' : game_system === 'conan' ? 'conan' : game_system === 'redsonja' ? 'redsonja' : game_system === 'buckrogers' ? 'buckrogers' : game_system === 'ghostbusters' ? 'ghostbusters' : game_system === 'gangbusters' ? 'gangbusters' : game_system === 'legionofdoom' ? 'legionofdoom' : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
       const isBH = sys === 'boothill';
@@ -537,6 +537,9 @@ Deno.serve(async (req) => {
       const isSJ = sys === 'spelljammer';
       const isDS = sys === 'darksun';
       const isTS = sys === 'topsecret';
+      const isGH = sys === 'greyhawk';
+      const isFR = sys === 'forgottenrealms';
+      const isHW = sys === 'hollowworld';
       const systemContext = isBH
         ? 'a Boot Hill Wild West role-playing campaign (percentile attributes — Speed, Gun Accuracy, Throwing Accuracy, Strength, Bravery, Experience; quick-draw shootouts, wound location and severity tables, frontier towns, dollars)'
         : isSF
