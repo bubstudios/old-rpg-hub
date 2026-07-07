@@ -120,6 +120,51 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/57d086f5d_generated_image.png",
     icon: "briefcase",
     enterLabel: "Accept the Mission"
+  },
+  {
+    id: "greyhawk",
+    name: "Greyhawk",
+    short: "Greyhawk",
+    tagline: "The classic World of Oerth",
+    description:
+      "The original Advanced Dungeons & Dragons campaign setting — the World of Greyhawk, created by Gary Gygax himself. Adventure across the Flanaess: the Free City of Greyhawk, the warring Great Kingdom, the shadow of Iuz, the scheming Circle of Eight, and the deadliest dungeons ever devised. Classic AD&D 1st Edition rules, ruled by an AI Dungeon Master. The dungeon awaits — and it does not forgive.",
+    dashboardTitle: "GREYHAWK",
+    dashboardSubtitle:
+      "A classic World of Greyhawk campaign, ruled by an AI Dungeon Master. Venture into the Flanaess — the Free City, the ruins of Castle Greyhawk, the wars of the Great Kingdom — where every delve is written in ink that cannot be unwritten.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/77a086e09_generated_image.png",
+    icon: "landmark",
+    enterLabel: "Enter the Flanaess"
+  },
+  {
+    id: "forgottenrealms",
+    name: "Forgotten Realms",
+    short: "Forgotten Realms",
+    tagline: "The Realms of high magic",
+    description:
+      "The most beloved Dungeons & Dragons setting — the Forgotten Realms, the world of Toril. Adventure across Faerûn: Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur's Gate, and the lightless Underdark beneath. Active gods walk among mortals, factions like the Harpers and Zhentarim scheme for power, and ancient magic saturates the land. AD&D rules, ruled by an AI Dungeon Master. The Realms await.",
+    dashboardTitle: "FORGOTTEN REALMS",
+    dashboardSubtitle:
+      "A Forgotten Realms campaign on the world of Toril, ruled by an AI Dungeon Master. Walk the streets of Waterdeep, brave the Underdark, and cross paths with gods and factions — where every legend is written in ink that cannot be unwritten.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/c02ba8eb4_generated_image.png",
+    icon: "crown",
+    enterLabel: "Enter the Realms"
+  },
+  {
+    id: "hollowworld",
+    name: "Hollow World",
+    short: "Hollow World",
+    tagline: "A world within the world",
+    description:
+      "Deep within the planet Mystara lies the Hollow World — a vast inner realm with its own sun, where the Immortals preserved ancient civilizations from the surface world's cataclysms. Explore the marble colonnades of the Milenian Empire, the jade pyramids of the Azcans, the pharaohs of Nithia, and dinosaurs roaming eternal jungles under an unmoving sun. D&D BECMI rules, ruled by an AI Dungeon Master. Descend through the polar opening — and discover a world that time forgot.",
+    dashboardTitle: "THE HOLLOW WORLD",
+    dashboardSubtitle:
+      "A Hollow World campaign inside the planet Mystara, ruled by an AI Dungeon Master. Descend through the polar opening into a vast inner world of preserved civilizations, immortal guardians, and ancient wonders — where every discovery is written in ink that cannot be unwritten.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/8dd161c03_generated_image.png",
+    icon: "globe",
+    enterLabel: "Descend Within"
   }
 ];
 

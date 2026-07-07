@@ -208,6 +208,68 @@ const TS_SETUP = {
   forgeLabel: 'Accept the Mission'
 };
 
+const GH_WORLDS = [
+  'The Free City of Greyhawk',
+  'The Flanaess',
+  'The Wild Coast',
+  'Furyondy',
+  'The Bandit Kingdoms',
+  'The Domain of Greyhawk',
+  'A custom region of Oerth'
+];
+
+const GH_SETUP = {
+  worldLabel: 'REGION OF OERIK',
+  worldPlaceholder: 'Name the city, region, or domain (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A band of adventurers gathered in the Free City of Greyhawk, hired by a mysterious patron to delve the ruins beneath Castle Greyhawk — where the Archmage's dungeons grow more deadly with every level descended.'",
+  namePlaceholder: 'e.g. Shadows of the Flanaess',
+  forgeLabel: 'Enter the Flanaess'
+};
+
+const FR_WORLDS = [
+  'Waterdeep',
+  'The Dalelands',
+  'The Sword Coast',
+  'Cormyr',
+  "Baldur's Gate",
+  'The North',
+  'A custom region of Faerûn'
+];
+
+const FR_SETUP = {
+  worldLabel: 'REGION OF FAERÛN',
+  worldPlaceholder: 'Name the city, region, or realm (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A party of adventurers arrives in Waterdeep the City of Splendors, drawn by a Harper's plea to investigate a Zhentarim plot threatening the Lords' Alliance — a conspiracy reaching into the highest towers of the city.'",
+  namePlaceholder: 'e.g. Shadows over Waterdeep',
+  forgeLabel: 'Enter the Realms'
+};
+
+const HW_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of exploration, survival, and ancient cultures' },
+  { id: 'combat_heavy', label: 'Beast Hunter', icon: Swords, desc: 'Frequent clashes with beasts, raiders, and preserved perils' },
+  { id: 'dungeon_crawler', label: 'Ruins of the Ancients', icon: Compass, desc: 'Lost cities, buried complexes, and Immortal secrets' },
+  { id: 'sandbox', label: 'The Inner World', icon: Map, desc: 'A vast curved world, free to explore' },
+  { id: 'character_driven', label: 'Cultural Saga', icon: Drama, desc: 'Faction politics, ancient lineages, and personal arcs' }
+];
+
+const HW_WORLDS = [
+  'The Milenian Empire',
+  'The Traldar Kingdoms',
+  'Azcanta',
+  'The Oltec Lands',
+  'Nithia',
+  'The Polar Opening',
+  'A custom region of the Hollow World'
+];
+
+const HW_SETUP = {
+  worldLabel: 'REGION OF THE HOLLOW WORLD',
+  worldPlaceholder: 'Name the culture, region, or land (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A party of surface-world explorers plunges through the polar opening into the Hollow World, finding themselves among the marble colonnades of the Milenian Empire — a civilization preserved by the Immortals, unaware that the surface world moved on millennia ago.'",
+  namePlaceholder: 'e.g. Descent into the Hollow World',
+  forgeLabel: 'Descend Within'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -226,9 +288,12 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isSJ = gameSystem === 'spelljammer';
   const isDS = gameSystem === 'darksun';
   const isTS = gameSystem === 'topsecret';
-  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
-  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
+  const isGH = gameSystem === 'greyhawk';
+  const isFR = gameSystem === 'forgottenrealms';
+  const isHW = gameSystem === 'hollowworld';
+  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : DND_TONES;
+  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : isHW ? HW_WORLDS : isFR ? FR_WORLDS : isGH ? GH_WORLDS : DND_WORLDS;
+  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : isHW ? HW_SETUP : isFR ? FR_SETUP : isGH ? GH_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -244,7 +309,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -366,7 +431,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : isHW ? 'Hollow World' : isFR ? 'Forgotten Realms' : isGH ? 'Greyhawk' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';

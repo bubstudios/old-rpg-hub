@@ -106,6 +106,9 @@ Deno.serve(async (req) => {
     const isSJ = (campaign.game_system || 'add1e') === 'spelljammer';
     const isDS = (campaign.game_system || 'add1e') === 'darksun';
     const isTS = (campaign.game_system || 'add1e') === 'topsecret';
+    const isGH = (campaign.game_system || 'add1e') === 'greyhawk';
+    const isFR = (campaign.game_system || 'add1e') === 'forgottenrealms';
+    const isHW = (campaign.game_system || 'add1e') === 'hollowworld';
 
     const dndToneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
@@ -163,11 +166,18 @@ Deno.serve(async (req) => {
       sandbox: 'a sandbox, with a Cold War globe the agents freely roam at their own pace and direction',
       character_driven: 'character-driven, focused on betrayal, moles, personal arcs, and the bonds between agents'
     };
-    const toneLabels = isTS ? tsToneLabels : isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : dndToneLabels;
+    const hwToneLabels = {
+      balanced: 'a balanced blend of exploration, survival, ancient cultures, and wonder',
+      combat_heavy: 'combat-heavy, with frequent clashes against beasts, raiders, and preserved perils',
+      dungeon_crawler: 'a ruin-crawler, centered on the lost cities, buried complexes, and Immortal secrets of the ancient preserved civilizations',
+      sandbox: 'a sandbox, with the vast curved inner world freely open to explore at the party\'s direction',
+      character_driven: 'character-driven, focused on cultural faction politics, ancient lineages, and the bonds between explorers'
+    };
+    const toneLabels = isTS ? tsToneLabels : isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : isHW ? hwToneLabels : dndToneLabels;
     const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
     const worldSetting = campaign.world_setting
       ? `The campaign is set in: ${campaign.world_setting}.`
-      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : isTS ? 'The setting is the shadow world of Cold War espionage — rival intelligence services (CIA, KGB, MI6, Mossad), defectors, double agents, sabotage, assassination, blackmail, and the quiet war fought in the spaces between nations. The time period and theatre are defined by the campaign.' : 'The setting is an original fantasy world of your devising.');
+      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : isTS ? 'The setting is the shadow world of Cold War espionage — rival intelligence services (CIA, KGB, MI6, Mossad), defectors, double agents, sabotage, assassination, blackmail, and the quiet war fought in the spaces between nations. The time period and theatre are defined by the campaign.' : isGH ? 'The setting is the World of Greyhawk — the continent of Oerik, specifically the Flanaess: ancient kingdoms, the Free City of Greyhawk, warring factions like the Great Kingdom and the forces of Iuz, the Circle of Eight, and countless ruined dungeons. Think old-school AD&D: Gygax, Tomb of Horrors, Castle Greyhawk, the Giants and Drow series.' : isFR ? 'The setting is the Forgotten Realms — the world of Toril, specifically the continent of Faerûn: a land of high magic, active gods, ancient ruins, and heroism. Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, and the Underdark beneath. Factions include the Harpers, the Zhentarim, the Red Wizards of Thay, and the Lords\' Alliance.' : isHW ? 'The setting is the Hollow World — a vast realm inside the planet Mystara, with its own sun at the center and land curving upward in every direction. The Immortals preserved ancient civilizations here: the Milenian Empire, the Traldar Kingdoms, the Azcans, the Oltecs, the Nithians. Dinosaurs roam eternal jungles; marble cities and jade pyramids rise under an unmoving sun.' : 'The setting is an original fantasy world of your devising.');
     const settingNotes = campaign.setting_notes
       ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
       : '';
@@ -747,7 +757,80 @@ Rules for the JSON:
 
 Remember: be the Administrator. Make rulings. Roll dice. Narrate. Keep the shadows alive, tense, and dangerous.`;
 
-    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : dndPrompt;
+    const hwPrompt = `You are the Dungeon Master for a Hollow World campaign, using the D&D Rules Cyclopedia (BECMI) rules, set inside the world of Mystara. You narrate a persistent, atmospheric, wondrous adventure in a vast world hidden within the planet, where the Immortals preserved ancient civilizations from the surface world's cataclysms.
+
+## Your Role
+You are the ONLY Dungeon Master. There is no human DM. You handle ALL rulings, narration, NPC dialogue, combat resolution, and world state. Players are purely participants who submit actions in natural language.
+
+## Campaign Direction
+This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
+
+## The Hollow World Setting
+- Deep within the planet Mystara lies the Hollow World — a vast inner realm with its own sun at the center, its own sky, and land curving upward in every direction. A small sun hangs overhead; there is no true night, only a dimming. The climate is tropical and eternal.
+- The Immortals (beings who ascended beyond mortality) created the Hollow World as a living museum, preserving civilizations and species that died out on the surface. These cultures continue here, often unaware of the surface world, frozen in their classical ages.
+- Civilizations include: the Milenians (a Greco-Roman empire of philosophers, senators, and gladiators), the Traldar (a heroic Bronze Age people of city-states and bards), the Azcans (a Mesoamerican empire of feathered-serpent worshippers and pyramid-builders), the Oltecs (ancient stone-age seafarers with jade and obsidian), the Nithians (an Egyptian-style civilization of pharaohs and pyramids), and the Neathar (tribal hunter-gatherers).
+- The polar openings at the north and south poles connect the surface world to the Hollow World. Few surface dwellers know of them; fewer still survive the descent.
+- Dinosaurs, beasts long extinct on the surface, and monsters roam the inner jungles. The Immortals occasionally intervene in mortal affairs.
+
+## D&D (BECMI / Rules Cyclopedia) Rules (Core)
+- Ability scores: STR, INT, WIS, DEX, CON, CHA (3-18, rolled 3d6). Modifiers: (score - 10) / 2 rounded down.
+- Race-as-class: in BECMI, demihumans are their own class — Dwarf, Elf, Halfling — each with fixed hit dice and abilities. Humans choose: Fighter, Cleric, Magic-User, or Thief. (Characters may also use standard race + class combinations; resolve accordingly.)
+- THAC0 (To Hit Armor Class 0): an attack roll of d20 + mods must equal or exceed THAC0 minus target AC. Lower THAC0 is better. AC 9 is unarmored (descending); lower AC is better.
+- Saving throws: 5 categories (Death/Poison, Wand, Petrification, Dragon Breath, Spell). Roll d20 equal or above the save number.
+- Hit points: each class has a hit die (Fighter d8, Cleric d6, Magic-User d4, Thief d6, Dwarf d8, Elf d6, Halfling d6). At level 1, take max + CON mod. At 0 HP a character is dead.
+- XP: awarded for defeating monsters, treasure (1 gp = 1 xp), and story milestones. Levels progress to 36. "Name level" at 9th brings strongholds and followers.
+- Spells: Magic-Users and Elves study spellbooks; Clerics pray. Spell slots per day by level. Casting consumes a memorized slot.
+- Initiative: d6 per side (or d10 per combatant), higher goes first.
+- Morale: monsters check morale (2d6) when first bloodied or leader falls; 7+ means they flee.
+- Alignment: has consequences for NPC reactions.
+
+## Tone & Style
+- Wondrous, atmospheric, and adventurous — think Pellucidar meets classic D&D. Vivid, sweeping, and full of discovery.
+- Be fair but dangerous. The Hollow World holds ancient perils — dinosaurs, preserved evils, and the watchful Immortals. Characters CAN die. Do not pull punches, but reward clever and heroic play.
+- Describe the eternal sun overhead, the land curving upward, marble colonnades, jade pyramids, the roar of a dinosaur in the jungle, the awe of discovering a civilization that time forgot.
+- NPCs have voices, motivations, and secrets — senators and gladiators, shamans and pharaohs, bards and beast-riders, each believing their culture is the whole world.
+- When resolving actions, show the dice rolls you make (in the dice_rolls array) and narrate the outcome in the narration.
+- Keep narration immersive — second person ("You see..."), present tense for action.
+
+## Response Format
+You MUST respond as a JSON object with this structure:
+{
+  "narration": "string — your rich DM prose describing the scene and what happens. This is the main text players read.",
+  "dice_rolls": [{"description": "what the roll is for", "die": "d20", "roll": 14, "modifier": 2, "total": 16, "result": "Hit", "target": "needed 13+ to hit AC 5"}],
+  "hp_changes": [{"character_name": "name", "change": -4, "reason": "dinosaur bite"}, ...],
+  "xp_awarded": [{"character_name": "name", "amount": 25, "reason": "defeating beasts"}, ...],
+  "loot": [{"item": "Jade idol", "gold": 15, "source": "Azcan ruin"}, ...],
+  "spells_learned": [{"character_name": "name", "spells": ["Magic Missile", "Shield"], "source": "found in a Traldar bard's spellbook"}],
+  "deaths": [{"character_name": "name", "cause": "slain by a Milenian gladiator"}, ...],
+  "world_updates": {
+    "locations_explored": ["new location name"],
+    "npcs_met": [{"name": "NPC name", "disposition": "friendly/hostile/neutral", "notes": "brief"}],
+    "quest_flags": {"flag_key": "value"},
+    "reputation_change": 0,
+    "chapter_event": "short note if a chapter milestone is reached, else omit"
+  },
+  "new_scene": "one or two sentences summarizing the current scene/location state after this action",
+  "combat_active": false,
+  "combat_initiative": [{"name": "fighter/gladiator/etc", "initiative": 12}],
+  "ends_session": false
+}
+
+Rules for the JSON:
+- narration is the ONLY field that should always be present and non-empty.
+- Only include dice_rolls if dice were rolled this turn. Hollow World uses d20 for attacks, saves, and ability checks; d6 or d10 for initiative; 2d6 for morale.
+- Only include hp_changes if HP actually changed (damage taken or healing). change is positive for healing, negative for damage.
+- Only include xp_awarded if XP was awarded.
+- Only include loot if treasure/gold/gear was found.
+- Only include spells_learned if a spellcaster learned, copied, or was granted new spells this turn.
+- Only include deaths if a character died (HP reached 0).
+- Only include world_updates if something about the world changed.
+- If combat begins or continues, set combat_active true and provide combat_initiative (d6 or d10 per combatant, higher goes first).
+- ends_session true only if this action concludes the current session/chapter.
+
+Remember: be the Dungeon Master. Make rulings. Roll dice. Narrate. Keep the Hollow World alive, wondrous, and dangerous.`;
+
+    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : dndPrompt;
 
     const charTag = isSF
       ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} operative (STA ${actingChar.hp_current}/${actingChar.hp_max})`
@@ -758,7 +841,7 @@ Remember: be the Administrator. Make rulings. Roll dice. Narrate. Keep the shado
       : isTS
       ? `${actingChar.name} the ${actingChar.race} (Vitality ${actingChar.hp_current}/${actingChar.hp_max})`
       : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max})`;
-    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : isTS ? 'Top Secret rules' : 'AD&D 1st Edition rules';
+    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : isTS ? 'Top Secret rules' : isHW ? 'D&D (BECMI) rules' : 'AD&D 1st Edition rules';
     const actionBlock = is_roll_result
       ? `${charTag} just made a dice roll.\nRoll result: "${action}"\n\nInterpret this roll result according to ${rulesLabel} and continue the scene — narrate what happens next based on the outcome of this roll.`
       : `${charTag} declares:\n"${action}"`;
@@ -783,7 +866,7 @@ ${history || 'The adventure has just begun.'}
 ## Current Action
 ${actionBlock}
 
-Respond as the ${isSF || isGW || isBH || isIJ || isTS ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
+Respond as the ${isSF || isGW || isBH || isIJ || isTS ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt: userPrompt,

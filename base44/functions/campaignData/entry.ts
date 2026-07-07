@@ -403,7 +403,7 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : game_system === 'greyhawk' ? 'greyhawk' : game_system === 'forgottenrealms' ? 'forgottenrealms' : game_system === 'hollowworld' ? 'hollowworld' : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
       const isBH = sys === 'boothill';
@@ -425,6 +425,12 @@ Deno.serve(async (req) => {
         ? 'a Dark Sun post-apocalyptic fantasy role-playing campaign using AD&D 2nd Edition rules set on the dying desert world of Athas (crimson sun, Sea of Silt, defiling vs preserving magic, psionics common, metal scarcity with bone/stone/obsidian weapons, sorcerer-kings and templars, gladiatorial arenas, slavery, races like Mul/Half-Giant/Thri-kreen/Athasian Elf/Dwarf/Halfling, ceramic pieces, city-states like Tyr/Urik/Balic/Gulg/Nibenay)'
         : isTS
         ? 'a Top Secret Cold War espionage role-playing campaign using TSR 1980 rules (seven percentile attributes 1-100 — Physical Strength, Physical Beauty, Charm, Courage, Knowledge, Judgment, Coordination; d100 roll-under resolution; Coordination for combat to-hit and initiative; Courage nerve modifier; wound location and severity tables; weapon and tradecraft skills; dollars; rival intelligence services like CIA/KGB/MI6/Mossad; cover identities, dead drops, moles, double agents, sabotage, and assassination)'
+        : isGH
+        ? 'a Greyhawk fantasy role-playing campaign using AD&D 1st Edition rules set on the World of Oerth, continent of Oerik — the Flanaess (the Free City of Greyhawk, the Great Kingdom, Furyondy, the Bandit Kingdoms, Iuz, the Circle of Eight, ruined dungeons like Castle Greyhawk, classic Gygaxian adventure)'
+        : isFR
+        ? 'a Forgotten Realms fantasy role-playing campaign using AD&D rules set on the world of Toril, continent of Faerûn (Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, the Underdark, active gods, the Harpers, the Zhentarim, the Red Wizards of Thay, high magic)'
+        : isHW
+        ? 'a Hollow World fantasy role-playing campaign using D&D BECMI/Rules Cyclopedia rules set inside the planet Mystara (a vast inner world with its own central sun, land curving upward, the Immortals who preserved ancient civilizations — Milenian Empire, Traldar, Azcans, Oltecs, Nithians — dinosaurs in eternal jungles, marble cities and jade pyramids, the polar openings)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
@@ -775,7 +781,7 @@ Extract:
       const character = await base44.entities.Character.create({
         name: charName.trim(),
         campaign_id,
-        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : isTS ? 'topsecret' : 'add1e',
+        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : isTS ? 'topsecret' : (campaign.game_system || 'add1e'),
         race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Human'),
         character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',

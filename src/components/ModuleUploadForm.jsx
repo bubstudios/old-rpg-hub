@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
@@ -93,6 +93,24 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
             className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'topsecret' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
           >
             <Briefcase className="w-3.5 h-3.5" /> TOP SECRET
+          </button>
+          <button
+            onClick={() => setGameSystem('greyhawk')}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'greyhawk' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Landmark className="w-3.5 h-3.5" /> GREYHAWK
+          </button>
+          <button
+            onClick={() => setGameSystem('forgottenrealms')}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'forgottenrealms' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Crown className="w-3.5 h-3.5" /> FORGOTTEN REALMS
+          </button>
+          <button
+            onClick={() => setGameSystem('hollowworld')}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'hollowworld' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Globe className="w-3.5 h-3.5" /> HOLLOW WORLD
           </button>
         </div>
       </div>

@@ -395,6 +395,12 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We emerge from the slave pens at dusk, counting the guards and eyeing the gate..." : "What does your Athasian survivor do?")
                     : campaign?.game_system === 'topsecret'
                     ? (isSetup ? "e.g. We make the dead drop at the tram station, watching for tails..." : "What does your agent do?")
+                    : campaign?.game_system === 'greyhawk'
+                    ? (isSetup ? "e.g. We gather at the Green Dragon Inn in the Free City, eyeing the stranger's map..." : "What does your hero do?")
+                    : campaign?.game_system === 'forgottenrealms'
+                    ? (isSetup ? "e.g. We step through the gates of Waterdeep as dusk falls over the harbor..." : "What does your hero do?")
+                    : campaign?.game_system === 'hollowworld'
+                    ? (isSetup ? "e.g. We emerge from the polar passage into the eternal light of the inner world..." : "What does your explorer do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}
