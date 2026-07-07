@@ -20,7 +20,7 @@ export default function Layout() {
             </div>
             <div className="leading-none">
               <span className="font-heading font-700 text-sm sm:text-base tracking-[0.15em] text-foreground">
-                THE IRON REALM
+                OLD RPG HUB
               </span>
               <span className="hidden sm:block text-[10px] font-heading tracking-[0.2em] text-primary/70 mt-0.5">
                 {activeGame ? `${activeGame.short.toUpperCase()} · AI GAME MASTER` : 'CHOOSE YOUR REALM'}
@@ -54,7 +54,7 @@ export default function Layout() {
       </main>
       <footer className="border-t border-border/40 py-3 px-6 text-center">
         <span className="text-[10px] font-heading tracking-[0.2em] text-muted-foreground/60">
-          ⚔ THE IRON REALM · EST. IN DARKNESS ⚔
+          ⚔ OLD RPG HUB · EST. IN DARKNESS ⚔
         </span>
       </footer>
     </div>
