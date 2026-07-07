@@ -159,6 +159,7 @@ export default function CampaignDetail() {
         narrate_audio: voiceOn
       });
       setLatestResult(res.data);
+      setProcessing(false);
       await loadData();
       setLatestResult(null);
     } catch (e) {
@@ -220,6 +221,7 @@ export default function CampaignDetail() {
       });
       const result = res.data;
       setLatestResult(result);
+      setProcessing(false);
 
       // Reload campaign + characters to reflect changes (narration now lives in entries)
       await loadData();
