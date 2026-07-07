@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones)"
+      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret)"
     },
     "level": {
       "type": "number",
@@ -131,6 +131,30 @@
         "app": {
           "type": "number",
           "description": "Appeal (Indiana Jones) \u2014 personality, charm, physical presence"
+        },
+        "pbea": {
+          "type": "number",
+          "description": "Physical Beauty (Top Secret) \u2014 appearance, disguise, cover identities"
+        },
+        "char": {
+          "type": "number",
+          "description": "Charm (Top Secret) \u2014 persuasion, seduction, social manipulation"
+        },
+        "cour": {
+          "type": "number",
+          "description": "Courage (Top Secret) \u2014 nerve under fire, willpower, combat modifier"
+        },
+        "know": {
+          "type": "number",
+          "description": "Knowledge (Top Secret) \u2014 education, languages, tradecraft facts"
+        },
+        "judg": {
+          "type": "number",
+          "description": "Judgment (Top Secret) \u2014 perception, tactics, decision-making"
+        },
+        "coor": {
+          "type": "number",
+          "description": "Coordination (Top Secret) \u2014 reflexes, dexterity, combat to-hit, initiative"
         }
       }
     },
@@ -177,7 +201,7 @@
     "gold": {
       "type": "number",
       "default": 0,
-      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones)"
+      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones, Top Secret)"
     },
     "equipment": {
       "type": "array",
@@ -198,7 +222,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, or Indiana Jones weapon/work skills (level = proficiency or percentile)",
+      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, or Top Secret weapon/tradecraft skills (level = proficiency or percentile)",
       "items": {
         "type": "object",
         "properties": {
@@ -213,7 +237,7 @@
     },
     "mutations": {
       "type": "array",
-      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D, Star Frontiers, Boot Hill, and Indiana Jones",
+      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D, Star Frontiers, Boot Hill, Indiana Jones, and Top Secret",
       "items": {
         "type": "object",
         "properties": {

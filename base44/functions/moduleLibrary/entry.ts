@@ -60,13 +60,14 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';
       const isIJ = gameSystem === 'indianajones';
       const isSJ = gameSystem === 'spelljammer';
       const isDS = gameSystem === 'darksun';
+      const isTS = gameSystem === 'topsecret';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -307,6 +308,46 @@ Rules:
 - Preserve exact numbers (damage, HP, save values, treasure amounts).
 - Use Dark Sun (AD&D 2nd Edition) mechanics: ability scores 3-18 (4d6 drop lowest, may exceed 18 with racial mods), THAC0, saving throws (5 categories), hit dice by class, spell slots, defiling vs preserving magic, psionics (PSPs, disciplines), ceramic pieces (cp), metal scarcity (bone/stone/obsidian weapons), sorcerer-kings, gladiators, slavery, the dying world of Athas beneath a crimson sun.
 - If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isTS
+        ? `You are preparing a detailed reference brief from an uploaded Top Secret espionage mission module so an AI Administrator (Game Master) can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the mission. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended agent experience levels, estimated length.
+
+## PREMISE & BACKGROUND
+The mission briefing, objectives, hooks, and what the operation is about — in enough detail to brief the agents. Note the time period, theatre, and agencies involved.
+
+## KEY LOCATIONS & AREAS
+For EACH location, building, facility, or area, preserve: the location name; what the agents see (description); contents (NPCs, enemies, security, intel, hazards, secrets, traps); any special rules or conditions; hidden elements the GM knows but agents discover through play. Keep these FULLY detailed — this is the spine of the mission.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note handlers, assets, rival agents, defectors, informants, and enemy operatives.
+
+## ENEMIES & COMBAT
+Enemy types (guards, agents, soldiers, hitmen), stats, numbers, tactics, weapons. Note patrol routes, alarm systems, and ambush points.
+
+## TREASURE & EQUIPMENT
+Notable gear, weapons, dollars, forged documents, and intelligence recovered, with locations.
+
+## HAZARDS & TRAPS
+Each hazard/trap: where, what it does, how to detect/avoid, damage. Include security systems, alarms, mines, and environmental hazards.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, chase rules, random encounters, stealth and surveillance rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: enemies, intel, traps, secrets).
+- Preserve exact numbers (damage, attribute scores, dollar amounts, wound levels).
+- Use Top Secret mechanics: seven percentile attributes 1-100 (Physical Strength, Physical Beauty, Charm, Courage, Knowledge, Judgment, Coordination), d100 roll-under resolution, Coordination for combat to-hit, Courage nerve modifier, wound location and severity tables, dollars, Cold War espionage setting.
+- If the document is not a mission module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.
 

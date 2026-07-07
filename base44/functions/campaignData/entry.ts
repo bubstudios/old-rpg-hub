@@ -330,6 +330,37 @@ Deno.serve(async (req) => {
         return Response.json({ character });
       }
 
+      // Top Secret branch: HP = Physical Strength (Vitality), percentile attributes, no THAC0/saves/spells
+      if (game_system === 'topsecret') {
+        const str = Math.max(1, Math.round((ability_scores && ability_scores.str) || 50));
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'topsecret',
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: str,
+          hp_max: str,
+          ac: 0,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
       const cls = CLASSES[character_class];
       if (!cls) return Response.json({ error: 'Invalid class' }, { status: 400 });
 
@@ -372,13 +403,14 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
       const isBH = sys === 'boothill';
       const isIJ = sys === 'indianajones';
       const isSJ = sys === 'spelljammer';
       const isDS = sys === 'darksun';
+      const isTS = sys === 'topsecret';
       const systemContext = isBH
         ? 'a Boot Hill Wild West role-playing campaign (percentile attributes — Speed, Gun Accuracy, Throwing Accuracy, Strength, Bravery, Experience; quick-draw shootouts, wound location and severity tables, frontier towns, dollars)'
         : isSF
@@ -391,6 +423,8 @@ Deno.serve(async (req) => {
         ? 'a Spelljammer science-fantasy role-playing campaign using AD&D 2nd Edition Adventures in Space rules (crystal spheres, the phlogiston, spelljamming helms powered by spellcasters, wildspace, ship combat with SR and hull points, spacefaring races like Giff/Scro/Dracon/Hadozee/Xixchil, neogi and mind flayer fleets, the Arcane traders, gold pieces)'
         : isDS
         ? 'a Dark Sun post-apocalyptic fantasy role-playing campaign using AD&D 2nd Edition rules set on the dying desert world of Athas (crimson sun, Sea of Silt, defiling vs preserving magic, psionics common, metal scarcity with bone/stone/obsidian weapons, sorcerer-kings and templars, gladiatorial arenas, slavery, races like Mul/Half-Giant/Thri-kreen/Athasian Elf/Dwarf/Halfling, ceramic pieces, city-states like Tyr/Urik/Balic/Gulg/Nibenay)'
+        : isTS
+        ? 'a Top Secret Cold War espionage role-playing campaign using TSR 1980 rules (seven percentile attributes 1-100 — Physical Strength, Physical Beauty, Charm, Courage, Knowledge, Judgment, Coordination; d100 roll-under resolution; Coordination for combat to-hit and initiative; Courage nerve modifier; wound location and severity tables; weapon and tradecraft skills; dollars; rival intelligence services like CIA/KGB/MI6/Mossad; cover identities, dead drops, moles, double agents, sabotage, and assassination)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
@@ -487,6 +521,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       const isIJ = (campaign.game_system || 'add1e') === 'indianajones';
       const isSJ = (campaign.game_system || 'add1e') === 'spelljammer';
       const isDS = (campaign.game_system || 'add1e') === 'darksun';
+      const isTS = (campaign.game_system || 'add1e') === 'topsecret';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -547,6 +582,23 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
           character_class: { type: "string" },
           level: { type: "number" },
           ability_scores: { type: "object", properties: { str: { type: "number" }, mov: { type: "number" }, prw: { type: "number" }, bck: { type: "number" }, ins: { type: "number" }, app: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isTS ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { str: { type: "number" }, pbea: { type: "number" }, char: { type: "number" }, cour: { type: "number" }, know: { type: "number" }, judg: { type: "number" }, coor: { type: "number" } } },
           hp_current: { type: "number" },
           hp_max: { type: "number" },
           gold: { type: "number" },
@@ -661,6 +713,21 @@ Extract:
 - spells: array of spell names
 - appearance: physical description if present
 - background: backstory if present`
+        : isTS
+        ? `You are reading a Top Secret espionage character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the agent's name or codename
+- race: their archetype (Field Agent, Assassin, Commando, Demolitions Expert, Electronics Tech, Wheelman, Interrogator, Martial Artist, Sniper, Forgery Specialist)
+- character_class: same as archetype
+- level: experience level (default 1)
+- ability_scores: the seven percentile attributes (1-100) — str (Physical Strength), pbea (Physical Beauty), char (Charm), cour (Courage), know (Knowledge), judg (Judgment), coor (Coordination)
+- hp_current and hp_max: current and max vitality (equals Physical Strength)
+- gold: dollars
+- skills: array of {name, level} — weapon skills (level = proficiency 1-6) and tradecraft skills (level = percentile score)
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -708,7 +775,7 @@ Extract:
       const character = await base44.entities.Character.create({
         name: charName.trim(),
         campaign_id,
-        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : 'add1e',
+        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : isTS ? 'topsecret' : 'add1e',
         race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Human'),
         character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',

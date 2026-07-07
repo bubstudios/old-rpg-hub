@@ -183,6 +183,31 @@ const DS_SETUP = {
   forgeLabel: 'Brave the Wastes'
 };
 
+const TS_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of tradecraft, action, and intrigue' },
+  { id: 'combat_heavy', label: 'Firefights', icon: Crosshair, desc: 'Frequent shootouts, raids, and lethal clashes' },
+  { id: 'dungeon_crawler', label: 'Deep Cover', icon: Compass, desc: 'Infiltration, facilities, and hidden bases' },
+  { id: 'sandbox', label: 'Globe-Trotting', icon: Globe, desc: 'Open Cold War world, go where the mission leads' },
+  { id: 'character_driven', label: 'Spycraft', icon: Drama, desc: 'Betrayal, moles, and personal arcs' }
+];
+
+const TS_WORLDS = [
+  'Cold War Europe',
+  'The Caribbean',
+  'Southeast Asia',
+  'The Middle East',
+  'North America',
+  'A custom theatre of my own'
+];
+
+const TS_SETUP = {
+  worldLabel: 'THEATRE / SETTING',
+  worldPlaceholder: 'Name the city, country, or theatre (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, agency, mission, or details you want the Administrator to weave in. e.g. 'Cold War Berlin, 1965. A CIA station chief hands your team a defector's file and a photograph of a Soviet mole inside Western intelligence. Find the mole before he vanishes — or before your own side burns you.'",
+  namePlaceholder: 'e.g. Operation Ghost Protocol',
+  forgeLabel: 'Accept the Mission'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -200,9 +225,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isIJ = gameSystem === 'indianajones';
   const isSJ = gameSystem === 'spelljammer';
   const isDS = gameSystem === 'darksun';
-  const tones = isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
-  const worlds = isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
+  const isTS = gameSystem === 'topsecret';
+  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
+  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -218,7 +244,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -340,7 +366,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

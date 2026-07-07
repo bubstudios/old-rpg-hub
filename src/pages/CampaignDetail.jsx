@@ -9,6 +9,7 @@ import SFDiceRollerPanel from '@/components/SFDiceRollerPanel';
 import GWDiceRollerPanel from '@/components/GWDiceRollerPanel';
 import BHDiceRollerPanel from '@/components/BHDiceRollerPanel';
 import IJDiceRollerPanel from '@/components/IJDiceRollerPanel';
+import TSDiceRollerPanel from '@/components/TSDiceRollerPanel';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -305,7 +306,7 @@ export default function CampaignDetail() {
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
-                {myCharacter?.name?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
+                {myCharacter?.name?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
               </span>
               <button
                 onClick={() => setDiscussMode((m) => !m)}
@@ -354,6 +355,14 @@ export default function CampaignDetail() {
                   onRolled={handleRollCompleted}
                   onClose={() => setDiceOpen(false)}
                 />
+              ) : campaign?.game_system === 'topsecret' ? (
+                <TSDiceRollerPanel
+                  myCharacter={myCharacter}
+                  campaignId={campaignId}
+                  chapter={campaign.current_chapter}
+                  onRolled={handleRollCompleted}
+                  onClose={() => setDiceOpen(false)}
+                />
               ) : (
                 <DiceRollerPanel
                   myCharacter={myCharacter}
@@ -384,6 +393,8 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We bring the spelljammer about and scan the crystal sphere for traffic..." : "What does your spacer do?")
                     : campaign?.game_system === 'darksun'
                     ? (isSetup ? "e.g. We emerge from the slave pens at dusk, counting the guards and eyeing the gate..." : "What does your Athasian survivor do?")
+                    : campaign?.game_system === 'topsecret'
+                    ? (isSetup ? "e.g. We make the dead drop at the tram station, watching for tails..." : "What does your agent do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}

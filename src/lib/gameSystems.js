@@ -105,6 +105,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/418eb6d15_generated_image.png",
     icon: "sun",
     enterLabel: "Brave the Wastes"
+  },
+  {
+    id: "topsecret",
+    name: "Top Secret",
+    short: "Top Secret",
+    tagline: "Espionage in the Cold War shadows",
+    description:
+      "Step into the shadow world of Cold War espionage — CIA, KGB, MI6, and the quiet war fought in the spaces between nations. A classic 1980 TSR spy thriller RPG with percentile attributes, wound tables, tradecraft skills, cover identities, dead drops, and lethal gunfights, all ruled by an AI Administrator. Trust no one. Watch your back. Survive the mission.",
+    dashboardTitle: "TOP SECRET",
+    dashboardSubtitle:
+      "A Cold War espionage campaign of spies, tradecraft, and betrayal, ruled by an AI Administrator. Run assets, crack safes, survive firefights, and navigate the shadow war between rival intelligence services — where one bullet ends a career and loyalty is the rarest currency.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/57d086f5d_generated_image.png",
+    icon: "briefcase",
+    enterLabel: "Accept the Mission"
   }
 ];
 
