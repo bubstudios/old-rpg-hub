@@ -225,6 +225,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/958d3add0_generated_image.png",
     icon: "ghost",
     enterLabel: "Suit Up"
+  },
+  {
+    id: "gangbusters",
+    name: "Gangbusters",
+    short: "Gangbusters",
+    tagline: "1920s Prohibition organized crime",
+    description:
+      "Step into the Roaring Twenties — Prohibition-era organized crime, Tommy guns, speakeasies, and the war between the mob and the law. Play a gangster, hit man, bootlegger, safecracker, cop, G-man, or private eye in this classic 1982 TSR crime role-playing game. A percentile (d100) system with wound tables and lethal gunfights, ruled by an AI Game Master. The city is yours for the taking — if you can hold it.",
+    dashboardTitle: "GANGBUSTERS",
+    dashboardSubtitle:
+      "A Prohibition-era organized crime campaign of mobsters, G-men, and gunfights, ruled by an AI Game Master. Run rackets, bust safes, dodge the Feds, and carve out an empire in the city's underworld — where every bullet is written in smoke that cannot be uninhaled.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/1b490ab3d_generated_image.png",
+    icon: "skull",
+    enterLabel: "Hit the Streets"
   }
 ];
 

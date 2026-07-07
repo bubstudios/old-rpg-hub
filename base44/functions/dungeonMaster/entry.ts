@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
     const isHY = (campaign.game_system || 'add1e') === 'conan' || (campaign.game_system || 'add1e') === 'redsonja';
     const isBR = (campaign.game_system || 'add1e') === 'buckrogers';
     const isGB = (campaign.game_system || 'add1e') === 'ghostbusters';
+    const isGang = (campaign.game_system || 'add1e') === 'gangbusters';
 
     const dndToneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
@@ -183,11 +184,18 @@ Deno.serve(async (req) => {
       sandbox: 'a sandbox, with a haunted city the busters patrol and respond to calls as they come',
       character_driven: 'character-driven, focused on franchise drama, bills, rivals, and personal arcs'
     };
-    const toneLabels = isTS ? tsToneLabels : isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : isHW ? hwToneLabels : isGB ? gbToneLabels : dndToneLabels;
+    const gangToneLabels = {
+      balanced: 'a balanced blend of crime, investigation, gunfights, and Prohibition-era drama',
+      combat_heavy: 'gunfight-heavy, with frequent shootouts, raids, raids, and Tommy gun mayhem',
+      dungeon_crawler: 'a heist-focused campaign, centered on safecracking, second-story jobs, and smuggling runs',
+      sandbox: 'a sandbox, with a Prohibition city the crew works and responds to opportunities as they come',
+      character_driven: 'character-driven, focused on mob politics, turf wars, and personal legends'
+    };
+    const toneLabels = isTS ? tsToneLabels : isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : isHW ? hwToneLabels : isGang ? gangToneLabels : isGB ? gbToneLabels : dndToneLabels;
     const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
     const worldSetting = campaign.world_setting
       ? `The campaign is set in: ${campaign.world_setting}.`
-      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : isTS ? 'The setting is the shadow world of Cold War espionage — rival intelligence services (CIA, KGB, MI6, Mossad), defectors, double agents, sabotage, assassination, blackmail, and the quiet war fought in the spaces between nations. The time period and theatre are defined by the campaign.' : isGH ? 'The setting is the World of Greyhawk — the continent of Oerik, specifically the Flanaess: ancient kingdoms, the Free City of Greyhawk, warring factions like the Great Kingdom and the forces of Iuz, the Circle of Eight, and countless ruined dungeons. Think old-school AD&D: Gygax, Tomb of Horrors, Castle Greyhawk, the Giants and Drow series.' : isFR ? 'The setting is the Forgotten Realms — the world of Toril, specifically the continent of Faerûn: a land of high magic, active gods, ancient ruins, and heroism. Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, and the Underdark beneath. Factions include the Harpers, the Zhentarim, the Red Wizards of Thay, and the Lords\' Alliance.' : isHW ? 'The setting is the Hollow World — a vast realm inside the planet Mystara, with its own sun at the center and land curving upward in every direction. The Immortals preserved ancient civilizations here: the Milenian Empire, the Traldar Kingdoms, the Azcans, the Oltecs, the Nithians. Dinosaurs roam eternal jungles; marble cities and jade pyramids rise under an unmoving sun.' : isHY ? 'The setting is the Hyborian Age — the savage world of Robert E. Howard, a lost epoch before recorded history. Ancient kingdoms sprawl across the land: Cimmeria, Aquilonia, Nemedia, Stygia, Turan, Hyrkania, Zamora, and more. Civilization is thin and corrupt; sorcery is dark, rare, and corrupting; steel is the law and the sword is the answer.' : isBR ? 'The setting is the 25th century — the XXVc. Earth is a poisoned relic ruled by the geniocracy of RAM from Mars. The Asteroid Belt hungers for freedom, Venus simmers, and Luna orbits overhead. Rocket ships, blasters, genetic engineering, and corporate intrigue define a solar system at war.' : isGB ? 'The setting is a modern-day haunted city — typically New York. The supernatural is real, ghosts manifest, and a Ghostbusters franchise answers the call. Proton packs, ghost traps, PKE meters, and Brownie Points are the tools of the trade. Comedy and horror in equal measure.' : 'The setting is an original fantasy world of your devising.');
+      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : isTS ? 'The setting is the shadow world of Cold War espionage — rival intelligence services (CIA, KGB, MI6, Mossad), defectors, double agents, sabotage, assassination, blackmail, and the quiet war fought in the spaces between nations. The time period and theatre are defined by the campaign.' : isGH ? 'The setting is the World of Greyhawk — the continent of Oerik, specifically the Flanaess: ancient kingdoms, the Free City of Greyhawk, warring factions like the Great Kingdom and the forces of Iuz, the Circle of Eight, and countless ruined dungeons. Think old-school AD&D: Gygax, Tomb of Horrors, Castle Greyhawk, the Giants and Drow series.' : isFR ? 'The setting is the Forgotten Realms — the world of Toril, specifically the continent of Faerûn: a land of high magic, active gods, ancient ruins, and heroism. Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, and the Underdark beneath. Factions include the Harpers, the Zhentarim, the Red Wizards of Thay, and the Lords\' Alliance.' : isHW ? 'The setting is the Hollow World — a vast realm inside the planet Mystara, with its own sun at the center and land curving upward in every direction. The Immortals preserved ancient civilizations here: the Milenian Empire, the Traldar Kingdoms, the Azcans, the Oltecs, the Nithians. Dinosaurs roam eternal jungles; marble cities and jade pyramids rise under an unmoving sun.' : isHY ? 'The setting is the Hyborian Age — the savage world of Robert E. Howard, a lost epoch before recorded history. Ancient kingdoms sprawl across the land: Cimmeria, Aquilonia, Nemedia, Stygia, Turan, Hyrkania, Zamora, and more. Civilization is thin and corrupt; sorcery is dark, rare, and corrupting; steel is the law and the sword is the answer.' : isBR ? 'The setting is the 25th century — the XXVc. Earth is a poisoned relic ruled by the geniocracy of RAM from Mars. The Asteroid Belt hungers for freedom, Venus simmers, and Luna orbits overhead. Rocket ships, blasters, genetic engineering, and corporate intrigue define a solar system at war.' : isGB ? 'The setting is a modern-day haunted city — typically New York. The supernatural is real, ghosts manifest, and a Ghostbusters franchise answers the call. Proton packs, ghost traps, PKE meters, and Brownie Points are the tools of the trade. Comedy and horror in equal measure.' : isGang ? 'The setting is Prohibition-era America — the Roaring Twenties, typically in a major city like Chicago, New York, or Atlantic City. The Volstead Act has made alcohol illegal, and organized crime controls the bootleg trade. Speakeasies, Tommy guns, pinstripe suits, fast cars, and the war between the mob and the law define the era.' : 'The setting is an original fantasy world of your devising.');
     const settingNotes = campaign.setting_notes
       ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
       : '';
@@ -1032,7 +1040,72 @@ Rules for the JSON:
 
 Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the city haunted, hilarious, and heroic.`;
 
-    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : isHY ? hyPrompt : isBR ? brPrompt : isGB ? gbPrompt : dndPrompt;
+    const gangPrompt = `You are the Game Master for a Gangbusters campaign — TSR's 1982 Prohibition-era organized crime role-playing game. You narrate a persistent, atmospheric campaign of bootleggers, gangsters, G-men, and gunfights in the Roaring Twenties.
+
+## Your Role
+You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narration, NPC dialogue, combat resolution, and world state. Players are purely participants who submit actions in natural language.
+
+## Campaign Direction
+This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
+
+## Gangbusters Rules (Core)
+- Setting: Prohibition-era America (1920s). The Volstead Act banned alcohol, creating a vast underground economy controlled by organized crime. Bootleggers smuggle liquor, speakeasies serve it, racketeers extort local businesses, and law enforcement — from beat cops to federal G-men — tries to hold the line. The era of Tommy guns, pinstripe suits, fast cars, jazz, and corruption.
+- Attributes are PERCENTILE (1-100, rolled d100). The six attributes are:
+  - Muscle (MUS): physical strength, brawling, and intimidation. Equals Grit (hit points) — how much lead you can take before you drop.
+  - Agility (AGI): quickness, reflexes, and coordination. Determines initiative (AGI/10 modifier) and reaction speed.
+  - Aim (AIM): shooting accuracy — the most important stat when the lead starts flying. The base chance to land a shot.
+  - Savvy (SAV): street smarts, perception, and investigation. Reading a room, spotting a tail, finding the hidden speakeasy.
+  - Nerve (NER): courage under fire and willpower. Adds a modifier to Aim in combat (NER/20 - 5, roughly -5 to 0). Steadies the hand when bullets fly.
+  - Panache (PAN): charm, persuasion, deception, and fast-talking. Talking your way past a cop, running a con, or working a room.
+- Resolution: to attempt any feat, roll d100. If the roll is EQUAL TO OR UNDER the relevant attribute (modified by circumstances), the action succeeds; otherwise it fails.
+- Combat: to land a shot or blow, roll d100 against the hit number = Aim + Nerve modifier + weapon skill bonus + situational modifiers. Range modifiers: point-blank +30%, short +10%, medium 0, long -20%, very long -40%. Cover: soft -20%, hard -40%. Movement: target moving -10 to -20%. Clamp the hit number to 5-95%. Highest Agility acts first (initiative = d10 + AGI/10).
+- Wounds: when a hit lands, roll d100 for wound LOCATION, then d100 for wound SEVERITY. Locations include Head, Chest (vital — higher fatality), Shoulders, Arms, Abdomen, Legs, Hand/Groin. Severity runs Slight (1 Grit lost), Light (2), Medium (4, with penalties), Serious (8, bleeding and incapacitating), Critical (16, dying), Mortal (death). Head and Chest wounds have an elevated chance of being Mortal. Subtract severity damage from the target's Grit (Muscle). At 0 Grit, the character falls and may die.
+- Weapons: pistols (.38, .45, .32, .25 — 1d4 to 1d8+1), submachine guns / Tommy guns (2d6, devastating), shotguns (1d10, devastating up close), rifles (1d8), knives and switchblades (1d4), brawling (1d3). The Tommy gun is the signature weapon of the era — a drum-fed Chicago Typewriter that can tear a room apart.
+- Skills: weapon skills (Pistol, Rifle, Shotgun, Submachine Gun, Brawling, Melee, Thrown — level 1-6, +10% to hit per level) and underworld skills (Driving, Stealth, Pick Lock, Forgery, Intimidation, Interrogation, Investigation, Streetwise, Appraisal, Disguise, Demolitions, Mechanics — each a percentile score, roll d100 under to succeed).
+- There are NO classes, NO alignments, NO spell slots, NO THAC0, NO saving throws. Use percentile attribute/skill checks (d100 roll-under) for all tests. Grit (Muscle) serves as hit points.
+- Currency: dollars. Use the loot field for dollars and gear found.
+- Gangbusters spirit: the Roaring Twenties, where the mob runs the city, the Feds are closing in, and every deal could be a setup. Reward bold, cunning, and ruthless play. Characters CAN die — a Tommy gun burst at close range is lethal — but reward daring and street smarts. The line between criminal and lawman is thin; both sides play by the same rules.
+
+## Tone & Style
+- Pulp noir crime drama — think The Untouchables, Boardwalk Empire, and old gangster films. Vivid, gritty, and stylish.
+- Be fair but lethal. Prohibition-era gunfights are deadly. Tommy guns, shotguns, and ambushes kill. Do not pull punches, but reward clever, bold, and street-smart play.
+- Describe the smoke-filled back room of a speakeasy, the rattle of a Tommy gun, the squeal of tires on wet cobblestone, the wail of a police siren, the clink of glasses and the jazz piano in the back.
+- NPCs have voices, motivations, and secrets — mob bosses, corrupt cops, federal agents, bootleggers, informants, dancers, and the ordinary people caught in the crossfire.
+- When resolving actions, show the dice rolls you make (in the dice_rolls array) and narrate the outcome.
+- Keep narration immersive — second person ("You see..."), present tense for action.
+
+## Response Format
+You MUST respond as a JSON object with this structure:
+{
+  "narration": "string — your rich GM prose describing the scene and what happens.",
+  "dice_rolls": [{"description": "what the roll is for", "die": "d100", "roll": 42, "modifier": 10, "total": 42, "result": "Hit", "target": "need ≤ 55%"}],
+  "hp_changes": [{"character_name": "name", "change": -8, "reason": "Tommy gun burst to the chest"}],
+  "xp_awarded": [{"character_name": "name", "amount": 0, "reason": "..."}],
+  "loot": [{"item": "Roll of cash", "gold": 200, "source": "dead gangster's pocket"}],
+  "deaths": [{"character_name": "name", "cause": "mortal chest wound from Tommy gun"}],
+  "world_updates": {"locations_explored": ["..."], "npcs_met": [{"name": "...", "disposition": "...", "notes": "..."}], "quest_flags": {}, "reputation_change": 0, "chapter_event": "..."},
+  "new_scene": "one or two sentences summarizing the current scene after this action",
+  "combat_active": false,
+  "combat_initiative": [{"name": "gangster/cop/etc", "initiative": 7}],
+  "ends_session": false
+}
+
+Rules for the JSON:
+- narration is the ONLY field that should always be present and non-empty.
+- Only include dice_rolls if dice were rolled this turn. Gangbusters uses d100 (percentile) for attacks, ability checks, reactions, and wound rolls; d10 for initiative.
+- Only include hp_changes if Grit (Muscle/HP) actually changed. Use wound severity damage values (Slight 1, Light 2, Medium 4, Serious 8, Critical 16, Mortal = death).
+- xp_awarded is optional; award for major milestones, surviving deadly encounters, or pulling off a big score.
+- Only include loot if dollars, gear, or contraband was found. Use the gold field for dollars.
+- Do NOT use spells_learned — Gangbusters has no spells.
+- Only include deaths if a character died (Grit reached 0, or a Mortal wound).
+- Only include world_updates if something about the world changed.
+- If combat begins or continues, set combat_active true and provide combat_initiative (d10 + AGI/10, higher goes first).
+- ends_session true only if this action concludes the current session/chapter.
+
+Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the Roaring Twenties alive, dangerous, and full of smoke and lead.`;
+
+    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : isHY ? hyPrompt : isBR ? brPrompt : isGB ? gbPrompt : isGang ? gangPrompt : dndPrompt;
 
     const charTag = isSF
       ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} operative (STA ${actingChar.hp_current}/${actingChar.hp_max})`
@@ -1046,8 +1119,10 @@ Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the city ha
       ? `${actingChar.name} the ${actingChar.race} (Vitality ${actingChar.hp_current}/${actingChar.hp_max})`
       : isGB
       ? `${actingChar.name} the ${actingChar.race} (${actingChar.hp_current}/${actingChar.hp_max} BP)`
+      : isGang
+      ? `${actingChar.name} the ${actingChar.race} (Grit ${actingChar.hp_current}/${actingChar.hp_max})`
       : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max})`;
-    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : isTS ? 'Top Secret rules' : isHW ? 'D&D (BECMI) rules' : isHY ? 'Hyborian (d100) rules' : isBR ? 'Buck Rogers XXVc (AD&D 2e) rules' : isGB ? 'Ghostbusters (D6 System) rules' : 'AD&D 1st Edition rules';
+    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : isTS ? 'Top Secret rules' : isHW ? 'D&D (BECMI) rules' : isHY ? 'Hyborian (d100) rules' : isBR ? 'Buck Rogers XXVc (AD&D 2e) rules' : isGB ? 'Ghostbusters (D6 System) rules' : isGang ? 'Gangbusters (d100) rules' : 'AD&D 1st Edition rules';
     const actionBlock = is_roll_result
       ? `${charTag} just made a dice roll.\nRoll result: "${action}"\n\nInterpret this roll result according to ${rulesLabel} and continue the scene — narrate what happens next based on the outcome of this roll.`
       : `${charTag} declares:\n"${action}"`;
@@ -1072,7 +1147,7 @@ ${history || 'The adventure has just begun.'}
 ## Current Action
 ${actionBlock}
 
-Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
+Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : isGang ? 'Gangbusters (d100)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt: userPrompt,

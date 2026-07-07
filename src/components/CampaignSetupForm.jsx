@@ -348,6 +348,31 @@ const GB_SETUP = {
   forgeLabel: 'Suit Up'
 };
 
+const GANG_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of crime, investigation, and gunfights' },
+  { id: 'combat_heavy', label: 'Gunfights', icon: Crosshair, desc: 'Frequent shootouts, raids, and Tommy gun mayhem' },
+  { id: 'dungeon_crawler', label: 'Heist', icon: Compass, desc: 'Safecracking, second-story jobs, and smuggling runs' },
+  { id: 'sandbox', label: 'Open City', icon: Globe, desc: 'The Prohibition city, go where the money leads' },
+  { id: 'character_driven', label: 'Syndicate', icon: Drama, desc: 'Mob politics, turf wars, and personal legends' }
+];
+
+const GANG_WORLDS = [
+  'Chicago',
+  'New York City',
+  'Atlantic City',
+  'Detroit',
+  'New Orleans',
+  'A custom Prohibition city'
+];
+
+const GANG_SETUP = {
+  worldLabel: 'CITY / TERRITORY',
+  worldPlaceholder: 'Name the city or territory (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'Prohibition Chicago, 1929. The party are a crew of bootleggers and muscle working for a rising outfit, smuggling Canadian whisky across the lake — but the feds are closing in and a rival syndicate wants their territory.'",
+  namePlaceholder: 'e.g. The Chicago Outfit',
+  forgeLabel: 'Hit the Streets'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -372,9 +397,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isHY = gameSystem === 'conan' || gameSystem === 'redsonja';
   const isBR = gameSystem === 'buckrogers';
   const isGB = gameSystem === 'ghostbusters';
-  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : isGB ? GB_TONES : isBR ? BR_TONES : isHY ? HY_TONES : DND_TONES;
-  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : isHW ? HW_WORLDS : isGB ? GB_WORLDS : isBR ? BR_WORLDS : isHY ? HY_WORLDS : isFR ? FR_WORLDS : isGH ? GH_WORLDS : DND_WORLDS;
-  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : isHW ? HW_SETUP : isGB ? GB_SETUP : isBR ? BR_SETUP : isHY ? HY_SETUP : isFR ? FR_SETUP : isGH ? GH_SETUP : DND_SETUP;
+  const isGang = gameSystem === 'gangbusters';
+  const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : isGang ? GANG_TONES : isGB ? GB_TONES : isBR ? BR_TONES : isHY ? HY_TONES : DND_TONES;
+  const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : isHW ? HW_WORLDS : isGang ? GANG_WORLDS : isGB ? GB_WORLDS : isBR ? BR_WORLDS : isHY ? HY_WORLDS : isFR ? FR_WORLDS : isGH ? GH_WORLDS : DND_WORLDS;
+  const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : isHW ? HW_SETUP : isGang ? GANG_SETUP : isGB ? GB_SETUP : isBR ? BR_SETUP : isHY ? HY_SETUP : isFR ? FR_SETUP : isGH ? GH_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -390,7 +416,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : isBR ? `Run to ${world}` : isGB ? `Ghosts of ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : isBR ? `Run to ${world}` : isGB ? `Ghosts of ${world}` : isGang ? `The ${world} Outfit` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -512,7 +538,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : isHW ? 'Hollow World' : isGB ? 'Ghostbusters' : isBR ? 'Buck Rogers' : isHY ? (gameSystem === 'redsonja' ? 'Red Sonja' : 'Conan') : isFR ? 'Forgotten Realms' : isGH ? 'Greyhawk' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isTS ? 'Top Secret' : isDS ? 'Dark Sun' : isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : isHW ? 'Hollow World' : isGang ? 'Gangbusters' : isGB ? 'Ghostbusters' : isBR ? 'Buck Rogers' : isHY ? (gameSystem === 'redsonja' ? 'Red Sonja' : 'Conan') : isFR ? 'Forgotten Realms' : isGH ? 'Greyhawk' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

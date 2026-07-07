@@ -12,6 +12,7 @@ import IJDiceRollerPanel from '@/components/IJDiceRollerPanel';
 import TSDiceRollerPanel from '@/components/TSDiceRollerPanel';
 import HyDiceRollerPanel from '@/components/HyDiceRollerPanel';
 import GBDiceRollerPanel from '@/components/GBDiceRollerPanel';
+import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -308,7 +309,7 @@ export default function CampaignDetail() {
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
-                {myCharacter?.name?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
+                {myCharacter?.name?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
               </span>
               <button
                 onClick={() => setDiscussMode((m) => !m)}
@@ -382,6 +383,14 @@ export default function CampaignDetail() {
                   onRolled={handleRollCompleted}
                   onClose={() => setDiceOpen(false)}
                 />
+              ) : campaign?.game_system === 'gangbusters' ? (
+                <GangDiceRollerPanel
+                  myCharacter={myCharacter}
+                  campaignId={campaignId}
+                  chapter={campaign.current_chapter}
+                  onRolled={handleRollCompleted}
+                  onClose={() => setDiceOpen(false)}
+                />
               ) : (
                 <DiceRollerPanel
                   myCharacter={myCharacter}
@@ -428,6 +437,8 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We dock at the station and scan for RAM traffic..." : "What does your rocketjockey do?")
                     : campaign?.game_system === 'ghostbusters'
                     ? (isSetup ? "e.g. We roll up to the haunted brownstone, proton packs humming..." : "What does your buster do?")
+                    : campaign?.game_system === 'gangbusters'
+                    ? (isSetup ? "e.g. We walk into the speakeasy, hats low, looking for the boss..." : "What does your character do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}

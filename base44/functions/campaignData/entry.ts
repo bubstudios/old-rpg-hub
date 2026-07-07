@@ -392,6 +392,37 @@ Deno.serve(async (req) => {
         return Response.json({ character });
       }
 
+      // Gangbusters branch: HP = Muscle (Grit), percentile attributes, no THAC0/saves/spells
+      if (game_system === 'gangbusters') {
+        const mus = Math.max(1, Math.round((ability_scores && ability_scores.mus) || 50));
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'gangbusters',
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: 1,
+          hp_current: mus,
+          hp_max: mus,
+          ac: 0,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
       // Top Secret branch: HP = Physical Strength (Vitality), percentile attributes, no THAC0/saves/spells
       if (game_system === 'topsecret') {
         const str = Math.max(1, Math.round((ability_scores && ability_scores.str) || 50));
@@ -598,6 +629,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       const isTS = (campaign.game_system || 'add1e') === 'topsecret';
       const isHY = (campaign.game_system || 'add1e') === 'conan' || (campaign.game_system || 'add1e') === 'redsonja';
       const isGB = (campaign.game_system || 'add1e') === 'ghostbusters';
+      const isGang = (campaign.game_system || 'add1e') === 'gangbusters';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -709,6 +741,23 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
           character_class: { type: "string" },
           level: { type: "number" },
           ability_scores: { type: "object", properties: { brain: { type: "number" }, muscle: { type: "number" }, moves: { type: "number" }, cool: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isGang ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { mus: { type: "number" }, agi: { type: "number" }, aim: { type: "number" }, sav: { type: "number" }, ner: { type: "number" }, pan: { type: "number" } } },
           hp_current: { type: "number" },
           hp_max: { type: "number" },
           gold: { type: "number" },
@@ -868,6 +917,21 @@ Extract:
 - equipment: array of {name, qty}
 - appearance: physical description if present
 - background: backstory if present`
+        : isGang
+        ? `You are reading a Gangbusters Prohibition-era crime character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the character's name
+- race: their archetype (Gangster, Hit Man, Bootlegger, Safecracker, Police Officer, Federal Agent, Private Investigator, Racketeer, Wheelman, Con Artist)
+- character_class: same as archetype
+- level: experience level (default 1)
+- ability_scores: the six percentile attributes (1-100) — mus (Muscle), agi (Agility), aim (Aim), sav (Savvy), ner (Nerve), pan (Panache)
+- hp_current and hp_max: current and max Grit (equals Muscle)
+- gold: dollars
+- skills: array of {name, level} — weapon skills (level = proficiency 1-6) and underworld skills (level = percentile score)
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: backstory if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -916,22 +980,22 @@ Extract:
         name: charName.trim(),
         campaign_id,
         game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : isTS ? 'topsecret' : (campaign.game_system || 'add1e'),
-        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : 'Human'),
-        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : 'Fighter'),
+        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : isGang ? 'Gangster' : 'Human'),
+        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : isGang ? 'Gangster' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',
         ability_scores,
         level: Math.max(1, Number(ext && ext.level) || 1),
-        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : 1),
-        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : 1),
-        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : 10),
-        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : 20),
+        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : isGang ? (ability_scores.mus || 50) : 1),
+        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : isGang ? (ability_scores.mus || 50) : 1),
+        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : isGang ? 0 : 10),
+        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : isGang ? 0 : 20),
         xp: Number(ext && ext.xp) || 0,
         saving_throws: (ext && ext.saving_throws) || {},
         gold: Number(ext && ext.gold) || 0,
         equipment: (ext && ext.equipment) || [],
-        skills: (isSF || isBH || isIJ || isTS || isHY || isGB) ? (ext && ext.skills) || [] : [],
+        skills: (isSF || isBH || isIJ || isTS || isHY || isGB || isGang) ? (ext && ext.skills) || [] : [],
         mutations: isGW ? (ext && ext.mutations) || [] : [],
-        spells: (isSF || isGB) ? [] : (ext && ext.spells) || [],
+        spells: (isSF || isGB || isGang) ? [] : (ext && ext.spells) || [],
         spell_slots: {},
         appearance: (ext && ext.appearance) || '',
         background: (ext && ext.background) || '',

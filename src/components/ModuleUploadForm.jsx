@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Flame, Swords, Satellite, Ghost } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Flame, Swords, Satellite, Ghost, Skull } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
@@ -123,6 +123,9 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
           </button>
           <button onClick={() => setGameSystem('ghostbusters')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'ghostbusters' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
             <Ghost className="w-3.5 h-3.5" /> GHOSTBUSTERS
+          </button>
+          <button onClick={() => setGameSystem('gangbusters')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'gangbusters' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
+            <Skull className="w-3.5 h-3.5" /> GANGBUSTERS
           </button>
         </div>
       </div>

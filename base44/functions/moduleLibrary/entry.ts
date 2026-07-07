@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : body.game_system === 'conan' ? 'conan' : body.game_system === 'redsonja' ? 'redsonja' : body.game_system === 'buckrogers' ? 'buckrogers' : body.game_system === 'ghostbusters' ? 'ghostbusters' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : body.game_system === 'conan' ? 'conan' : body.game_system === 'redsonja' ? 'redsonja' : body.game_system === 'buckrogers' ? 'buckrogers' : body.game_system === 'ghostbusters' ? 'ghostbusters' : body.game_system === 'gangbusters' ? 'gangbusters' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';
@@ -71,6 +71,7 @@ Deno.serve(async (req) => {
       const isHY = gameSystem === 'conan' || gameSystem === 'redsonja';
       const isBR = gameSystem === 'buckrogers';
       const isGB = gameSystem === 'ghostbusters';
+      const isGang = gameSystem === 'gangbusters';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -470,6 +471,46 @@ Rules:
 - Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs.
 - Preserve exact numbers (ghost Power, BP costs, Target Numbers, damage).
 - Use Ghostbusters (West End Games D6 System) mechanics: four attributes rated in dice (Brain, Muscle, Moves, Cool), tag skills that add bonus dice, the Ghost Die (6 = ghost, counts 0), Brownie Points as currency/hero points/damage track, Target Numbers for task resolution (Easy 5, Moderate 10, Hard 15, Very Hard 20), ghost classifications (Class 1-7), proton packs and ghost traps, modern-day haunted setting, comedy-horror tone.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isGang
+        ? `You are preparing a detailed reference brief from an uploaded Gangbusters Prohibition-era crime adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the 1920s Prohibition setting and locale.
+
+## KEY LOCATIONS & AREAS
+For EACH location, building, speakeasy, or area, preserve: the location name; what the party sees (description); contents (NPCs, enemies, clues, hazards, secrets, traps); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note mob bosses, corrupt cops, federal agents, bootleggers, informants, and civilians.
+
+## ENEMIES & COMBAT
+Enemy types (gangsters, hit men, cops, G-men, thugs), stats, numbers, tactics, weapons. Note intended gunfight locations and ambush points.
+
+## TREASURE & EQUIPMENT
+Notable gear, weapons, dollars, contraband, and clues, with locations.
+
+## HAZARDS & TRAPS
+Each hazard/trap: where, what it does, how to detect/avoid, damage. Include security systems, alarms, and environmental hazards.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, chase rules, random encounters, stealth rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: enemies, clues, traps, secrets).
+- Preserve exact numbers (damage, attribute scores, dollar amounts, wound levels).
+- Use Gangbusters mechanics: six percentile attributes 1-100 (Muscle, Agility, Aim, Savvy, Nerve, Panache), d100 roll-under resolution, Aim for combat to-hit, Nerve modifier, wound location and severity tables, dollars, 1920s Prohibition setting.
 - If the document is not an adventure module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.

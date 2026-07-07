@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret, conan, redsonja, buckrogers, ghostbusters, gangbusters)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret)"
+      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters)"
     },
     "level": {
       "type": "number",
@@ -155,6 +155,58 @@
         "coor": {
           "type": "number",
           "description": "Coordination (Top Secret) \u2014 reflexes, dexterity, combat to-hit, initiative"
+        },
+        "agi": {
+          "type": "number",
+          "description": "Agility (Hyborian / Gangbusters) \u2014 quickness, reflexes, initiative, dodge"
+        },
+        "end": {
+          "type": "number",
+          "description": "Endurance (Hyborian) \u2014 stamina and damage capacity; equals Vitality"
+        },
+        "lck": {
+          "type": "number",
+          "description": "Luck (Hyborian) \u2014 fate, fortune, and the favor of the gods"
+        },
+        "men": {
+          "type": "number",
+          "description": "Mentation (Hyborian) \u2014 willpower and mental fortitude; resists sorcery and fear"
+        },
+        "brain": {
+          "type": "number",
+          "description": "Brain (Ghostbusters) \u2014 intellect, knowledge, logic, science"
+        },
+        "muscle": {
+          "type": "number",
+          "description": "Muscle (Ghostbusters) \u2014 physical power and brawn"
+        },
+        "moves": {
+          "type": "number",
+          "description": "Moves (Ghostbusters) \u2014 agility, reflexes, coordination"
+        },
+        "cool": {
+          "type": "number",
+          "description": "Cool (Ghostbusters) \u2014 composure, willpower, social grace"
+        },
+        "mus": {
+          "type": "number",
+          "description": "Muscle (Gangbusters) \u2014 physical strength, brawling, intimidation; equals Grit"
+        },
+        "aim": {
+          "type": "number",
+          "description": "Aim (Gangbusters) \u2014 shooting accuracy, base chance to hit in combat"
+        },
+        "sav": {
+          "type": "number",
+          "description": "Savvy (Gangbusters) \u2014 street smarts, perception, investigation"
+        },
+        "ner": {
+          "type": "number",
+          "description": "Nerve (Gangbusters) \u2014 courage under fire, willpower, combat modifier"
+        },
+        "pan": {
+          "type": "number",
+          "description": "Panache (Gangbusters) \u2014 charm, persuasion, deception, fast-talking"
         }
       }
     },
@@ -201,7 +253,7 @@
     "gold": {
       "type": "number",
       "default": 0,
-      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones, Top Secret)"
+      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones, Top Secret, Gangbusters)"
     },
     "equipment": {
       "type": "array",
@@ -222,7 +274,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, or Top Secret weapon/tradecraft skills (level = proficiency or percentile)",
+      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, Top Secret weapon/tradecraft skills, Hyborian weapon/adventuring skills, Ghostbusters tag skills, or Gangbusters weapon/underworld skills (level = proficiency or percentile)",
       "items": {
         "type": "object",
         "properties": {
@@ -237,7 +289,7 @@
     },
     "mutations": {
       "type": "array",
-      "description": "Gamma World mutations (name, type, defect, description); unused in AD&D, Star Frontiers, Boot Hill, Indiana Jones, and Top Secret",
+      "description": "Gamma World mutations (name, type, defect, description); unused in other systems",
       "items": {
         "type": "object",
         "properties": {
