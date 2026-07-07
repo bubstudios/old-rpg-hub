@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
@@ -75,6 +75,12 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
             className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'indianajones' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
           >
             <Compass className="w-3.5 h-3.5" /> INDIANA JONES
+          </button>
+          <button
+            onClick={() => setGameSystem('spelljammer')}
+            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'spelljammer' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
+          >
+            <Orbit className="w-3.5 h-3.5" /> SPELLJAMMER
           </button>
         </div>
       </div>

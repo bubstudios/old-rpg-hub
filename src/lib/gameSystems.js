@@ -75,6 +75,21 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/4608283ff_generated_image.png",
     icon: "compass",
     enterLabel: "Begin the Expedition"
+  },
+  {
+    id: "spelljammer",
+    name: "Spelljammer",
+    short: "Spelljammer",
+    tagline: "AD&D Adventures in Space",
+    description:
+      "Sail the void between worlds in a spelljamming ship — crystal spheres, the rainbow rivers of the phlogiston, spacefaring races, and ship-to-ship combat across wildspace, in this classic 1989 TSR AD&D 2nd Edition setting, ruled by an AI Dungeon Master. Take the helm, brave the void, and chart a course between the spheres.",
+    dashboardTitle: "SPELLJAMMER",
+    dashboardSubtitle:
+      "A Spelljammer science-fantasy campaign, ruled by an AI Dungeon Master. Take the helm of a spelljamming ship, sail the void of wildspace between crystal spheres, and brave the phlogiston — where every voyage is written in starlight that cannot be unwritten.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/e9e07d862_generated_image.png",
+    icon: "orbit",
+    enterLabel: "Take the Helm"
   }
 ];
 

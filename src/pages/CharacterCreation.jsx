@@ -6,6 +6,7 @@ import {
   rollAbilityScores, applyRacialAdjustments, classAvailableToRace,
   meetsClassRequirements, validAlignmentForClass, computeAC, getTHAC0
 } from '@/lib/dndRules';
+import { SJ_RACES } from '@/lib/sjRules';
 import { Dices, ChevronLeft, ChevronRight, Check, Loader2, Swords, Sparkles, Diamond, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,7 +75,13 @@ export default function CharacterCreation() {
     );
   }
 
-  const adjustedScores = rawScores && race ? applyRacialAdjustments(rawScores, race) : rawScores;
+  const raceList = gameSystem === 'spelljammer' ? { ...RACES, ...SJ_RACES } : RACES;
+  const adjustedScores = rawScores && race ? (() => {
+    const adj = raceList[race]?.abilityAdjustments || {};
+    const r = { ...rawScores };
+    Object.entries(adj).forEach(([k, v]) => { r[k] = (r[k] || 0) + v; });
+    return r;
+  })() : rawScores;
   const previewHP = (() => {
     if (!adjustedScores || !characterClass) return 0;
     const conMod = Math.floor((adjustedScores.con - 10) / 2);
@@ -90,14 +97,14 @@ export default function CharacterCreation() {
     setScoresRolled(true);
   }
 
-  const classOptions = race ? RACES[race].classes : Object.keys(CLASSES);
+  const classOptions = race ? raceList[race].classes : Object.keys(CLASSES);
   const meetsReqs = characterClass && adjustedScores ? meetsClassRequirements(characterClass, adjustedScores) : true;
   const validAlignment = characterClass && alignment ? validAlignmentForClass(characterClass, alignment) : true;
   const allowedAlignments = characterClass ? (ALIGNMENTS.filter(a => validAlignmentForClass(characterClass, a))) : ALIGNMENTS;
 
   const canProceed = [
     !!race,
-    !!characterClass && classAvailableToRace(characterClass, race) && meetsReqs,
+    !!characterClass && raceList[race]?.classes?.includes(characterClass) && meetsReqs,
     !!adjustedScores,
     !!alignment && validAlignment,
     !!name.trim(),
@@ -112,6 +119,7 @@ export default function CharacterCreation() {
       const res = await base44.functions.invoke('campaignData', {
         op: 'createCharacter',
         campaign_id: campaignId,
+        game_system: gameSystem,
         name: name.trim(),
         race,
         character_class: characterClass,
@@ -183,7 +191,7 @@ export default function CharacterCreation() {
               <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CHOOSE YOUR RACE</h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-2.5">
-              {Object.entries(RACES).map(([r, data]) => (
+              {Object.entries(raceList).map(([r, data]) => (
                 <button
                   key={r}
                   onClick={() => { setRace(r); setCharacterClass(''); }}
@@ -216,12 +224,12 @@ export default function CharacterCreation() {
               <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CHOOSE YOUR CLASS</h2>
             </div>
             <p className="text-[11px] text-muted-foreground font-body mb-3">
-              As a {race}, you may pursue: {RACES[race].classes.join(', ')}
+              As a {race}, you may pursue: {raceList[race].classes.join(', ')}
             </p>
             <div className="grid gap-2.5 max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
               {classOptions.map((c) => {
                 const data = CLASSES[c];
-                const available = classAvailableToRace(c, race);
+                const available = raceList[race]?.classes?.includes(c);
                 return (
                   <button
                     key={c}
@@ -268,7 +276,7 @@ export default function CharacterCreation() {
                   {['str', 'int', 'wis', 'dex', 'con', 'cha'].map((ab) => {
                     const raw = rawScores[ab];
                     const adjusted = adjustedScores[ab];
-                    const adj = race ? RACES[race].abilityAdjustments[ab] || 0 : 0;
+                    const adj = race ? raceList[race].abilityAdjustments[ab] || 0 : 0;
                     const reqs = characterClass ? (requirementForClass(characterClass, ab)) : null;
                     const meets = reqs ? adjusted >= reqs : true;
                     return (

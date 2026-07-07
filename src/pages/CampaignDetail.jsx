@@ -380,6 +380,8 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We ride into town and hitch our horses outside the saloon..." : "What does your gunslinger do?")
                     : campaign?.game_system === 'indianajones'
                     ? (isSetup ? "e.g. We step off the train in Cairo, map in hand, watching for tails..." : "What does your adventurer do?")
+                    : campaign?.game_system === 'spelljammer'
+                    ? (isSetup ? "e.g. We bring the spelljammer about and scan the crystal sphere for traffic..." : "What does your spacer do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}

@@ -131,6 +131,31 @@ const IJ_SETUP = {
   forgeLabel: 'Begin the Expedition'
 };
 
+const SJ_TONES = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of ship combat, exploration, and swashbuckling' },
+  { id: 'combat_heavy', label: 'Void Battles', icon: Swords, desc: 'Frequent skirmishes and boarding actions' },
+  { id: 'dungeon_crawler', label: 'Salvager', icon: Compass, desc: 'Derelict hulks, lost colonies, and ancient wrecks' },
+  { id: 'sandbox', label: 'Open Spheres', icon: Globe, desc: 'The crystal spheres and the Flow, go where you please' },
+  { id: 'character_driven', label: 'Crew Saga', icon: Drama, desc: 'Faction politics, crew bonds, and personal legends' }
+];
+
+const SJ_WORLDS = [
+  'Krynnspace',
+  'Realmspace',
+  'Greyspace',
+  'The Rock of Bral',
+  'The Tears of Selûne',
+  'A custom sphere of my own'
+];
+
+const SJ_SETUP = {
+  worldLabel: 'CRYSTAL SPHERE / SETTING',
+  worldPlaceholder: 'Name the sphere, rock, or region (or pick one above)',
+  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A crew of free traders on a battered Squid Ship, fleeing a neogi slave fleet through the Flow toward the Rock of Bral, carrying a stolen helm the Arcane want back.'",
+  namePlaceholder: 'e.g. Voyage Beyond the Crystal Sphere',
+  forgeLabel: 'Set Sail'
+};
+
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
@@ -146,9 +171,10 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isGW = gameSystem === 'gammaworld';
   const isBH = gameSystem === 'boothill';
   const isIJ = gameSystem === 'indianajones';
-  const tones = isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
-  const worlds = isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
-  const setup = isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
+  const isSJ = gameSystem === 'spelljammer';
+  const tones = isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : DND_TONES;
+  const worlds = isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : DND_WORLDS;
+  const setup = isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : DND_SETUP;
 
   useEffect(() => {
     (async () => {
@@ -164,7 +190,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
 
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
-    const fallbackName = world ? (isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
+    const fallbackName = world ? (isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : `Tales of ${world}`) : '';
     const finalName = (overrideName || name.trim() || fallbackName).trim();
     if (!finalName || creating) return;
     setCreating(true);
@@ -286,7 +312,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
           </div>
         ) : modules.length === 0 ? (
           <p className="text-[11px] text-muted-foreground/60 font-body italic">
-            No {isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
+            No {isSJ ? 'Spelljammer' : isIJ ? 'Indiana Jones' : isBH ? 'Boot Hill' : isGW ? 'Gamma World' : isSF ? 'Star Frontiers' : 'AD&D'} modules in the library yet. Visit the Library to add one.
           </p>
         ) : (
           <div className="space-y-1.5 max-h-44 overflow-y-auto scrollbar-thin pr-1">

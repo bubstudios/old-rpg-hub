@@ -1,8 +1,8 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { ScrollText, Rocket, ChevronRight, Library, Atom, Crosshair, Compass } from 'lucide-react';
+import { ScrollText, Rocket, ChevronRight, Library, Atom, Crosshair, Compass, Orbit } from 'lucide-react';
 import { GAME_SYSTEMS } from '@/lib/gameSystems';
 
-const ICONS = { scroll: ScrollText, rocket: Rocket, atom: Atom, crosshair: Crosshair, compass: Compass };
+const ICONS = { scroll: ScrollText, rocket: Rocket, atom: Atom, crosshair: Crosshair, compass: Compass, orbit: Orbit };
 
 export default function GameSelection() {
   const navigate = useNavigate();

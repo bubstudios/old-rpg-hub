@@ -344,6 +344,7 @@ Deno.serve(async (req) => {
       const character = await base44.entities.Character.create({
         name: name.trim(),
         campaign_id,
+        game_system: body.game_system || 'add1e',
         race,
         character_class,
         alignment: alignment || 'True Neutral',
@@ -371,11 +372,12 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : 'add1e';
+      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
       const isBH = sys === 'boothill';
       const isIJ = sys === 'indianajones';
+      const isSJ = sys === 'spelljammer';
       const systemContext = isBH
         ? 'a Boot Hill Wild West role-playing campaign (percentile attributes — Speed, Gun Accuracy, Throwing Accuracy, Strength, Bravery, Experience; quick-draw shootouts, wound location and severity tables, frontier towns, dollars)'
         : isSF
@@ -384,6 +386,8 @@ Deno.serve(async (req) => {
         ? 'a Gamma World post-apocalyptic science-fantasy role-playing campaign (7 attributes 3-18, mutations physical and mental, genotypes like Pure Strain Human/Altered Human/Mutated Animal/Sentient Plant, domars, Gamma Terra ruins)'
         : isIJ
         ? 'an Indiana Jones pulp action-adventure role-playing campaign set in the 1930s (six percentile attributes 1-100 — Strength, Movement, Prowess, Backbone, Instinct, Appeal; d100 roll-under resolution; light/medium/serious wound levels; archaeology, lost temples, ancient artifacts, Nazis, rival treasure hunters; dollars)'
+        : isSJ
+        ? 'a Spelljammer science-fantasy role-playing campaign using AD&D 2nd Edition Adventures in Space rules (crystal spheres, the phlogiston, spelljamming helms powered by spellcasters, wildspace, ship combat with SR and hull points, spacefaring races like Giff/Scro/Dracon/Hadozee/Xixchil, neogi and mind flayer fleets, the Arcane traders, gold pieces)'
         : 'an AD&D 1st Edition fantasy role-playing campaign (THAC0, saving throws, classes like Fighter/Cleric/Magic-User/Thief)';
 
       const extraction = await base44.integrations.Core.InvokeLLM({
@@ -478,6 +482,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       const isGW = (campaign.game_system || 'add1e') === 'gammaworld';
       const isBH = (campaign.game_system || 'add1e') === 'boothill';
       const isIJ = (campaign.game_system || 'add1e') === 'indianajones';
+      const isSJ = (campaign.game_system || 'add1e') === 'spelljammer';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -679,7 +684,7 @@ Extract:
       const character = await base44.entities.Character.create({
         name: charName.trim(),
         campaign_id,
-        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : 'add1e',
+        game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : 'add1e',
         race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Human'),
         character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',

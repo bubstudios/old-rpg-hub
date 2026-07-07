@@ -60,11 +60,12 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';
       const isIJ = gameSystem === 'indianajones';
+      const isSJ = gameSystem === 'spelljammer';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -224,6 +225,46 @@ Rules:
 - Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: enemies, treasure, traps, secrets).
 - Preserve exact numbers (damage, attribute scores, dollar amounts, wound levels).
 - Use Indiana Jones mechanics: six percentile attributes 1-100 (Strength, Movement, Prowess, Backbone, Instinct, Appeal), d100 roll-under resolution, Prowess for combat to-hit, light/medium/serious wound levels, dollars, 1930s pulp setting.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isSJ
+        ? `You are preparing a detailed reference brief from an uploaded Spelljammer (AD&D 2nd Edition Adventures in Space) adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended character/crew levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the adventure is about — in enough detail to brief players. Note the crystal sphere(s) and locales involved.
+
+## KEY LOCATIONS & AREAS
+For EACH location, ship, asteroid, planet, or area, preserve: the location name; what the party sees (description); contents (creatures, NPCs, treasure, traps, secrets, puzzles); any special rules or conditions; hidden elements the GM knows but players discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs & CREWS
+Each named NPC: who they are, disposition, stats if given, goals, secrets, what they know. Note ship captains, the Arcane, neogi, mind flayers, and rival crews.
+
+## MONSTERS & COMBAT
+Monster/creature types, stats, numbers, tactics, special abilities. Note any ship-to-ship combat encounters, boarding actions, and spelljamming tactical details.
+
+## TREASURE & EQUIPMENT
+Notable treasures, magic items, spelljamming helms, gold, and gear, with locations.
+
+## TRAPS & HAZARDS
+Each trap: where, what it does, how to detect/disarm, damage. Include void hazards, fouled air, gravity plane dangers, and phlogiston fire risks.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, ship combat (SR, hull points, weapons), environmental rules, wildspace/Flow rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: monsters, treasure, traps, secrets).
+- Preserve exact numbers (damage, HP, save values, treasure amounts, SR, hull points).
+- Use Spelljammer (AD&D 2nd Edition) mechanics: ability scores 3-18 (STR/INT/WIS/DEX/CON/CHA), THAC0, saving throws (5 categories), hit dice by class, spell slots, spelljamming helms (powered by spellcaster spell energy), Ship Rating (SR), hull points, ship weapons (catapults, ballistae, rams), crystal spheres, the phlogiston, air envelopes, gravity planes.
 - If the document is not an adventure module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.
