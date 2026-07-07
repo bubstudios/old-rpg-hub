@@ -627,7 +627,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
       </div>
 
       <div className="flex gap-2 pt-1">
-        <Button onClick={handleCreate} disabled={creating || (!name.trim() && !worldSetting.trim())} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button onClick={() => handleCreate()} disabled={creating || (!name.trim() && !worldSetting.trim())} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
           {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : setup.forgeLabel}
         </Button>
         <Button onClick={onCancel} variant="ghost" className="text-muted-foreground">Cancel</Button>
