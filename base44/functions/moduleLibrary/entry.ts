@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : body.game_system === 'conan' ? 'conan' : body.game_system === 'redsonja' ? 'redsonja' : body.game_system === 'buckrogers' ? 'buckrogers' : body.game_system === 'ghostbusters' ? 'ghostbusters' : body.game_system === 'gangbusters' ? 'gangbusters' : 'add1e';
+      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : body.game_system === 'conan' ? 'conan' : body.game_system === 'redsonja' ? 'redsonja' : body.game_system === 'buckrogers' ? 'buckrogers' : body.game_system === 'ghostbusters' ? 'ghostbusters' : body.game_system === 'gangbusters' ? 'gangbusters' : body.game_system === 'legionofdoom' ? 'legionofdoom' : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';
@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
       const isBR = gameSystem === 'buckrogers';
       const isGB = gameSystem === 'ghostbusters';
       const isGang = gameSystem === 'gangbusters';
+      const isLOD = gameSystem === 'legionofdoom';
 
       const extractionPrompt = isSF
         ? `You are preparing a detailed reference brief from an uploaded Star Frontiers adventure module so an AI Game Master can run it faithfully.
@@ -511,6 +512,46 @@ Rules:
 - Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content (what's in each area: enemies, clues, traps, secrets).
 - Preserve exact numbers (damage, attribute scores, dollar amounts, wound levels).
 - Use Gangbusters mechanics: six percentile attributes 1-100 (Muscle, Agility, Aim, Savvy, Nerve, Panache), d100 roll-under resolution, Aim for combat to-hit, Nerve modifier, wound location and severity tables, dollars, 1920s Prohibition setting.
+- If the document is not an adventure module, note that and extract what you can.
+- This brief will be injected into the GM's instructions.`
+        : isLOD
+        ? `You are preparing a detailed reference brief from an uploaded Legion of Doom supervillain adventure module so an AI Game Master can run it faithfully.
+
+Read the attached module document in full and produce a COMPREHENSIVE brief that preserves everything needed to run the adventure. Do NOT summarize away tactical details.
+
+Structure your brief exactly as:
+
+## MODULE OVERVIEW
+Title, author/source, recommended villain levels, estimated length.
+
+## PREMISE & BACKGROUND
+The setup, hooks, and what the caper or adventure is about — in enough detail to brief the villains. Note the modern superhero setting and locale.
+
+## KEY LOCATIONS & AREAS
+For EACH location, building, lair, or area, preserve: the location name; what the villains see (description); contents (heroes, NPCs, security systems, hazards, secrets, traps, loot); any special rules or conditions; hidden elements the GM knows but villains discover through play. Keep these FULLY detailed — this is the spine of the adventure.
+
+## NPCs & HEROES
+Each named NPC or hero: who they are, disposition, stats if given, goals, secrets, what they know. Note rival villains, superheroes, minions, civilians, and authorities.
+
+## COMBAT & ENCOUNTERS
+Hero and enemy types, their super-powers, stats, numbers, tactics. Note where clashes occur and what triggers them.
+
+## TREASURE & EQUIPMENT
+Notable gear, gadgets, resources, intel, and loot, with locations.
+
+## HAZARDS & TRAPS
+Each hazard or trap: where, what it does, how to detect or avoid. Include security systems, alarms, and super-tech hazards.
+
+## SPECIAL RULES & CONDITIONS
+Unique mechanics, chase rules, random encounters, environmental rules, victory conditions.
+
+## RUNNING NOTES
+Tone, pacing advice, anything the GM should know.
+
+Rules:
+- Be COMPLETE but CONCISE — use compact bullet points, not prose paragraphs. The GM needs area-by-area content.
+- Preserve exact numbers (damage, attribute scores, resource amounts, Vitality).
+- Use Legion of Doom mechanics: six attributes 3-18 (MGT Might, CUN Cunning, AGI Agility, TGH Toughness, WIL Will, CHA Charisma), d20 roll-under resolution, Vitality = Toughness + level, Defense = 10 + TGH mod, Ego = Will score, super-powers ranked 1-5, resources in dollars, modern superhero setting, villains are the player characters.
 - If the document is not an adventure module, note that and extract what you can.
 - This brief will be injected into the GM's instructions.`
         : `You are preparing a detailed reference brief from an uploaded AD&D 1st Edition adventure module so an AI Dungeon Master can run it faithfully.

@@ -227,6 +227,21 @@ export const GAME_SYSTEMS = [
     enterLabel: "Suit Up"
   },
   {
+    id: "legionofdoom",
+    name: "Legion of Doom",
+    short: "Legion of Doom",
+    tagline: "Be the villain. Conquer the world.",
+    description:
+      "Join the Legion of Doom — a cabal of supervillains united for mutual gain. Play the bad guys: masterminds, powerhouses, tricksters, speedsters, sorcerers, shapeshifters, gadgeteers, and mentalists. Pull heists, battle heroes, scheme against each other, and pursue world domination. An original d20 roll-under system with super-powers, Ego, and villainous flair, ruled by an AI Game Master. The Hall of Doom awaits — and the world is yours for the taking.",
+    dashboardTitle: "THE LEGION OF DOOM",
+    dashboardSubtitle:
+      "A supervillain caper campaign, ruled by an AI Game Master. Join the Legion of Doom, pull heists, battle heroes, and scheme for world domination — where every monologue is written in villainy that cannot be undone.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/6fd4dd456_generated_image.png",
+    icon: "zap",
+    enterLabel: "Enter the Hall of Doom"
+  },
+  {
     id: "gangbusters",
     name: "Gangbusters",
     short: "Gangbusters",

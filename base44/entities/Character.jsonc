@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret, conan, redsonja, buckrogers, ghostbusters, gangbusters)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret, conan, redsonja, buckrogers, ghostbusters, gangbusters, legionofdoom)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters)"
+      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters, Legion of Doom)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters, Legion of Doom)"
     },
     "level": {
       "type": "number",
@@ -158,7 +158,7 @@
         },
         "agi": {
           "type": "number",
-          "description": "Agility (Hyborian / Gangbusters) \u2014 quickness, reflexes, initiative, dodge"
+          "description": "Agility (Hyborian / Gangbusters / Legion of Doom) \u2014 quickness, reflexes, initiative, dodge"
         },
         "end": {
           "type": "number",
@@ -207,6 +207,22 @@
         "pan": {
           "type": "number",
           "description": "Panache (Gangbusters) \u2014 charm, persuasion, deception, fast-talking"
+        },
+        "mgt": {
+          "type": "number",
+          "description": "Might (Legion of Doom) \u2014 physical strength, raw power, melee prowess"
+        },
+        "cun": {
+          "type": "number",
+          "description": "Cunning (Legion of Doom) \u2014 intellect, strategy, technology, scheming"
+        },
+        "tgh": {
+          "type": "number",
+          "description": "Toughness (Legion of Doom) \u2014 durability, damage resistance; equals Vitality"
+        },
+        "wil": {
+          "type": "number",
+          "description": "Will (Legion of Doom) \u2014 mental fortitude, ego, willpower; equals Ego pool"
         }
       }
     },
@@ -253,7 +269,7 @@
     "gold": {
       "type": "number",
       "default": 0,
-      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones, Top Secret, Gangbusters)"
+      "description": "Gold (AD&D), credits (Star Frontiers), domars (Gamma World), or dollars (Boot Hill, Indiana Jones, Top Secret, Gangbusters, Legion of Doom)"
     },
     "equipment": {
       "type": "array",
@@ -274,7 +290,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, Top Secret weapon/tradecraft skills, Hyborian weapon/adventuring skills, Ghostbusters tag skills, or Gangbusters weapon/underworld skills (level = proficiency or percentile)",
+      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, Top Secret weapon/tradecraft skills, Hyborian weapon/adventuring skills, Ghostbusters tag skills, Gangbusters weapon/underworld skills, or Legion of Doom super-powers (level = power rank)",
       "items": {
         "type": "object",
         "properties": {

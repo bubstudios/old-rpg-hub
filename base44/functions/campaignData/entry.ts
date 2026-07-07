@@ -330,6 +330,39 @@ Deno.serve(async (req) => {
         return Response.json({ character });
       }
 
+      // Legion of Doom branch: HP = Toughness + level, Defense in ac (10 + TGH mod), powers in skills, no THAC0/saves/spells
+      if (game_system === 'legionofdoom') {
+        const tgh = Math.max(3, Math.round((ability_scores && ability_scores.tgh) || 10));
+        const tghMod = Math.floor((tgh - 10) / 2);
+        const hp = tgh + Math.max(1, Number(level) || 1);
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system: 'legionofdoom',
+          race,
+          character_class,
+          alignment: alignment || 'Chaotic Evil',
+          ability_scores,
+          level: Math.max(1, Number(level) || 1),
+          hp_current: hp,
+          hp_max: hp,
+          ac: 10 + tghMod,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
       // Hyborian branch (Conan / Red Sonja): HP = Endurance (Vitality), percentile attributes, no THAC0/saves/spells
       if (game_system === 'conan' || game_system === 'redsonja') {
         const end = Math.max(1, Math.round((ability_scores && ability_scores.end) || 50));
@@ -630,6 +663,7 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
       const isHY = (campaign.game_system || 'add1e') === 'conan' || (campaign.game_system || 'add1e') === 'redsonja';
       const isGB = (campaign.game_system || 'add1e') === 'ghostbusters';
       const isGang = (campaign.game_system || 'add1e') === 'gangbusters';
+      const isLOD = (campaign.game_system || 'add1e') === 'legionofdoom';
       const charSchema = isSF ? {
         type: "object",
         properties: {
@@ -760,6 +794,24 @@ If the document is sparse, extract what you can and infer reasonable defaults. N
           ability_scores: { type: "object", properties: { mus: { type: "number" }, agi: { type: "number" }, aim: { type: "number" }, sav: { type: "number" }, ner: { type: "number" }, pan: { type: "number" } } },
           hp_current: { type: "number" },
           hp_max: { type: "number" },
+          gold: { type: "number" },
+          skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
+          equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
+          appearance: { type: "string" },
+          background: { type: "string" }
+        },
+        required: ["name", "race", "character_class"]
+      } : isLOD ? {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          race: { type: "string" },
+          character_class: { type: "string" },
+          level: { type: "number" },
+          ability_scores: { type: "object", properties: { mgt: { type: "number" }, cun: { type: "number" }, agi: { type: "number" }, tgh: { type: "number" }, wil: { type: "number" }, cha: { type: "number" } } },
+          hp_current: { type: "number" },
+          hp_max: { type: "number" },
+          ac: { type: "number" },
           gold: { type: "number" },
           skills: { type: "array", items: { type: "object", properties: { name: { type: "string" }, level: { type: "number" } } } },
           equipment: { type: "array", items: { type: "object", properties: { name: { type: "string" }, qty: { type: "number" } } } },
@@ -932,6 +984,22 @@ Extract:
 - equipment: array of {name, qty}
 - appearance: physical description if present
 - background: backstory if present`
+        : isLOD
+        ? `You are reading a Legion of Doom supervillain character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
+
+Extract:
+- name: the villain's name
+- race: their archetype (The Mastermind, The Powerhouse, The Trickster, The Speedster, The Sorcerer, The Shapeshifter, The Gadgeteer, The Mentalist)
+- character_class: same as archetype
+- level: experience level (default 1)
+- ability_scores: the six attributes 3-18 — mgt (Might), cun (Cunning), agi (Agility), tgh (Toughness), wil (Will), cha (Charisma)
+- hp_current and hp_max: current and max Vitality (equals Toughness + level)
+- ac: Defense (10 + Toughness modifier)
+- gold: resources in dollars
+- skills: array of {name, level} — super-powers (level = power rank 1-5)
+- equipment: array of {name, qty}
+- appearance: physical description if present
+- background: origin story if present`
         : `You are reading an AD&D 1st Edition character sheet (PDF, image, or text). Extract every field accurately, using the EXACT numbers written on the sheet — do not recompute or estimate. If a field is not present, use null for numbers or an empty string.
 
 Extract:
@@ -980,22 +1048,22 @@ Extract:
         name: charName.trim(),
         campaign_id,
         game_system: isSF ? 'starfrontiers' : isGW ? 'gammaworld' : isBH ? 'boothill' : isIJ ? 'indianajones' : isSJ ? 'spelljammer' : isDS ? 'darksun' : isTS ? 'topsecret' : (campaign.game_system || 'add1e'),
-        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : isGang ? 'Gangster' : 'Human'),
-        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : isGang ? 'Gangster' : 'Fighter'),
+        race: (ext && ext.race) || (isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : isGang ? 'Gangster' : isLOD ? 'The Mastermind' : 'Human'),
+        character_class: (ext && ext.character_class) || (isSF ? 'Military' : isGW ? 'Altered Human' : isBH ? 'Gunfighter' : isIJ ? 'Archaeologist' : isTS ? 'Field Agent' : isHY ? 'Barbarian' : isGB ? 'Scientist' : isGang ? 'Gangster' : isLOD ? 'The Mastermind' : 'Fighter'),
         alignment: (ext && ext.alignment) || 'True Neutral',
         ability_scores,
         level: Math.max(1, Number(ext && ext.level) || 1),
-        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : isGang ? (ability_scores.mus || 50) : 1),
-        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : isGang ? (ability_scores.mus || 50) : 1),
-        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : isGang ? 0 : 10),
-        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : isGang ? 0 : 20),
+        hp_current: Number(ext && ext.hp_current) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : isGang ? (ability_scores.mus || 50) : isLOD ? ((ability_scores.tgh || 10) + 1) : 1),
+        hp_max: Number(ext && ext.hp_max) || (isSF ? staFallback : isGW ? cnFallback : (isBH || isIJ || isTS) ? strFallback : isHY ? (ability_scores.end || 50) : isGB ? (Number(ext && ext.gold) || 20) : isGang ? (ability_scores.mus || 50) : isLOD ? ((ability_scores.tgh || 10) + 1) : 1),
+        ac: Number(ext && ext.ac) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : isGang ? 0 : isLOD ? (10 + Math.floor(((ability_scores.tgh || 10) - 10) / 2)) : 10),
+        thaco: Number(ext && ext.thaco) || (isSF ? 0 : isGW ? 0 : isBH ? 0 : isIJ ? 0 : isTS ? 0 : isHY ? 0 : isGB ? 0 : isGang ? 0 : isLOD ? 0 : 20),
         xp: Number(ext && ext.xp) || 0,
         saving_throws: (ext && ext.saving_throws) || {},
         gold: Number(ext && ext.gold) || 0,
         equipment: (ext && ext.equipment) || [],
-        skills: (isSF || isBH || isIJ || isTS || isHY || isGB || isGang) ? (ext && ext.skills) || [] : [],
+        skills: (isSF || isBH || isIJ || isTS || isHY || isGB || isGang || isLOD) ? (ext && ext.skills) || [] : [],
         mutations: isGW ? (ext && ext.mutations) || [] : [],
-        spells: (isSF || isGB || isGang) ? [] : (ext && ext.spells) || [],
+        spells: (isSF || isGB || isGang || isLOD) ? [] : (ext && ext.spells) || [],
         spell_slots: {},
         appearance: (ext && ext.appearance) || '',
         background: (ext && ext.background) || '',

@@ -15,6 +15,7 @@ import TSCharacterSheet from '@/pages/TSCharacterSheet';
 import HyCharacterSheet from '@/pages/HyCharacterSheet';
 import GBCharacterSheet from '@/pages/GBCharacterSheet';
 import GangCharacterSheet from '@/pages/GangCharacterSheet';
+import LODCharacterSheet from '@/pages/LODCharacterSheet';
 import { exportCharacterSheet } from '@/lib/exportCharacterSheet';
 
 export default function CharacterSheet() {
@@ -107,6 +108,10 @@ export default function CharacterSheet() {
 
   if (campaign?.game_system === 'gangbusters') {
     return <GangCharacterSheet character={character} campaignId={campaignId} />;
+  }
+
+  if (campaign?.game_system === 'legionofdoom') {
+    return <LODCharacterSheet character={character} campaignId={campaignId} />;
   }
 
   const scores = character.ability_scores || {};

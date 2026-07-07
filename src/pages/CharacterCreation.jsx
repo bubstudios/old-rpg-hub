@@ -20,6 +20,7 @@ import TSCharacterCreation from '@/pages/TSCharacterCreation';
 import HyCharacterCreation from '@/pages/HyCharacterCreation';
 import GBCharacterCreation from '@/pages/GBCharacterCreation';
 import GangCharacterCreation from '@/pages/GangCharacterCreation';
+import LODCharacterCreation from '@/pages/LODCharacterCreation';
 import ImportCharacterSheetForm from '@/components/ImportCharacterSheetForm';
 
 const STEPS = ['Race', 'Class', 'Ability Scores', 'Alignment', 'Identity', 'Review'];
@@ -56,6 +57,7 @@ export default function CharacterCreation() {
   if (gameSystem === 'conan' || gameSystem === 'redsonja') return <HyCharacterCreation />;
   if (gameSystem === 'ghostbusters') return <GBCharacterCreation />;
   if (gameSystem === 'gangbusters') return <GangCharacterCreation />;
+  if (gameSystem === 'legionofdoom') return <LODCharacterCreation />;
   if (!gameSystem) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">

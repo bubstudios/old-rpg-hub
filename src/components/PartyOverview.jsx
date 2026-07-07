@@ -46,13 +46,13 @@ export default function PartyOverview({ characters, campaignId, gameSystem }) {
                     ? `${c.race}`
                     : gameSystem === 'topsecret'
                     ? `${c.race}`
-                    : gameSystem === 'conan' || gameSystem === 'redsonja' || gameSystem === 'ghostbusters' || gameSystem === 'gangbusters'
+                    : gameSystem === 'conan' || gameSystem === 'redsonja' || gameSystem === 'ghostbusters' || gameSystem === 'gangbusters' || gameSystem === 'legionofdoom'
                     ? `${c.race}`
                     : `${c.race} ${c.character_class} · Lvl ${c.level}`}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {gameSystem !== 'starfrontiers' && gameSystem !== 'gammaworld' && gameSystem !== 'boothill' && gameSystem !== 'indianajones' && gameSystem !== 'topsecret' && gameSystem !== 'conan' && gameSystem !== 'redsonja' && gameSystem !== 'ghostbusters' && gameSystem !== 'gangbusters' && (
+                {gameSystem !== 'starfrontiers' && gameSystem !== 'gammaworld' && gameSystem !== 'boothill' && gameSystem !== 'indianajones' && gameSystem !== 'topsecret' && gameSystem !== 'conan' && gameSystem !== 'redsonja' && gameSystem !== 'ghostbusters' && gameSystem !== 'gangbusters' && gameSystem !== 'legionofdoom' && (
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Shield className="w-3 h-3" strokeWidth={1.5} />
                     <span className="font-heading font-600">{c.ac}</span>

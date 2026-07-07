@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
     const isHY = body.game_system === 'conan' || body.game_system === 'redsonja';
     const isGB = body.game_system === 'ghostbusters';
     const isGang = body.game_system === 'gangbusters';
+    const isLOD = body.game_system === 'legionofdoom';
     const GW_ABILITY_LABELS = { ps: 'PS', ms: 'MS', dx: 'DX', cn: 'CN', in: 'IN', ch: 'CH', sn: 'SN' };
     const BH_ABILITY_LABELS = { spd: 'SPD', gacc: 'GACC', tacc: 'TACC', str: 'STR', brv: 'BRV', exp: 'EXP' };
     const BH_WEAPON_SKILLS = ['Brawling', 'Fast Draw', 'Pistol', 'Rifle', 'Shotgun'];
@@ -55,6 +56,7 @@ Deno.serve(async (req) => {
     const HY_WEAPON_SKILLS = ['Broadsword', 'Dagger', 'Bow', 'Spear', 'Shield', 'Brawling'];
     const GANG_ABILITY_LABELS = { mus: 'MUS', agi: 'AGI', aim: 'AIM', sav: 'SAV', ner: 'NER', pan: 'PAN' };
     const GANG_WEAPON_SKILLS = ['Pistol', 'Rifle', 'Shotgun', 'Submachine Gun', 'Brawling', 'Melee', 'Thrown'];
+    const LOD_ABILITY_LABELS = { mgt: 'MGT', cun: 'CUN', agi: 'AGI', tgh: 'TGH', wil: 'WIL', cha: 'CHA' };
 
     // --- Star Frontiers roll types (percentile, roll-under) ---
     if (isSF && roll_type === 'attack') {
@@ -606,6 +608,48 @@ Deno.serve(async (req) => {
       const success = d100 <= agi;
       rolls.push({ description: 'Reaction', die: 'd100', roll: d100, modifier: 0, total: d100, result: success ? 'Quick' : 'Slow', target: `need ≤ ${agi} (Agility)` });
       summary = `${char.name} reaction: d100 = ${d100} vs Agility ${agi} — ${success ? 'QUICK' : 'SLOW'}.`;
+    }
+    // --- Legion of Doom roll types (d20 roll-under) ---
+    else if (isLOD && roll_type === 'attack') {
+      const melee = body.melee !== false;
+      const baseAttr = melee ? (scores.mgt || 10) : (scores.agi || 10);
+      const bestRank = (char.skills || []).length ? Math.max(...(char.skills || []).map(s => Number(s.level) || 0)) : 0;
+      const modifier = Number(body.modifier) || 0;
+      const hitNumber = Math.min(18, Math.max(3, baseAttr + bestRank + modifier));
+      const d20 = rollDie(20);
+      const success = d20 <= hitNumber;
+      rolls.push({
+        description: melee ? 'Melee attack' : 'Ranged attack',
+        die: 'd20', roll: d20, modifier: bestRank + modifier, total: d20,
+        result: success ? 'Hit' : 'Miss', target: `need ≤ ${hitNumber}`
+      });
+      summary = `${char.name} attacks (${melee ? 'melee' : 'ranged'}): d20 = ${d20} vs ${hitNumber} — ${success ? 'HIT' : 'MISS'}.`;
+    }
+    else if (isLOD && roll_type === 'ability') {
+      const ability = body.ability;
+      if (!LOD_ABILITY_LABELS[ability]) return Response.json({ error: 'Invalid ability' }, { status: 400 });
+      const score = scores[ability] || 10;
+      const d20 = rollDie(20);
+      const success = d20 <= score;
+      rolls.push({
+        description: `${LOD_ABILITY_LABELS[ability]} check`,
+        die: 'd20', roll: d20, modifier: 0, total: d20,
+        result: success ? 'Success' : 'Failure',
+        target: `need ≤ ${score}`
+      });
+      summary = `${char.name} ${LOD_ABILITY_LABELS[ability]} check: d20 = ${d20} vs ${score} — ${success ? 'SUCCESS' : 'FAILURE'}.`;
+    }
+    else if (isLOD && roll_type === 'initiative') {
+      const agi = scores.agi || 10;
+      const initMod = Math.floor((agi - 10) / 2);
+      const d20 = rollDie(20);
+      const total = d20 + initMod;
+      rolls.push({
+        description: 'Initiative',
+        die: 'd20', roll: d20, modifier: initMod, total,
+        target: `AGI mod ${initMod >= 0 ? '+' : ''}${initMod}`
+      });
+      summary = `${char.name} initiative: AGI ${initMod >= 0 ? '+' : ''}${initMod} + d20 ${d20} = ${total}.`;
     }
     // --- AD&D roll types ---
     else if (roll_type === 'attack') {

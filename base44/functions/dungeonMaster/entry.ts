@@ -1,5 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+// Split narration into chunks ≤ maxLen for the speech API (5000 char limit).
+// Breaks at sentence boundaries when possible.
+function chunkNarration(text, maxLen = 4500) {
+  if (text.length <= maxLen) return [text];
+  const chunks = [];
+  let remaining = text;
+  while (remaining.length > maxLen) {
+    let breakPoint = remaining.lastIndexOf('. ', maxLen);
+    if (breakPoint < maxLen / 2) breakPoint = maxLen;
+    chunks.push(remaining.slice(0, breakPoint + 1).trim());
+    remaining = remaining.slice(breakPoint + 1);
+  }
+  if (remaining.trim()) chunks.push(remaining.trim());
+  return chunks;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -7,7 +23,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { campaign_id, action, acting_character_id, is_roll_result } = body;
+    const { campaign_id, action, acting_character_id, is_roll_result, narrate_audio } = body;
 
     if (!campaign_id || !action) {
       return Response.json({ error: 'campaign_id and action are required' }, { status: 400 });
@@ -113,6 +129,7 @@ Deno.serve(async (req) => {
     const isBR = (campaign.game_system || 'add1e') === 'buckrogers';
     const isGB = (campaign.game_system || 'add1e') === 'ghostbusters';
     const isGang = (campaign.game_system || 'add1e') === 'gangbusters';
+    const isLOD = (campaign.game_system || 'add1e') === 'legionofdoom';
 
     const dndToneLabels = {
       balanced: 'a balanced blend of combat, exploration, roleplay, and story',
@@ -191,11 +208,18 @@ Deno.serve(async (req) => {
       sandbox: 'a sandbox, with a Prohibition city the crew works and responds to opportunities as they come',
       character_driven: 'character-driven, focused on mob politics, turf wars, and personal legends'
     };
-    const toneLabels = isTS ? tsToneLabels : isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : isHW ? hwToneLabels : isGang ? gangToneLabels : isGB ? gbToneLabels : dndToneLabels;
+    const lodToneLabels = {
+      balanced: 'a balanced blend of heists, super-powered combat, scheming, and villainous drama',
+      combat_heavy: 'combat-heavy, with frequent super-powered clashes and hero brawls',
+      dungeon_crawler: 'a heist-focused campaign, centered on capers, infiltrations, and daring raids',
+      sandbox: 'a sandbox, with a city and world the Legion freely schemes across at their own direction',
+      character_driven: 'character-driven, focused on villainous arcs, rivalries, ego, and the bonds between villains'
+    };
+    const toneLabels = isTS ? tsToneLabels : isDS ? dsToneLabels : isSJ ? sjToneLabels : isIJ ? ijToneLabels : isBH ? bhToneLabels : isGW ? gwToneLabels : isSF ? sfToneLabels : isHW ? hwToneLabels : isGang ? gangToneLabels : isGB ? gbToneLabels : isLOD ? lodToneLabels : dndToneLabels;
     const toneDesc = toneLabels[campaign.tone] || toneLabels.balanced;
     const worldSetting = campaign.world_setting
       ? `The campaign is set in: ${campaign.world_setting}.`
-      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : isTS ? 'The setting is the shadow world of Cold War espionage — rival intelligence services (CIA, KGB, MI6, Mossad), defectors, double agents, sabotage, assassination, blackmail, and the quiet war fought in the spaces between nations. The time period and theatre are defined by the campaign.' : isGH ? 'The setting is the World of Greyhawk — the continent of Oerik, specifically the Flanaess: ancient kingdoms, the Free City of Greyhawk, warring factions like the Great Kingdom and the forces of Iuz, the Circle of Eight, and countless ruined dungeons. Think old-school AD&D: Gygax, Tomb of Horrors, Castle Greyhawk, the Giants and Drow series.' : isFR ? 'The setting is the Forgotten Realms — the world of Toril, specifically the continent of Faerûn: a land of high magic, active gods, ancient ruins, and heroism. Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, and the Underdark beneath. Factions include the Harpers, the Zhentarim, the Red Wizards of Thay, and the Lords\' Alliance.' : isHW ? 'The setting is the Hollow World — a vast realm inside the planet Mystara, with its own sun at the center and land curving upward in every direction. The Immortals preserved ancient civilizations here: the Milenian Empire, the Traldar Kingdoms, the Azcans, the Oltecs, the Nithians. Dinosaurs roam eternal jungles; marble cities and jade pyramids rise under an unmoving sun.' : isHY ? 'The setting is the Hyborian Age — the savage world of Robert E. Howard, a lost epoch before recorded history. Ancient kingdoms sprawl across the land: Cimmeria, Aquilonia, Nemedia, Stygia, Turan, Hyrkania, Zamora, and more. Civilization is thin and corrupt; sorcery is dark, rare, and corrupting; steel is the law and the sword is the answer.' : isBR ? 'The setting is the 25th century — the XXVc. Earth is a poisoned relic ruled by the geniocracy of RAM from Mars. The Asteroid Belt hungers for freedom, Venus simmers, and Luna orbits overhead. Rocket ships, blasters, genetic engineering, and corporate intrigue define a solar system at war.' : isGB ? 'The setting is a modern-day haunted city — typically New York. The supernatural is real, ghosts manifest, and a Ghostbusters franchise answers the call. Proton packs, ghost traps, PKE meters, and Brownie Points are the tools of the trade. Comedy and horror in equal measure.' : isGang ? 'The setting is Prohibition-era America — the Roaring Twenties, typically in a major city like Chicago, New York, or Atlantic City. The Volstead Act has made alcohol illegal, and organized crime controls the bootleg trade. Speakeasies, Tommy guns, pinstripe suits, fast cars, and the war between the mob and the law define the era.' : 'The setting is an original fantasy world of your devising.');
+      : (isSF ? 'The setting is the Frontier of known space, on the edge of explored territory.' : isGW ? 'The setting is Gamma Terra — the irradiated, mutant-overgrown ruins of Earth centuries after the Social Wars.' : isBH ? 'The setting is the American Old West of the 1870s-1880s — frontier towns, cattle drives, mining camps, railroads, and lawless territories.' : isIJ ? 'The setting is the 1930s — a globe-spanning pulp world of archaeology, lost temples, ancient artifacts, two-fisted adventure, Nazis, gangsters, and rival treasure hunters.' : isSJ ? 'The setting is the Spelljammer universe — crystal spheres enclosing solar systems, the rainbow rivers of the phlogiston between them, and wooden ships that sail the void of wildspace powered by spelljamming helms.' : isDS ? 'The setting is Athas — a dying desert world beneath a swollen crimson sun, where the seas are long gone, water is life, metal is nearly myth, defiler magic blights the land, psionics are common, and immortal sorcerer-kings rule the city-states as living gods.' : isTS ? 'The setting is the shadow world of Cold War espionage — rival intelligence services (CIA, KGB, MI6, Mossad), defectors, double agents, sabotage, assassination, blackmail, and the quiet war fought in the spaces between nations. The time period and theatre are defined by the campaign.' : isGH ? 'The setting is the World of Greyhawk — the continent of Oerik, specifically the Flanaess: ancient kingdoms, the Free City of Greyhawk, warring factions like the Great Kingdom and the forces of Iuz, the Circle of Eight, and countless ruined dungeons. Think old-school AD&D: Gygax, Tomb of Horrors, Castle Greyhawk, the Giants and Drow series.' : isFR ? 'The setting is the Forgotten Realms — the world of Toril, specifically the continent of Faerûn: a land of high magic, active gods, ancient ruins, and heroism. Waterdeep the City of Splendors, the Dalelands, the Sword Coast, Cormyr, Baldur\'s Gate, and the Underdark beneath. Factions include the Harpers, the Zhentarim, the Red Wizards of Thay, and the Lords\' Alliance.' : isHW ? 'The setting is the Hollow World — a vast realm inside the planet Mystara, with its own sun at the center and land curving upward in every direction. The Immortals preserved ancient civilizations here: the Milenian Empire, the Traldar Kingdoms, the Azcans, the Oltecs, the Nithians. Dinosaurs roam eternal jungles; marble cities and jade pyramids rise under an unmoving sun.' : isHY ? 'The setting is the Hyborian Age — the savage world of Robert E. Howard, a lost epoch before recorded history. Ancient kingdoms sprawl across the land: Cimmeria, Aquilonia, Nemedia, Stygia, Turan, Hyrkania, Zamora, and more. Civilization is thin and corrupt; sorcery is dark, rare, and corrupting; steel is the law and the sword is the answer.' : isBR ? 'The setting is the 25th century — the XXVc. Earth is a poisoned relic ruled by the geniocracy of RAM from Mars. The Asteroid Belt hungers for freedom, Venus simmers, and Luna orbits overhead. Rocket ships, blasters, genetic engineering, and corporate intrigue define a solar system at war.' : isGB ? 'The setting is a modern-day haunted city — typically New York. The supernatural is real, ghosts manifest, and a Ghostbusters franchise answers the call. Proton packs, ghost traps, PKE meters, and Brownie Points are the tools of the trade. Comedy and horror in equal measure.'       : isGang ? 'The setting is Prohibition-era America — the Roaring Twenties, typically in a major city like Chicago, New York, or Atlantic City. The Volstead Act has made alcohol illegal, and organized crime controls the bootleg trade. Speakeasies, Tommy guns, pinstripe suits, fast cars, and the war between the mob and the law define the era.' : isLOD ? 'The setting is a world of superheroes and supervillains — a modern metropolis where caped heroes patrol the skies and the Legion of Doom, a cabal of supervillains, schemes from the shadows of the Hall of Doom. The players ARE the villains — the bad guys, united for mutual gain, pulling heists, battling heroes, and pursuing world domination.' : 'The setting is an original fantasy world of your devising.');
     const settingNotes = campaign.setting_notes
       ? `\n## The Player's Vision\nThe player who began this campaign asked for the following. Honor it as the spine of the world:\n"${campaign.setting_notes}"`
       : '';
@@ -1105,7 +1129,70 @@ Rules for the JSON:
 
 Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the Roaring Twenties alive, dangerous, and full of smoke and lead.`;
 
-    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : isHY ? hyPrompt : isBR ? brPrompt : isGB ? gbPrompt : isGang ? gangPrompt : dndPrompt;
+    const lodPrompt = `You are the Game Master for a Legion of Doom campaign — an original supervillain role-playing game where the players ARE the bad guys. You narrate a persistent, comic-book-flavored adventure of heists, super-powered brawls, hero clashes, and villainous scheming as a cabal of supervillains united for mutual gain.
+
+## Your Role
+You are the ONLY Game Master. There is no human GM. You handle ALL rulings, narration, NPC dialogue (including heroes, civilians, minions, and rival villains), combat resolution, and world state. Players are purely participants who submit actions in natural language.
+
+## Campaign Direction
+This campaign's tone is: ${toneDesc}. Shape encounters, pacing, and narration toward this style throughout.
+${worldSetting}${settingNotes}${moduleBrief}${chronicleBrief}${dmBriefBlock}
+
+## Legion of Doom Rules (Core)
+- The players are SUPERVILLAINS — members of the Legion of Doom, a cabal united for mutual gain. They are the antagonists of the world. Heroes (capes) are their enemies. The party schemes, steals, conquers, and clashes with heroes and rival villains alike.
+- Attributes (3-18, rolled 4d6 drop lowest): Might (MGT), Cunning (CUN), Agility (AGI), Toughness (TGH), Will (WIL), Charisma (CHA).
+- Resolution: roll d20. If the result is EQUAL TO OR UNDER the relevant attribute (+ modifiers), the action succeeds. This is a roll-under system — lower rolls are better.
+- Vitality (hit points) = Toughness + level. At 0 Vitality, a villain is DEFEATED — captured, humiliated, knocked out, or forced to retreat (villains rarely die; they escape to scheme another day). Track current and max Vitality.
+- Defense = 10 + Toughness modifier (toughness as natural armor). Used to resist attacks.
+- Ego = Will score. A resource pool spent to power abilities, add bonus dice, or force a dramatic monologue. Gained through villainous drama (monologues, cruelty, spectacle) and lost when humiliated. The GM awards and deducts Ego narratively.
+- Super-Powers: each villain has powers (stored as skills, level = power rank 1-5). Powers define their abilities — Energy Projection, Flight, Super Strength, Mind Control, Shapeshifting, Telekinesis, Dark Magic, Gadgets, Freeze Ray, Super Speed, etc. When a villain uses a power, resolve it as an ability check (d20 roll-under the relevant attribute) with the power rank added to the target number. Powers are dramatic and flexible — let players describe creative applications.
+- Combat: to attack, roll d20 against the hit number = attack attribute (MGT for melee, AGI for ranged) + best power rank + situational modifiers, clamped to 3-18. Roll ≤ hit number = hit. Damage is rolled on the power/weapon die, reduced by the target's Toughness modifier (minimum 1 damage).
+- Initiative: d20 + Agility modifier, highest acts first.
+- No wound location tables — damage reduces Vitality directly. At 0 Vitality, the villain is defeated (not killed) — captured, knocked out, humiliated, or escaped.
+- Resources (dollars): for lairs, gadgets, minions, and schemes. Use the loot field for resources and gear recovered.
+- There are NO classes, NO alignments (villains are villains), NO spell slots, NO THAC0, NO saving throws. Use d20 roll-under attribute checks for all tests. Powers replace spells.
+- Heroes: the enemies of the party. Design heroes as worthy foes — capes with their own powers, egos, and codes. Heroes can be defeated, captured, humiliated, or (rarely) killed, but they also escape and return. The party's Infamy grows as they clash with heroes, attracting more powerful adversaries.
+- Infamy: a reputation track that grows as the villains commit crimes and clash with heroes. Higher Infamy means more notoriety, more hero attention, and more minions flocking to their banner. Track it in world_state.reputation.
+
+## Tone & Style
+- Comic-book supervillain caper — think Saturday-morning cartoons meets heist films, with a dash of dark humor. Vivid, dramatic, and fun. Villains monologue. Heroes are dramatic. The stakes are world-domination-scale but the tone can be playful.
+- Be fair but dangerous. Heroes are competent. Rival villains scheme. The law and the capes are closing in. Villains CAN be defeated (captured, humiliated) — but they escape to scheme again. Reward bold, cunning, and theatrical play.
+- Describe the crackle of energy blasts, the gloating monologue, the clash of super-powers, the smoke of a bank vault, the wail of sirens, the swagger of a villain in their element.
+- NPCs have voices, motivations, and secrets — heroes with codes and egos, rival villains with grudges, minions with loyalty issues, civilians in the crossfire, and the occasional alien invasion or doomsday plot.
+- When resolving actions, show the dice rolls you make (in the dice_rolls array) and narrate the outcome.
+- Keep narration immersive — second person ("You..."), present tense for action. Embrace the villainy.
+
+## Response Format
+You MUST respond as a JSON object with this structure:
+{
+  "narration": "string — your rich GM prose describing the scene and what happens. This is the main text players read.",
+  "dice_rolls": [{"description": "what the roll is for", "die": "d20", "roll": 8, "modifier": 2, "total": 8, "result": "Success", "target": "need ≤ 14"}],
+  "hp_changes": [{"character_name": "name", "change": -6, "reason": "hero's energy blast"}],
+  "xp_awarded": [{"character_name": "name", "amount": 0, "reason": "..."}],
+  "loot": [{"item": "Stolen Diamond", "gold": 50000, "source": "bank vault"}],
+  "deaths": [{"character_name": "name", "cause": "overwhelmed — captured by the heroes"}],
+  "world_updates": {"locations_explored": ["..."], "npcs_met": [{"name": "...", "disposition": "...", "notes": "..."}], "quest_flags": {}, "reputation_change": 0, "chapter_event": "..."},
+  "new_scene": "one or two sentences summarizing the current scene after this action",
+  "combat_active": false,
+  "combat_initiative": [{"name": "villain/hero/etc", "initiative": 14}],
+  "ends_session": false
+}
+
+Rules for the JSON:
+- narration is the ONLY field that should always be present and non-empty.
+- Only include dice_rolls if dice were rolled this turn. Legion of Doom uses d20 (roll-under) for attacks, ability checks, and power use; d20 + AGI mod for initiative.
+- Only include hp_changes if Vitality actually changed (damage taken or healing). change is positive for healing, negative for damage. At 0 Vitality, the villain is defeated (captured/retreated), not dead.
+- xp_awarded is optional; award for major milestones, pulling off big heists, or defeating heroes.
+- Only include loot if resources, gear, or intel was found. Use the gold field for dollars.
+- Do NOT use spells_learned — powers are gained through play, not spell slots.
+- Only include deaths if a villain was defeated (Vitality reached 0) — narrate as captured/retreated/overwhelmed, not literally dead. Heroes are "defeated" (captured or escaped), not killed.
+- Only include world_updates if something about the world changed. Use reputation_change for Infamy shifts.
+- If combat begins or continues, set combat_active true and provide combat_initiative (d20 + AGI mod per combatant, higher goes first).
+- ends_session true only if this action concludes the current session/chapter.
+
+Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the Legion of Doom scheming, spectacular, and dangerous.`;
+
+    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : isHY ? hyPrompt : isBR ? brPrompt : isGB ? gbPrompt : isGang ? gangPrompt : isLOD ? lodPrompt : dndPrompt;
 
     const charTag = isSF
       ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} operative (STA ${actingChar.hp_current}/${actingChar.hp_max})`
@@ -1121,8 +1208,10 @@ Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the Roaring
       ? `${actingChar.name} the ${actingChar.race} (${actingChar.hp_current}/${actingChar.hp_max} BP)`
       : isGang
       ? `${actingChar.name} the ${actingChar.race} (Grit ${actingChar.hp_current}/${actingChar.hp_max})`
+      : isLOD
+      ? `${actingChar.name} the ${actingChar.race} (Vitality ${actingChar.hp_current}/${actingChar.hp_max})`
       : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max})`;
-    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : isTS ? 'Top Secret rules' : isHW ? 'D&D (BECMI) rules' : isHY ? 'Hyborian (d100) rules' : isBR ? 'Buck Rogers XXVc (AD&D 2e) rules' : isGB ? 'Ghostbusters (D6 System) rules' : isGang ? 'Gangbusters (d100) rules' : 'AD&D 1st Edition rules';
+    const rulesLabel = isSF ? 'Star Frontiers rules' : isGW ? 'Gamma World rules' : isBH ? 'Boot Hill rules' : isIJ ? 'Indiana Jones rules' : isSJ ? 'Spelljammer (AD&D 2nd Edition) rules' : isDS ? 'Dark Sun (AD&D 2nd Edition) rules' : isTS ? 'Top Secret rules' : isHW ? 'D&D (BECMI) rules' : isHY ? 'Hyborian (d100) rules' : isBR ? 'Buck Rogers XXVc (AD&D 2e) rules' : isGB ? 'Ghostbusters (D6 System) rules' : isGang ? 'Gangbusters (d100) rules' : isLOD ? 'Legion of Doom (d20) rules' : 'AD&D 1st Edition rules';
     const actionBlock = is_roll_result
       ? `${charTag} just made a dice roll.\nRoll result: "${action}"\n\nInterpret this roll result according to ${rulesLabel} and continue the scene — narrate what happens next based on the outcome of this roll.`
       : `${charTag} declares:\n"${action}"`;
@@ -1147,7 +1236,7 @@ ${history || 'The adventure has just begun.'}
 ## Current Action
 ${actionBlock}
 
-Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : isGang ? 'Gangbusters (d100)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
+Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang || isLOD ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : isGang ? 'Gangbusters (d100)' : isLOD ? 'Legion of Doom (d20)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt: userPrompt,
@@ -1403,7 +1492,7 @@ Rules:
       });
     }
 
-    await base44.asServiceRole.entities.JournalEntry.create({
+    const narrationEntry = await base44.asServiceRole.entities.JournalEntry.create({
       campaign_id: campaign_id,
       entry_type: 'narration',
       narration: result.narration,
@@ -1413,6 +1502,27 @@ Rules:
       acting_character_name: actingChar.name,
       chapter: campaign.current_chapter
     });
+
+    // Generate spoken narration audio if requested (uses the "storm" voice — formal & authoritative)
+    let audio_urls = [];
+    if (narrate_audio && result.narration && result.narration.trim()) {
+      try {
+        const chunks = chunkNarration(result.narration, 4500);
+        for (const chunk of chunks) {
+          const speech = await base44.integrations.Core.GenerateSpeech({
+            text: chunk,
+            voice: 'storm',
+            language_code: 'en'
+          });
+          if (speech && speech.url) audio_urls.push(speech.url);
+        }
+        if (audio_urls.length) {
+          await base44.asServiceRole.entities.JournalEntry.update(narrationEntry.id, { audio_urls });
+        }
+      } catch (speechErr) {
+        console.log("Speech generation failed:", speechErr.message);
+      }
+    }
 
     return Response.json({
       narration: result.narration,
@@ -1426,7 +1536,8 @@ Rules:
       combat_active: result.combat_active || false,
       combat_initiative: result.combat_initiative || [],
       new_scene: result.new_scene || campaign.current_scene,
-      ends_session: result.ends_session || false
+      ends_session: result.ends_session || false,
+      audio_urls
     });
 
   } catch (error) {

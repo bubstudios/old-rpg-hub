@@ -47,6 +47,13 @@
         "type": "object"
       }
     },
+    "audio_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Generated speech audio URLs for spoken narration (one per text chunk)"
+    },
     "chapter": {
       "type": "number"
     }
