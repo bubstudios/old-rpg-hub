@@ -255,8 +255,191 @@ export const GAME_SYSTEMS = [
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/1b490ab3d_generated_image.png",
     icon: "skull",
     enterLabel: "Hit the Streets"
+  },
+  {
+    id: "starwars",
+    name: "Star Wars",
+    short: "Star Wars",
+    tagline: "A galaxy far, far away",
+    description: "Travel to a galaxy far, far away in the classic West End Games Star Wars RPG. Play a Rebel operative, a smuggler, a Jedi, or a bounty hunter. Blasters, starships, the Force, and the eternal struggle between light and dark. D6 System mechanics with wound levels, Force Points, and the seductive pull of the Dark Side. Ruled by an AI Game Master. May the Force be with you.",
+    dashboardTitle: "STAR WARS",
+    dashboardSubtitle: "A Star Wars D6 System campaign, ruled by an AI Game Master. Fly the stars, wield the Force, and fight the Empire — where every blaster bolt is written in light that cannot be outrun.",
+    cardImage: null,
+    icon: "star",
+    enterLabel: "Jump to Lightspeed"
+  },
+  {
+    id: "marvel",
+    name: "Marvel Super Heroes",
+    short: "Marvel SH",
+    tagline: "FASERIP superhero action",
+    description: "Become a superhero in the classic TSR Marvel Super Heroes RPG (FASERIP system). Fighting, Agility, Strength, Endurance, Reason, Intuition, Psyche — each rated by rank (Feeble to Unearthly). Roll on the Universal Table, spend Karma, and battle supervillains. Ruled by an AI Game Master. Excelsior!",
+    dashboardTitle: "MARVEL SUPER HEROES",
+    dashboardSubtitle: "A Marvel Super Heroes campaign, ruled by an AI Game Master. Suit up, roll on the Universal Table, and save the world — where every heroic deed is written in Karma that cannot be unspent.",
+    cardImage: null,
+    icon: "zap",
+    enterLabel: "Assemble"
+  },
+  {
+    id: "dcheroes",
+    name: "DC Heroes",
+    short: "DC Heroes",
+    tagline: "Mayfair exponential heroics",
+    description: "Join the Justice League in the classic Mayfair DC Heroes RPG. Attributes rated in AP (Attribute Points) on an exponential scale — lift cars, leap buildings, outrun lasers. Spend Hero Points, roll on the Action Table, and face Lex Luthor, the Joker, and Darkseid. Ruled by an AI Game Master. To the Batcave!",
+    dashboardTitle: "DC HEROES",
+    dashboardSubtitle: "A DC Heroes campaign, ruled by an AI Game Master. Don the cape, roll the Action Table, and save Metropolis — where every hero point is written in heroism that cannot be undone.",
+    cardImage: null,
+    icon: "shield",
+    enterLabel: "Answer the Call"
+  },
+  {
+    id: "jamesbond",
+    name: "James Bond 007",
+    short: "James Bond 007",
+    tagline: "Espionage, gadgets, and danger",
+    description: "Step into the tailored world of James Bond 007 — the classic Victory Games espionage RPG. Play a 00 agent with percentile attributes, Ease Factor skill checks, Hero Points, and lethal gunfights. Casino royales, villain lairs, gadgetry, seduction, and the Cold War. Ruled by an AI Game Master. Shaken, not stirred.",
+    dashboardTitle: "JAMES BOND 007",
+    dashboardSubtitle: "A James Bond 007 espionage campaign, ruled by an AI Game Master. Travel the world, seduce the assets, survive the lair — where every martini is written in danger that cannot be unstirred.",
+    cardImage: null,
+    icon: "crosshair",
+    enterLabel: "Accept the Assignment"
+  },
+  {
+    id: "shadowrun",
+    name: "Shadowrun",
+    short: "Shadowrun",
+    tagline: "Cyberpunk meets fantasy",
+    description: "Enter the shadows of 2050s Seattle — where magic returned to a cyberpunk world. Play a street samurai, decker, mage, shaman, or rigger. Trolls with cyberarms, elves in corporate boardrooms, dragons running megacorps. The classic FASA d6 dice-pool system with Target Numbers, physical and stun damage tracks, the Matrix, and Nuyen. Ruled by an AI Game Master. Watch your back. Shoot straight. Conserve ammo. And never, ever, cut a deal with a dragon.",
+    dashboardTitle: "SHADOWRUN",
+    dashboardSubtitle: "A Shadowrun cyberpunk-fantasy campaign, ruled by an AI Game Master. Run the shadows, hack the Matrix, dodge the megacorps — where every run is written in Nuyen that cannot be unspent.",
+    cardImage: null,
+    icon: "cpu",
+    enterLabel: "Enter the Shadows"
+  },
+  {
+    id: "cyberpunk",
+    name: "Cyberpunk",
+    short: "Cyberpunk",
+    tagline: "The Street finds its own uses",
+    description: "Welcome to Night City, 2020 or 2077 — the classic R. Talsorian Cyberpunk RPG. Play a Solo, Netrunner, Techie, Medtech, Media, Cop, Corporate, Fixer, Nomad, or Rockerboy. The Interlock system: d10 + stat + skill vs Difficulty. Cyberware costs Humanity, chrome is addictive, and the Street is lethal. Eurodollars, heavy weapons, and the eternal question: style over substance? Ruled by an AI Game Master. Wake up, choomba. The future is now.",
+    dashboardTitle: "CYBERPUNK",
+    dashboardSubtitle: "A Cyberpunk campaign, ruled by an AI Game Master. Walk the Street, install the chrome, dodge the lead — where every deal is written in Eurodollars that cannot be unspent.",
+    cardImage: null,
+    icon: "cpu",
+    enterLabel: "Hit the Street"
+  },
+  {
+    id: "traveller",
+    name: "Traveller",
+    short: "Traveller",
+    tagline: "Explore the Imperium",
+    description: "Explore the vast Third Imperium in the classic GDW Traveller RPG. No classes, no levels — your character has a prior career (Navy, Army, Marines, Scouts, Merchants, and more). Attributes are 2d6 (Strength, Dexterity, Endurance, Intelligence, Education, Social Standing). Resolution is 2d6 + skill vs Target. Starships, trade, exploration, and the alien races of the Imperium. Ruled by an AI Game Master. To the stars!",
+    dashboardTitle: "TRAVELLER",
+    dashboardSubtitle: "A Traveller science-fiction campaign, ruled by an AI Game Master. Crew a starship, jump between worlds, and explore the Imperium — where every parsec is written in starlight that cannot be unjumped.",
+    cardImage: null,
+    icon: "satellite",
+    enterLabel: "Jump Out"
+  },
+  {
+    id: "ravenloft",
+    name: "Ravenloft",
+    short: "Ravenloft",
+    tagline: "Gothic horror in the Demiplane of Dread",
+    description: "Enter the Mists of Ravenloft — the Demiplane of Dread, where Darklords rule their eternal prisons and horror stalks every shadow. Gothic castles, werewolves, vampires, and the cursed Domains that feed on fear. AD&D 2nd Edition rules with Fear, Horror, and Madness checks, and a Powers Check for those who tread the path of darkness. Ruled by an AI Dungeon Master. The Mists are calling...",
+    dashboardTitle: "RAVENLOFT",
+    dashboardSubtitle: "A Ravenloft gothic horror campaign, ruled by an AI Dungeon Master. Brave the Mists, face the Darklords, and resist the darkness within — where every fear is written in shadow that cannot be unlit.",
+    cardImage: null,
+    icon: "moon",
+    enterLabel: "Enter the Mists"
+  },
+  {
+    id: "oddnd",
+    name: "Original D&D (1974)",
+    short: "OD&D",
+    tagline: "The original three booklets",
+    description: "Return to where it all began — Original Dungeons & Dragons (1974), the three little booklets that started it all. Fighting-Men, Magic-Users, and Clerics; Elves, Dwarves, and Halflings as their own classes. Descending Armor Class, attack matrices, and the original spell lists. Lean, lethal, and endlessly creative. Ruled by an AI Dungeon Master. The dungeon awaits — as it did in 1974.",
+    dashboardTitle: "ORIGINAL D&D",
+    dashboardSubtitle: "An Original D&D (1974) campaign, ruled by an AI Dungeon Master. Enter the first dungeon ever — where every delve is written in the original ink that cannot be unwritten.",
+    cardImage: null,
+    icon: "scroll",
+    enterLabel: "Enter the Dungeon"
+  },
+  {
+    id: "bxdnd",
+    name: "B/X D&D",
+    short: "B/X D&D",
+    tagline: "Basic & Expert, Moldvay/Cook",
+    description: "The beloved B/X edition — Tom Moldvay's Basic and Dave Cook's Expert sets (1981). Race-as-class for Elves, Dwarves, and Halflings; Fighters, Clerics, Magic-Users, and Thieves for humans. Clean, simple, and endlessly playable. d20 attack rolls vs descending AC, saving throws, and exploration turns. Levels 1-14. Ruled by an AI Dungeon Master. Keep on the Borderlands.",
+    dashboardTitle: "B/X DUNGEONS & DRAGONS",
+    dashboardSubtitle: "A B/X D&D campaign, ruled by an AI Dungeon Master. Explore the known world, delve the dungeon, and level up — where every turn is written in the simple ink that cannot be unwritten.",
+    cardImage: null,
+    icon: "bookopen",
+    enterLabel: "Keep on the Borderlands"
+  },
+  {
+    id: "add2e",
+    name: "AD&D 2nd Edition",
+    short: "AD&D 2e",
+    tagline: "The refined edition",
+    description: "The refined AD&D — 2nd Edition (1989). THAC0, weapon and non-weapon proficiencies, class kits, mage specialization by school, priest spheres, and the complete class lineup (Barbarian, Bard, Cavalier, and more). The Player's Handbook, the Dungeon Master's Guide, and the Monstrous Compendium. Ruled by an AI Dungeon Master. The adventure continues.",
+    dashboardTitle: "AD&D 2ND EDITION",
+    dashboardSubtitle: "An AD&D 2nd Edition campaign, ruled by an AI Dungeon Master. Choose your kit, master your proficiencies, and venture forth — where every roll is written in refined ink that cannot be unwritten.",
+    cardImage: null,
+    icon: "scroll",
+    enterLabel: "Venture Forth"
+  },
+  {
+    id: "dnd35",
+    name: "D&D 3.5 Edition",
+    short: "D&D 3.5",
+    tagline: "The d20 System",
+    description: "The d20 System at its peak — D&D 3.5 Edition. d20 + modifiers vs DC. Ascending Armor Class. Base Attack Bonus that improves with level. Skills (rank-based, class vs cross-class), Feats (every 3 levels), and free multiclassing. Fortitude, Reflex, and Will saves. The SRD that powered a generation of gaming. Ruled by an AI Dungeon Master. Roll for initiative.",
+    dashboardTitle: "D&D 3.5 EDITION",
+    dashboardSubtitle: "A D&D 3.5 Edition campaign, ruled by an AI Dungeon Master. Build your character, stack your feats, and take on the CR-appropriate challenge — where every d20 is written in modifiers that cannot be unrolled.",
+    cardImage: null,
+    icon: "bookopen",
+    enterLabel: "Roll for Initiative"
+  },
+  {
+    id: "dnd4e",
+    name: "D&D 4th Edition",
+    short: "D&D 4e",
+    tagline: "Tactical combat redefined",
+    description: "The tactical edition — D&D 4th Edition (2008). At-Will, Encounter, and Daily powers for every class. Roles: Defender, Striker, Controller, Leader. Defenses: AC, Fortitude, Reflex, Will. Healing Surges and Action Points. Grid-based combat with marked targets, shifts, and opportunity attacks. High HP, big numbers, epic encounters. Ruled by an AI Dungeon Master. Mark your target and strike.",
+    dashboardTitle: "D&D 4TH EDITION",
+    dashboardSubtitle: "A D&D 4th Edition campaign, ruled by an AI Dungeon Master. Choose your powers, hold the line, and surge forward — where every encounter is written in tactical ink that cannot be unrolled.",
+    cardImage: null,
+    icon: "swords",
+    enterLabel: "Mark Your Target"
+  },
+  {
+    id: "dnd5e",
+    name: "D&D 5th Edition",
+    short: "D&D 5e",
+    tagline: "The world's greatest RPG",
+    description: "The current edition — D&D 5th Edition (2014). Advantage and Disadvantage, bounded accuracy, and streamlined rules. Ability modifiers: (score - 10) / 2. Proficiency bonus (+2 to +6). Skills you're proficient in or not. Cantrips at-will, spell slots by level (not per-spell), Hit Dice for short-rest healing. Backgrounds, subclasses at level 1-3, and optional Feats. Ascending AC. Ruled by an AI Dungeon Master. Gather your party and venture forth.",
+    dashboardTitle: "D&D 5TH EDITION",
+    dashboardSubtitle: "A D&D 5th Edition campaign, ruled by an AI Dungeon Master. Roll with advantage, spend your Hit Dice, and become a hero — where every natural 20 is written in advantage that cannot be unrolled.",
+    cardImage: null,
+    icon: "scroll",
+    enterLabel: "Gather Your Party"
   }
 ];
+
+export const CATEGORY_MAP = {
+  add1e: "Dungeons & Dragons", oddnd: "Dungeons & Dragons", bxdnd: "Dungeons & Dragons", add2e: "Dungeons & Dragons",
+  dnd35: "Dungeons & Dragons", dnd4e: "Dungeons & Dragons", dnd5e: "Dungeons & Dragons",
+  greyhawk: "Dungeons & Dragons", forgottenrealms: "Dungeons & Dragons", ravenloft: "Dungeons & Dragons",
+  darksun: "Dungeons & Dragons", spelljammer: "Dungeons & Dragons", hollowworld: "Dungeons & Dragons",
+  starfrontiers: "Science Fiction", starwars: "Science Fiction", traveller: "Science Fiction",
+  buckrogers: "Science Fiction", shadowrun: "Science Fiction", cyberpunk: "Science Fiction",
+  legionofdoom: "Superhero", marvel: "Superhero", dcheroes: "Superhero",
+  gammaworld: "Classic Adventure", boothill: "Classic Adventure", indianajones: "Classic Adventure",
+  topsecret: "Classic Adventure", gangbusters: "Classic Adventure", ghostbusters: "Classic Adventure",
+  jamesbond: "Classic Adventure", conan: "Sword & Sorcery", redsonja: "Sword & Sorcery"
+};
+
+export const CATEGORIES = ["Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery"];
 
 export const DEFAULT_GAME = "add1e";
 

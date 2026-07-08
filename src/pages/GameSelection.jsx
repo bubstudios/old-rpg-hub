@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ScrollText, Rocket, ChevronRight, Library, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Globe, Flame, Swords, Satellite, Ghost, Skull, Zap, KeyRound, Loader2 } from 'lucide-react';
-import { GAME_SYSTEMS } from '@/lib/gameSystems';
+import { ScrollText, Rocket, ChevronRight, Library, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Globe, Flame, Swords, Satellite, Ghost, Skull, Zap, KeyRound, Loader2, Star, Shield, Cpu, Moon, BookOpen } from 'lucide-react';
+import { GAME_SYSTEMS, CATEGORIES, CATEGORY_MAP } from '@/lib/gameSystems';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-const ICONS = { scroll: ScrollText, rocket: Rocket, atom: Atom, crosshair: Crosshair, compass: Compass, orbit: Orbit, sun: Sun, briefcase: Briefcase, landmark: Landmark, crown: Crown, globe: Globe, flame: Flame, swords: Swords, satellite: Satellite, ghost: Ghost, skull: Skull, zap: Zap };
+const ICONS = { scroll: ScrollText, rocket: Rocket, atom: Atom, crosshair: Crosshair, compass: Compass, orbit: Orbit, sun: Sun, briefcase: Briefcase, landmark: Landmark, crown: Crown, globe: Globe, flame: Flame, swords: Swords, satellite: Satellite, ghost: Ghost, skull: Skull, zap: Zap, star: Star, shield: Shield, cpu: Cpu, moon: Moon, bookopen: BookOpen };
 
 export default function GameSelection() {
   const navigate = useNavigate();
@@ -72,40 +72,58 @@ export default function GameSelection() {
         </div>
       </div>
 
-      {/* Game cards */}
-      <div className="grid md:grid-cols-2 gap-5">
-        {GAME_SYSTEMS.map((game) => {
-          const Icon = ICONS[game.icon] || ScrollText;
+      {/* Game cards by category */}
+      <div className="space-y-10">
+        {CATEGORIES.map((cat) => {
+          const games = GAME_SYSTEMS.filter((g) => CATEGORY_MAP[g.id] === cat);
+          if (!games.length) return null;
           return (
-            <button
-              key={game.id}
-              onClick={() => navigate(`/game/${game.id}`)}
-              className="group relative overflow-hidden rounded-xl border border-border/60 text-left h-[26rem] flex flex-col justify-end panel-glow hover:border-primary/50 transition-all"
-            >
-              <img
-                src={game.cardImage}
-                alt={game.name}
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 group-hover:scale-105 transition-all duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/20" />
-              <div className="relative p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full wax-seal flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5 text-primary-foreground" strokeWidth={1.4} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-heading tracking-[0.2em] text-primary/80 uppercase">{game.tagline}</p>
-                    <h2 className="font-heading font-700 text-xl sm:text-2xl text-foreground tracking-wide">{game.name}</h2>
-                  </div>
-                </div>
-                <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-4">
-                  {game.description}
-                </p>
-                <span className="inline-flex items-center gap-1.5 text-xs font-heading tracking-[0.15em] text-primary group-hover:gap-2.5 transition-all">
-                  {game.enterLabel} <ChevronRight className="w-3.5 h-3.5" />
-                </span>
+            <div key={cat}>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="font-heading text-sm tracking-[0.2em] text-primary/80 uppercase">{cat}</h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-primary/30 to-transparent" />
               </div>
-            </button>
+              <div className="grid md:grid-cols-2 gap-5">
+                {games.map((game) => {
+                  const Icon = ICONS[game.icon] || ScrollText;
+                  return (
+                    <button
+                      key={game.id}
+                      onClick={() => navigate(`/game/${game.id}`)}
+                      className="group relative overflow-hidden rounded-xl border border-border/60 text-left h-[26rem] flex flex-col justify-end panel-glow hover:border-primary/50 transition-all"
+                    >
+                      {game.cardImage ? (
+                        <img
+                          src={game.cardImage}
+                          alt={game.name}
+                          className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 group-hover:scale-105 transition-all duration-700"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/40 to-background" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/20" />
+                      <div className="relative p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full wax-seal flex items-center justify-center shrink-0">
+                            <Icon className="w-5 h-5 text-primary-foreground" strokeWidth={1.4} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-heading tracking-[0.2em] text-primary/80 uppercase">{game.tagline}</p>
+                            <h2 className="font-heading font-700 text-xl sm:text-2xl text-foreground tracking-wide">{game.name}</h2>
+                          </div>
+                        </div>
+                        <p className="font-body text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-4">
+                          {game.description}
+                        </p>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-heading tracking-[0.15em] text-primary group-hover:gap-2.5 transition-all">
+                          {game.enterLabel} <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </div>

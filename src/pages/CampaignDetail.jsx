@@ -102,7 +102,8 @@ export default function CampaignDetail() {
     setProcessing(true);
     setLatestResult(null);
     try {
-      const res = await base44.functions.invoke('dungeonMaster', {
+      const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const res = await base44.functions.invoke(dmFunc, {
         campaign_id: campaignId,
         action: rollResult.summary,
         acting_character_id: myCharacter.id,
@@ -163,7 +164,8 @@ export default function CampaignDetail() {
     setEntries(prev => [...prev, tempActionEntry]);
 
     try {
-      const res = await base44.functions.invoke('dungeonMaster', {
+      const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const res = await base44.functions.invoke(dmFunc, {
         campaign_id: campaignId,
         action: submittedAction,
         acting_character_id: myCharacter.id

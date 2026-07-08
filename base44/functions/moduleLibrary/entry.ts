@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
       const { file_url, title, description, visibility } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
 
-      const gameSystem = body.game_system === 'starfrontiers' ? 'starfrontiers' : body.game_system === 'boothill' ? 'boothill' : body.game_system === 'gammaworld' ? 'gammaworld' : body.game_system === 'indianajones' ? 'indianajones' : body.game_system === 'spelljammer' ? 'spelljammer' : body.game_system === 'darksun' ? 'darksun' : body.game_system === 'topsecret' ? 'topsecret' : body.game_system === 'greyhawk' ? 'greyhawk' : body.game_system === 'forgottenrealms' ? 'forgottenrealms' : body.game_system === 'hollowworld' ? 'hollowworld' : body.game_system === 'conan' ? 'conan' : body.game_system === 'redsonja' ? 'redsonja' : body.game_system === 'buckrogers' ? 'buckrogers' : body.game_system === 'ghostbusters' ? 'ghostbusters' : body.game_system === 'gangbusters' ? 'gangbusters' : body.game_system === 'legionofdoom' ? 'legionofdoom' : 'add1e';
+      const VALID_GAME_SYSTEMS = ['add1e','starfrontiers','gammaworld','boothill','indianajones','spelljammer','darksun','topsecret','greyhawk','forgottenrealms','hollowworld','conan','redsonja','buckrogers','ghostbusters','gangbusters','legionofdoom','starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'];
+      const gameSystem = VALID_GAME_SYSTEMS.includes(body.game_system) ? body.game_system : 'add1e';
       const isSF = gameSystem === 'starfrontiers';
       const isBH = gameSystem === 'boothill';
       const isGW = gameSystem === 'gammaworld';

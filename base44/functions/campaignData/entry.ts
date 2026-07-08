@@ -487,6 +487,49 @@ Deno.serve(async (req) => {
         return Response.json({ character });
       }
 
+      // Generic branch for all new game systems (Star Wars, Marvel, DC Heroes, James Bond, Shadowrun, Cyberpunk, Traveller, Ravenloft, D&D editions)
+      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e'];
+      if (NEW_SYSTEMS.includes(game_system)) {
+        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end' };
+        const hpAttr = hpAttrMap[game_system];
+        let hpMax;
+        if (hpAttr) {
+          hpMax = Math.max(1, Math.round((ability_scores && ability_scores[hpAttr]) || 10));
+        } else {
+          // D&D editions: default hit die + CON mod
+          const hitDie = 8;
+          const conMod = Math.floor(((ability_scores && ability_scores.con || 10) - 10) / 2);
+          hpMax = Math.max(1, hitDie + conMod);
+        }
+        const isModernDnd = ['dnd35', 'dnd4e', 'dnd5e'].includes(game_system);
+        const character = await base44.entities.Character.create({
+          name: name.trim(),
+          campaign_id,
+          game_system,
+          race,
+          character_class,
+          alignment: alignment || 'True Neutral',
+          ability_scores,
+          level: Math.max(1, Number(level) || 1),
+          hp_current: hpMax,
+          hp_max: hpMax,
+          ac: isModernDnd ? 10 : (Number(body.ac) || 0),
+          thaco: isModernDnd ? 0 : 20,
+          xp: 0,
+          saving_throws: {},
+          gold: Number(gold) || 0,
+          equipment: equipment || [],
+          skills: skills || [],
+          mutations: [],
+          spells: body.spells || [],
+          spell_slots: body.spell_slots || {},
+          appearance: appearance || '',
+          background: background || '',
+          status: 'active'
+        });
+        return Response.json({ character });
+      }
+
       const cls = CLASSES[character_class];
       if (!cls) return Response.json({ error: 'Invalid class' }, { status: 400 });
 
@@ -529,7 +572,8 @@ Deno.serve(async (req) => {
     if (op === 'importCampaign') {
       const { file_url, game_system, name, mode, tone, setting_notes } = body;
       if (!file_url) return Response.json({ error: 'file_url required' }, { status: 400 });
-      const sys = game_system === 'starfrontiers' ? 'starfrontiers' : game_system === 'gammaworld' ? 'gammaworld' : game_system === 'boothill' ? 'boothill' : game_system === 'indianajones' ? 'indianajones' : game_system === 'spelljammer' ? 'spelljammer' : game_system === 'darksun' ? 'darksun' : game_system === 'topsecret' ? 'topsecret' : game_system === 'greyhawk' ? 'greyhawk' : game_system === 'forgottenrealms' ? 'forgottenrealms' : game_system === 'hollowworld' ? 'hollowworld' : game_system === 'conan' ? 'conan' : game_system === 'redsonja' ? 'redsonja' : game_system === 'buckrogers' ? 'buckrogers' : game_system === 'ghostbusters' ? 'ghostbusters' : game_system === 'gangbusters' ? 'gangbusters' : game_system === 'legionofdoom' ? 'legionofdoom' : 'add1e';
+      const VALID_SYSTEMS = ['add1e','starfrontiers','gammaworld','boothill','indianajones','spelljammer','darksun','topsecret','greyhawk','forgottenrealms','hollowworld','conan','redsonja','buckrogers','ghostbusters','gangbusters','legionofdoom','starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'];
+      const sys = VALID_SYSTEMS.includes(game_system) ? game_system : 'add1e';
       const isSF = sys === 'starfrontiers';
       const isGW = sys === 'gammaworld';
       const isBH = sys === 'boothill';
