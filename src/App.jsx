@@ -12,6 +12,7 @@ import Layout from '@/components/Layout';
 import Dashboard from '@/pages/Dashboard';
 import Home from '@/pages/Home';
 import GameSelection from '@/pages/GameSelection';
+import Join from '@/pages/Join';
 import CampaignDetail from '@/pages/CampaignDetail';
 import CharacterCreation from '@/pages/CharacterCreation';
 import CharacterSheet from '@/pages/CharacterSheet';
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/games" element={<GameSelection />} />
+          <Route path="/join" element={<Join />} />
           <Route path="/game/:gameId" element={<Home />} />
           <Route path="/campaign/:id" element={<CampaignDetail />} />
           <Route path="/campaign/:id/create-character" element={<CharacterCreation />} />

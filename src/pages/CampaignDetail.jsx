@@ -17,12 +17,13 @@ import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
 import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
 import EndSessionDialog from '@/components/EndSessionDialog';
+import InviteDialog from '@/components/InviteDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag
+  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -46,6 +47,7 @@ export default function CampaignDetail() {
   const [savingBrief, setSavingBrief] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [endSessionOpen, setEndSessionOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -266,11 +268,10 @@ export default function CampaignDetail() {
             <Video className="w-3.5 h-3.5" strokeWidth={1.5} /> Video
           </button>
           <button
-            onClick={copyInviteCode}
+            onClick={() => setInviteOpen(true)}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span>CODE: {campaign.invite_code}</span>
-            <Copy className="w-3 h-3" />
+            <UserPlus className="w-3.5 h-3.5" strokeWidth={1.5} /> Invite
           </button>
           {isOwner && (
             <Button variant="ghost" size="sm" onClick={() => setBriefOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
@@ -567,6 +568,7 @@ export default function CampaignDetail() {
       </Dialog>
 
       <EndSessionDialog open={endSessionOpen} onOpenChange={setEndSessionOpen} campaignId={campaignId} />
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} campaign={campaign} />
     </div>
   );
 }
