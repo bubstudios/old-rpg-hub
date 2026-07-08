@@ -14,7 +14,7 @@ import HyDiceRollerPanel from '@/components/HyDiceRollerPanel';
 import GBDiceRollerPanel from '@/components/GBDiceRollerPanel';
 import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
-import ZoomVideoPanel from '@/components/ZoomVideoPanel';
+import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
 import LocationDossier from '@/components/LocationDossier';
 import EndSessionDialog from '@/components/EndSessionDialog';
@@ -351,7 +351,7 @@ export default function CampaignDetail() {
         {/* Main play area */}
         <div className="flex flex-col min-h-[60vh]">
           {videoOpen && (
-            <ZoomVideoPanel
+            <JitsiVideoPanel
               roomName={campaign.invite_code}
               displayName={myCharacter?.name}
               onClose={() => setVideoOpen(false)}
