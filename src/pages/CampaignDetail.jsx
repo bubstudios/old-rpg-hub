@@ -259,7 +259,7 @@ export default function CampaignDetail() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setVideoOpen((o) => !o)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}

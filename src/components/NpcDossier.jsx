@@ -61,7 +61,7 @@ export default function NpcDossier({ campaignId }) {
       </div>
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelectedId(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[85dvh] overflow-y-auto overscroll-contain p-4 sm:p-6">
           {selected && (
             <>
               <DialogHeader>
