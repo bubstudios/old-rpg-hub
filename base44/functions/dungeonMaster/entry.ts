@@ -1262,7 +1262,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
         },
         required: ["narration"]
       },
-      model: "automatic"
+      model: "claude_sonnet_4_6"
     });
 
     console.log("LLM response type:", typeof llmResponse);
