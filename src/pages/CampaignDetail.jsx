@@ -16,6 +16,7 @@ import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
 import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
+import LocationDossier from '@/components/LocationDossier';
 import EndSessionDialog from '@/components/EndSessionDialog';
 import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
@@ -598,14 +599,7 @@ export default function CampaignDetail() {
               <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">WORLD STATE</h3>
             </div>
             <div className="space-y-2 text-[11px] font-body">
-              <div>
-                <p className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">EXPLORED</p>
-                <p className="text-muted-foreground">
-                  {(campaign.world_state?.locations_explored || []).length
-                    ? (campaign.world_state?.locations_explored || []).join(', ')
-                    : 'Nothing yet'}
-                </p>
-              </div>
+              <LocationDossier campaignId={campaignId} legacyLocations={campaign.world_state?.locations_explored || []} />
               <NpcDossier campaignId={campaignId} />
               <div className="flex items-center justify-between pt-1 border-t border-border/30">
                 <span className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">REPUTATION</span>

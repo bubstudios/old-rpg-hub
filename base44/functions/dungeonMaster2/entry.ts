@@ -65,6 +65,48 @@ async function upsertNpcs(base44, campaign_id, chapter, npcUpdates) {
   }
 }
 
+function locKey(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+async function upsertLocations(base44, campaign_id, chapter, locUpdates) {
+  if (!Array.isArray(locUpdates) || !locUpdates.length) return;
+  let existing = [];
+  try { existing = await base44.asServiceRole.entities.Location.filter({ campaign_id }); } catch (e) { existing = []; }
+  for (const loc of locUpdates) {
+    if (!loc || typeof loc.name !== 'string') continue;
+    const nameRaw = String(loc.name).trim();
+    if (!nameRaw) continue;
+    const key = locKey(nameRaw);
+    const match = existing.find(e => locKey(e.name) === key);
+    const summaryNew = typeof loc.summary === 'string' ? loc.summary.trim() : '';
+    if (match) {
+      const updates = {};
+      if (summaryNew) {
+        const cur = typeof match.summary === 'string' ? match.summary : '';
+        const lines = cur.split('\n').map(s => s.trim()).filter(Boolean);
+        for (const f of summaryNew.split('\n').map(s => s.trim()).filter(Boolean)) {
+          if (!lines.some(l => l.toLowerCase() === f.toLowerCase())) lines.push(f);
+        }
+        const joined = lines.join('\n');
+        if (joined !== cur) updates.summary = joined;
+      }
+      if (chapter && Number(match.last_visited_chapter) !== Number(chapter)) updates.last_visited_chapter = chapter;
+      if (Object.keys(updates).length) {
+        await base44.asServiceRole.entities.Location.update(match.id, updates);
+        Object.assign(match, updates);
+      }
+    } else {
+      const created = await base44.asServiceRole.entities.Location.create({
+        campaign_id,
+        name: nameRaw,
+        summary: summaryNew,
+        first_visited_chapter: chapter,
+        last_visited_chapter: chapter
+      });
+      existing.push(created);
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -129,6 +171,13 @@ Deno.serve(async (req) => {
       if (n.what_we_know) parts.push(`Known: ${String(n.what_we_know).replace(/\n/g, '; ')}`);
       const alias = Array.isArray(n.aliases) && n.aliases.length ? ` (aka ${n.aliases.join(', ')})` : '';
       return `• ${n.name}${alias} [${n.disposition || 'unknown'}]${parts.length ? ' — ' + parts.join(' | ') : ''}`;
+    }).join('\n') || 'none yet';
+
+    // Load Location dossier (living, deduplicated entity records)
+    const locList = await base44.asServiceRole.entities.Location.filter({ campaign_id });
+    const locRoster = (locList || []).map(l => {
+      const summary = l.summary ? ` — ${String(l.summary).replace(/\n/g, '; ')}` : '';
+      return `• ${l.name}${summary}`;
     }).join('\n') || 'none yet';
 
     let moduleBrief = '';
@@ -264,6 +313,14 @@ Rules:
 - "description", "characteristics", and "attributes" reflect the CURRENT full state — give your latest complete understanding (they overwrite the prior value). "what_we_know" holds only NEW facts from this turn (the system appends them to a running log).
 - This applies to ALL game systems — people, aliens, mutants, ghosts, mob bosses, heroes, villains, creatures, factions, and any notable entity.
 
+## Location Dossier (all game systems)
+You maintain a living, DEDUPLICATED dossier of every notable location, region, site, landmark, or place the party explores. When the party visits a NEW location OR something notable happens at an existing one, include a top-level "location_updates" array: [{"name":"canonical location name","summary":"only the NEW events and facts from THIS turn (these accumulate into a running log)"}].
+Rules:
+- Use the SAME canonical name for a recurring location every turn. Never re-list the same place under different names.
+- Only include an entry when the party actually visits or explores the location OR something notable happens there. Do NOT re-list a location merely because it was mentioned.
+- "summary" holds only NEW facts from this turn (the system appends them to a running log).
+- This applies to ALL game systems — taverns, temples, cities, planets, stations, ruins, lairs, vaults, hideouts, haunted sites, and any notable place.
+
 ## Equipment & Consumables
 When a character uses, throws, fires, drinks, expends, buys, finds, or receives an item, include an "equipment_changes" array: [{"character_name": "name", "item": "item name", "change": -1, "reason": "thrown at enemy"}]. Use a NEGATIVE change (e.g. -1) to consume/expend an existing item, and a POSITIVE change (e.g. 20) to ADD a new item or increase a quantity — including items the character does NOT yet have on their sheet. For example, adding arrows: {"character_name": "name", "item": "Arrows", "change": 20, "reason": "purchased at market"}. Match the item name to the character's equipment list when modifying an existing item; otherwise just name it clearly and it will be added.
 
@@ -291,6 +348,7 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
           equipment_transfers: { type: "array", items: { type: "object" } },
           deaths: { type: "array", items: { type: "object" } },
           npc_updates: { type: "array", items: { type: "object" } },
+          location_updates: { type: "array", items: { type: "object" } },
           world_updates: { type: "object" },
           new_scene: { type: "string" },
           combat_active: { type: "boolean" },
@@ -470,6 +528,11 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
       await upsertNpcs(base44, campaign_id, campaign.current_chapter, result.npc_updates);
     }
 
+    // Upsert Location dossier entries (deduplicated by name)
+    if (Array.isArray(result.location_updates)) {
+      await upsertLocations(base44, campaign_id, campaign.current_chapter, result.location_updates);
+    }
+
     // Update world state
     const newWorldState = { ...worldState };
     if (result.world_updates && typeof result.world_updates === 'object') {
@@ -538,6 +601,7 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
       equipment_transfers: result.equipment_transfers || [],
       deaths: result.deaths || [],
       npc_updates: result.npc_updates || [],
+      location_updates: result.location_updates || [],
       world_updates: result.world_updates || null,
       combat_active: result.combat_active || false,
       combat_initiative: result.combat_initiative || [],

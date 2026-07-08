@@ -1,0 +1,30 @@
+{
+  "name": "Location",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "The campaign this location belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Canonical name of the location, region, site, or landmark"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Running log of notable events and facts at this location \u2014 one fact per line, accumulates over time"
+    },
+    "first_visited_chapter": {
+      "type": "number",
+      "description": "Chapter number when the party first explored this location"
+    },
+    "last_visited_chapter": {
+      "type": "number",
+      "description": "Chapter number of the most recent visit"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "name"
+  ]
+}
