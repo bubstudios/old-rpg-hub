@@ -1,9 +1,11 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { ScrollText, Home as HomeIcon, Library } from 'lucide-react';
+import { ScrollText, Home as HomeIcon, Library, Gauge } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 import { getGameSystem } from '@/lib/gameSystems';
 
 export default function Layout() {
   const location = useLocation();
+  const { user } = useAuth();
   const inCampaign = location.pathname.includes('/campaign/');
   const gameMatch = location.pathname.match(/^\/game\/([^/]+)/);
   const activeGameId = gameMatch ? gameMatch[1] : null;
@@ -46,6 +48,17 @@ export default function Layout() {
               <Library className="w-3.5 h-3.5" strokeWidth={1.5} />
               Library
             </Link>
+            {user?.role === 'admin' && (
+              <Link
+                to="/admin/usage"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
+                  location.pathname === '/admin/usage' ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+              >
+                <Gauge className="w-3.5 h-3.5" strokeWidth={1.5} />
+                Usage
+              </Link>
+            )}
           </nav>
         </div>
       </header>

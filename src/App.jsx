@@ -16,6 +16,7 @@ import CharacterCreation from '@/pages/CharacterCreation';
 import CharacterSheet from '@/pages/CharacterSheet';
 import CampaignJournal from '@/pages/CampaignJournal';
 import ModuleLibrary from '@/pages/ModuleLibrary';
+import AdminUsage from '@/pages/AdminUsage';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
           <Route path="/campaign/:id/character/:charId" element={<CharacterSheet />} />
           <Route path="/campaign/:id/journal" element={<CampaignJournal />} />
           <Route path="/modules" element={<ModuleLibrary />} />
+          <Route path="/admin/usage" element={<AdminUsage />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
