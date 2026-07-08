@@ -1239,6 +1239,9 @@ ${actionBlock}
 ## Equipment & Consumables
 When a character uses, throws, fires, drinks, or expends a consumable item (grenades, ammo, potions, scrolls, rations, batteries, etc.), include an "equipment_changes" array in your JSON response: [{"character_name": "name", "item": "Fragmentation Grenade", "change": -1, "reason": "thrown at enemy"}]. Use change: -1 per item consumed. Match the item name to what is in the character's equipment list above. Only include equipment_changes when items are actually used or expended this turn.
 
+## Equipment Transfers (handing items between characters)
+When a character gives, hands, passes, or trades an item to another character, include an "equipment_transfers" array: [{"from_character": "giver name", "to_character": "receiver name", "item": "Short Sword +1", "qty": 1, "reason": "handed the sword to the rogue"}]. The item is removed from the giver's equipment and added to the receiver's. Match the item name to the giver's equipment list. Use qty for partial stacks (e.g. handing 2 of 5 torches). This is how items move between party members — always use it when a character hands something to another.
+
 ## Gold Changes
 When a character's gold (or credits/domars/Nuyen/Eurodollars/etc. depending on the system) changes for ANY reason — finding treasure, receiving a reward, making a purchase, paying for services, or being awarded gold by the DM — you MUST include a "gold_changes" array: [{"character_name": "name", "change": 100, "reason": "reward from the baron"}]. Use positive change for gold gained, negative for gold spent or lost. This is the PRIMARY way gold is updated on character sheets — always use it whenever gold changes, even if you also list the treasure in the loot array.
 
@@ -1257,6 +1260,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
           gold_changes: { type: "array", items: { type: "object" } },
           spells_learned: { type: "array", items: { type: "object" } },
           equipment_changes: { type: "array", items: { type: "object" } },
+          equipment_transfers: { type: "array", items: { type: "object" } },
           deaths: { type: "array", items: { type: "object" } },
           world_updates: { type: "object" },
           new_scene: { type: "string" },
@@ -1399,6 +1403,46 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       }
     }
 
+    // Apply equipment transfers (items moved between characters)
+    if (result.equipment_transfers && result.equipment_transfers.length) {
+      for (const transfer of result.equipment_transfers) {
+        const giver = characters.find(c => c.name === transfer.from_character);
+        const receiver = characters.find(c => c.name === transfer.to_character);
+        if (giver && receiver && Array.isArray(giver.equipment)) {
+          const itemName = String(transfer.item || '').trim().toLowerCase();
+          const transferQty = Math.max(1, Number(transfer.qty || 1));
+          // Find the item in the giver's equipment
+          const giverItem = giver.equipment.find(e => e && typeof e.name === 'string' && e.name.trim().toLowerCase() === itemName);
+          if (giverItem) {
+            const movedItem = { ...giverItem };
+            const availableQty = giverItem.qty || 1;
+            const actualQty = Math.min(transferQty, availableQty);
+            // Remove from giver (reduce qty or remove entirely)
+            const updatedGiverEq = giver.equipment.map(e => {
+              if (e === giverItem) {
+                const newQty = availableQty - actualQty;
+                return newQty > 0 ? { ...e, qty: newQty } : null;
+              }
+              return e;
+            }).filter(Boolean);
+            giver.equipment = updatedGiverEq;
+            await base44.asServiceRole.entities.Character.update(giver.id, { equipment: updatedGiverEq });
+            // Add to receiver (stack if they already have one, otherwise append)
+            const receiverEq = Array.isArray(receiver.equipment) ? receiver.equipment : [];
+            const existing = receiverEq.find(e => e && typeof e.name === 'string' && e.name.trim().toLowerCase() === itemName);
+            let updatedReceiverEq;
+            if (existing) {
+              updatedReceiverEq = receiverEq.map(e => e === existing ? { ...e, qty: (e.qty || 1) + actualQty } : e);
+            } else {
+              updatedReceiverEq = [...receiverEq, { ...movedItem, qty: actualQty }];
+            }
+            receiver.equipment = updatedReceiverEq;
+            await base44.asServiceRole.entities.Character.update(receiver.id, { equipment: updatedReceiverEq });
+          }
+        }
+      }
+    }
+
     // Record deaths
     if (result.deaths && result.deaths.length) {
       for (const death of result.deaths) {
@@ -1503,6 +1547,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       gold_changes: result.gold_changes || [],
       spells_learned: result.spells_learned || [],
       equipment_changes: result.equipment_changes || [],
+      equipment_transfers: result.equipment_transfers || [],
       deaths: result.deaths || [],
       world_updates: result.world_updates || null,
       combat_active: result.combat_active || false,
