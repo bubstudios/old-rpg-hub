@@ -427,19 +427,28 @@ export const GAME_SYSTEMS = [
 ];
 
 export const CATEGORY_MAP = {
-  add1e: "Dungeons & Dragons", oddnd: "Dungeons & Dragons", bxdnd: "Dungeons & Dragons", add2e: "Dungeons & Dragons",
+  // TSR Classics — the original TSR-published games the app launched with
+  add1e: "TSR Classics", starfrontiers: "TSR Classics", gammaworld: "TSR Classics",
+  boothill: "TSR Classics", indianajones: "TSR Classics", spelljammer: "TSR Classics",
+  darksun: "TSR Classics", topsecret: "TSR Classics", greyhawk: "TSR Classics",
+  forgottenrealms: "TSR Classics", hollowworld: "TSR Classics", buckrogers: "TSR Classics",
+  gangbusters: "TSR Classics",
+  // Dungeons & Dragons — newer editions and settings
+  oddnd: "Dungeons & Dragons", bxdnd: "Dungeons & Dragons", add2e: "Dungeons & Dragons",
   dnd35: "Dungeons & Dragons", dnd4e: "Dungeons & Dragons", dnd5e: "Dungeons & Dragons",
-  greyhawk: "Dungeons & Dragons", forgottenrealms: "Dungeons & Dragons", ravenloft: "Dungeons & Dragons",
-  darksun: "Dungeons & Dragons", spelljammer: "Dungeons & Dragons", hollowworld: "Dungeons & Dragons",
-  starfrontiers: "Science Fiction", starwars: "Science Fiction", traveller: "Science Fiction",
-  buckrogers: "Science Fiction", shadowrun: "Science Fiction", cyberpunk: "Science Fiction",
+  ravenloft: "Dungeons & Dragons",
+  // Science Fiction
+  starwars: "Science Fiction", traveller: "Science Fiction",
+  shadowrun: "Science Fiction", cyberpunk: "Science Fiction",
+  // Superhero
   legionofdoom: "Superhero", marvel: "Superhero", dcheroes: "Superhero",
-  gammaworld: "Classic Adventure", boothill: "Classic Adventure", indianajones: "Classic Adventure",
-  topsecret: "Classic Adventure", gangbusters: "Classic Adventure", ghostbusters: "Classic Adventure",
-  jamesbond: "Classic Adventure", conan: "Sword & Sorcery", redsonja: "Sword & Sorcery"
+  // Classic Adventure
+  ghostbusters: "Classic Adventure", jamesbond: "Classic Adventure",
+  // Sword & Sorcery
+  conan: "Sword & Sorcery", redsonja: "Sword & Sorcery"
 };
 
-export const CATEGORIES = ["Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery"];
+export const CATEGORIES = ["TSR Classics", "Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery"];
 
 export const DEFAULT_GAME = "add1e";
 

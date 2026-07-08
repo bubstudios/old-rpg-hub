@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Upload, BookOpen, Globe, Lock, Scroll, Rocket, Atom, Crosshair, Compass, Orbit, Sun, Briefcase, Landmark, Crown, Flame, Swords, Satellite, Ghost, Skull } from 'lucide-react';
+import { Loader2, Upload, BookOpen, Globe, Lock, Scale, Check, AlertTriangle } from 'lucide-react';
+import { GAME_SYSTEMS, CATEGORIES, CATEGORY_MAP } from '@/lib/gameSystems';
 import { toast } from 'sonner';
 
 export default function ModuleUploadForm({ onUploaded, onCancel }) {
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [visibility, setVisibility] = useState('shared');
@@ -20,10 +22,8 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
     }
     setUploading(true);
     try {
-      // 1. Upload the source file
       const upRes = await base44.integrations.Core.UploadFile({ file });
       const file_url = upRes.file_url;
-      // 2. DM studies the document + creates the library record
       const res = await base44.functions.invoke('moduleLibrary', {
         op: 'upload',
         file_url,
@@ -41,93 +41,75 @@ export default function ModuleUploadForm({ onUploaded, onCancel }) {
     }
   }
 
+  // Legal notice — shown before the upload form
+  if (!legalAccepted) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-border/40">
+          <div className="w-9 h-9 rounded-full wax-seal flex items-center justify-center shrink-0">
+            <Scale className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
+          </div>
+          <div>
+            <h2 className="font-heading font-700 text-base text-foreground tracking-wide">OWNERSHIP &amp; LEGALITY</h2>
+            <p className="text-[10px] font-heading tracking-[0.15em] text-primary/60 uppercase">Please read before uploading</p>
+          </div>
+        </div>
+
+        <div className="space-y-3 text-sm font-body text-foreground/80 leading-relaxed">
+          <p>By uploading a module to the library, you confirm that:</p>
+          <ul className="space-y-2 pl-1">
+            <li className="flex gap-2">
+              <Check className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
+              <span>You <strong>own</strong> the material or have <strong>permission</strong> from the rights holder to use and share it.</span>
+            </li>
+            <li className="flex gap-2">
+              <Check className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
+              <span>The content is your <strong>original work</strong>, in the <strong>public domain</strong>, or used under <strong>fair use</strong> or an appropriate license.</span>
+            </li>
+            <li className="flex gap-2">
+              <Check className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
+              <span>You understand that <strong>copyrighted material</strong> you do not own may be <strong>removed</strong> at the rights holder's request.</span>
+            </li>
+            <li className="flex gap-2">
+              <Check className="w-4 h-4 text-primary/70 shrink-0 mt-0.5" strokeWidth={2} />
+              <span><strong>Shared</strong> modules are visible to all players — only share content you have the right to distribute.</span>
+            </li>
+          </ul>
+          <div className="flex items-start gap-2 p-3 rounded-md bg-accent/10 border border-accent/20">
+            <AlertTriangle className="w-4 h-4 text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
+            <p className="text-xs text-foreground/70 leading-relaxed">
+              Old RPG Hub is not responsible for the content users upload. Users are solely liable for any material they add to the library.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-1">
+          <Button onClick={() => setLegalAccepted(true)} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Check className="w-4 h-4" /> I Understand &amp; Agree
+          </Button>
+          <Button onClick={onCancel} variant="ghost" className="text-muted-foreground">Cancel</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <div>
         <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">GAME SYSTEM</label>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => setGameSystem('add1e')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'add1e' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Scroll className="w-3.5 h-3.5" /> AD&D 1E
-          </button>
-          <button
-            onClick={() => setGameSystem('starfrontiers')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'starfrontiers' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Rocket className="w-3.5 h-3.5" /> STAR FRONTIERS
-          </button>
-          <button
-            onClick={() => setGameSystem('gammaworld')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'gammaworld' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Atom className="w-3.5 h-3.5" /> GAMMA WORLD
-          </button>
-          <button
-            onClick={() => setGameSystem('boothill')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'boothill' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Crosshair className="w-3.5 h-3.5" /> BOOT HILL
-          </button>
-          <button
-            onClick={() => setGameSystem('indianajones')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'indianajones' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Compass className="w-3.5 h-3.5" /> INDIANA JONES
-          </button>
-          <button
-            onClick={() => setGameSystem('spelljammer')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'spelljammer' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Orbit className="w-3.5 h-3.5" /> SPELLJAMMER
-          </button>
-          <button
-            onClick={() => setGameSystem('darksun')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'darksun' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Sun className="w-3.5 h-3.5" /> DARK SUN
-          </button>
-          <button
-            onClick={() => setGameSystem('topsecret')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'topsecret' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Briefcase className="w-3.5 h-3.5" /> TOP SECRET
-          </button>
-          <button
-            onClick={() => setGameSystem('greyhawk')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'greyhawk' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Landmark className="w-3.5 h-3.5" /> GREYHAWK
-          </button>
-          <button
-            onClick={() => setGameSystem('forgottenrealms')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'forgottenrealms' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Crown className="w-3.5 h-3.5" /> FORGOTTEN REALMS
-          </button>
-          <button
-            onClick={() => setGameSystem('hollowworld')}
-            className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'hollowworld' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}
-          >
-            <Globe className="w-3.5 h-3.5" /> HOLLOW WORLD
-          </button>
-          <button onClick={() => setGameSystem('conan')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'conan' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
-            <Flame className="w-3.5 h-3.5" /> CONAN
-          </button>
-          <button onClick={() => setGameSystem('redsonja')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'redsonja' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
-            <Swords className="w-3.5 h-3.5" /> RED SONJA
-          </button>
-          <button onClick={() => setGameSystem('buckrogers')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'buckrogers' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
-            <Satellite className="w-3.5 h-3.5" /> BUCK ROGERS
-          </button>
-          <button onClick={() => setGameSystem('ghostbusters')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'ghostbusters' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
-            <Ghost className="w-3.5 h-3.5" /> GHOSTBUSTERS
-          </button>
-          <button onClick={() => setGameSystem('gangbusters')} className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded text-[10px] font-heading tracking-wide border transition-colors ${gameSystem === 'gangbusters' ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/40 text-muted-foreground hover:text-foreground'}`}>
-            <Skull className="w-3.5 h-3.5" /> GANGBUSTERS
-          </button>
-        </div>
+        <select
+          value={gameSystem}
+          onChange={(e) => setGameSystem(e.target.value)}
+          className="w-full px-3 py-2 rounded-md border border-border/60 bg-background/60 text-sm font-body text-foreground focus:outline-none focus:border-primary/40"
+        >
+          {CATEGORIES.map(cat => (
+            <optgroup key={cat} label={cat}>
+              {GAME_SYSTEMS.filter(g => CATEGORY_MAP[g.id] === cat).map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       </div>
 
       <div>
