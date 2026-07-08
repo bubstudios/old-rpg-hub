@@ -30,6 +30,25 @@ export default function CharacterSheet() {
     load();
   }, [campaignId, charId]);
 
+  // Real-time sync: when the DM updates this character (items, gold, spells, HP, etc.),
+  // refresh the sheet automatically so changes appear live.
+  useEffect(() => {
+    const unsubscribe = base44.entities.Character.subscribe((event) => {
+      const changedId = event.id || event.data?.id;
+      if (changedId === charId) {
+        refreshCharacter();
+      }
+    });
+    return () => unsubscribe();
+  }, [charId]);
+
+  async function refreshCharacter() {
+    try {
+      const updated = await base44.entities.Character.get(charId);
+      if (updated) setCharacter(updated);
+    } catch (e) { /* ignore transient errors */ }
+  }
+
   async function load() {
     try {
       setLoading(true);
@@ -118,6 +137,13 @@ export default function CharacterSheet() {
   const saves = character.saving_throws || {};
   const hpPct = character.hp_max > 0 ? (character.hp_current / character.hp_max) * 100 : 0;
 
+  // Only show the six D&D ability scores — other systems' attributes (AGI, GACC, MOV, etc.)
+  // are stored on the same object but belong to different game systems and must not appear here.
+  const DND_ABILITIES = ['str', 'int', 'wis', 'dex', 'con', 'cha'];
+  const dndScores = DND_ABILITIES
+    .filter(ab => scores[ab] !== undefined && scores[ab] !== null)
+    .map(ab => [ab, scores[ab]]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       <button
@@ -197,7 +223,7 @@ export default function CharacterSheet() {
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">ABILITY SCORES</h3>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {Object.entries(scores).map(([ab, val]) => {
+            {dndScores.map(([ab, val]) => {
               const mod = Math.floor((val - 10) / 2);
               return (
                 <div key={ab} className="text-center p-2 rounded-lg bg-secondary/30 border border-border/30">
