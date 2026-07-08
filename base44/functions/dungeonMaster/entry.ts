@@ -1237,7 +1237,7 @@ ${history || 'The adventure has just begun.'}
 ${actionBlock}
 
 ## Equipment & Consumables
-When a character uses, throws, fires, drinks, or expends a consumable item (grenades, ammo, potions, scrolls, rations, batteries, etc.), include an "equipment_changes" array in your JSON response: [{"character_name": "name", "item": "Fragmentation Grenade", "change": -1, "reason": "thrown at enemy"}]. Use change: -1 per item consumed. Match the item name to what is in the character's equipment list above. Only include equipment_changes when items are actually used or expended this turn.
+When a character uses, throws, fires, drinks, expends, buys, finds, or receives an item, include an "equipment_changes" array in your JSON response: [{"character_name": "name", "item": "Fragmentation Grenade", "change": -1, "reason": "thrown at enemy"}]. Use a NEGATIVE change (e.g. -1) to consume/expend an existing item, and a POSITIVE change (e.g. 20) to ADD a new item or increase a quantity — including items the character does NOT yet have on their sheet. For example, adding arrows: {"character_name": "name", "item": "Arrows", "change": 20, "reason": "purchased at market"}. Match the item name to the character's equipment list when modifying an existing item; otherwise just name it clearly and it will be added.
 
 ## Equipment Transfers (handing items between characters)
 When a character gives, hands, passes, or trades an item to another character, include an "equipment_transfers" array: [{"from_character": "giver name", "to_character": "receiver name", "item": "Short Sword +1", "qty": 1, "reason": "handed the sword to the rogue"}]. The item is removed from the giver's equipment and added to the receiver's. Match the item name to the giver's equipment list. Use qty for partial stacks (e.g. handing 2 of 5 torches). This is how items move between party members — always use it when a character hands something to another.
@@ -1384,19 +1384,30 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       }
     }
 
-    // Apply equipment changes (consumed items)
+    // Apply equipment changes (consume existing items, or add new ones)
     if (result.equipment_changes && result.equipment_changes.length) {
       for (const eqChange of result.equipment_changes) {
         const target = characters.find(c => c.name === eqChange.character_name);
-        if (target && Array.isArray(target.equipment)) {
-          const itemName = String(eqChange.item || '').trim().toLowerCase();
-          const updatedEquipment = target.equipment.map(e => {
-            if (e && typeof e.name === 'string' && e.name.trim().toLowerCase() === itemName) {
-              const newQty = Math.max(0, (e.qty || 1) + Number(eqChange.change || 0));
-              return newQty > 0 ? { ...e, qty: newQty } : null;
-            }
-            return e;
-          }).filter(Boolean);
+        if (target) {
+          const itemNameRaw = String(eqChange.item || '').trim();
+          const itemName = itemNameRaw.toLowerCase();
+          const changeNum = Number(eqChange.change || 0);
+          const currentEq = Array.isArray(target.equipment) ? target.equipment : [];
+          const existing = currentEq.find(e => e && typeof e.name === 'string' && e.name.trim().toLowerCase() === itemName);
+          let updatedEquipment;
+          if (existing) {
+            updatedEquipment = currentEq.map(e => {
+              if (e === existing) {
+                const newQty = Math.max(0, (e.qty || 1) + changeNum);
+                return newQty > 0 ? { ...e, qty: newQty } : null;
+              }
+              return e;
+            }).filter(Boolean);
+          } else if (changeNum > 0 && itemNameRaw) {
+            updatedEquipment = [...currentEq, { name: itemNameRaw, qty: changeNum, notes: eqChange.reason || '' }];
+          } else {
+            continue;
+          }
           target.equipment = updatedEquipment;
           await base44.asServiceRole.entities.Character.update(target.id, { equipment: updatedEquipment });
         }
