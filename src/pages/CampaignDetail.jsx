@@ -14,12 +14,13 @@ import HyDiceRollerPanel from '@/components/HyDiceRollerPanel';
 import GBDiceRollerPanel from '@/components/GBDiceRollerPanel';
 import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
+import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices
+  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,6 +42,7 @@ export default function CampaignDetail() {
   const [briefOpen, setBriefOpen] = useState(false);
   const [briefText, setBriefText] = useState('');
   const [savingBrief, setSavingBrief] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -254,6 +256,13 @@ export default function CampaignDetail() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
+            onClick={() => setVideoOpen((o) => !o)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
+            title="Toggle party video call"
+          >
+            <Video className="w-3.5 h-3.5" strokeWidth={1.5} /> Video
+          </button>
+          <button
             onClick={copyInviteCode}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -276,6 +285,13 @@ export default function CampaignDetail() {
       <div className="grid lg:grid-cols-[1fr_280px] gap-5">
         {/* Main play area */}
         <div className="flex flex-col min-h-[60vh]">
+          {videoOpen && (
+            <JitsiVideoPanel
+              roomName={campaign.invite_code}
+              displayName={myCharacter?.name}
+              onClose={() => setVideoOpen(false)}
+            />
+          )}
           {/* Narration feed */}
           <div ref={feedRef} className="flex-1 space-y-4 overflow-y-auto scrollbar-thin pr-1 pb-4 max-h-[calc(100vh-320px)]">
             {!hasEntries && !processing && (
