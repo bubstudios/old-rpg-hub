@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Volume2, VolumeX
+  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,11 +41,7 @@ export default function CampaignDetail() {
   const [briefOpen, setBriefOpen] = useState(false);
   const [briefText, setBriefText] = useState('');
   const [savingBrief, setSavingBrief] = useState(false);
-  const [voiceOn, setVoiceOn] = useState(true);
   const feedRef = useRef(null);
-  const audioRef = useRef(null);
-  const playedUrlsRef = useRef(new Set());
-  const audioQueueRef = useRef([]);
 
   useEffect(() => {
     loadData();
@@ -56,51 +52,6 @@ export default function CampaignDetail() {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
   }, [entries, latestResult, processing]);
-
-  function playNextAudio() {
-    const audio = audioRef.current;
-    if (!audio || audioQueueRef.current.length === 0 || !audio.paused) return;
-    const url = audioQueueRef.current.shift();
-    audio.src = url;
-    audio.play().catch(() => {});
-  }
-
-  function queueAudio(urls) {
-    if (!voiceOn || !urls || !urls.length) return;
-    let added = false;
-    for (const url of urls) {
-      if (!playedUrlsRef.current.has(url)) {
-        audioQueueRef.current.push(url);
-        playedUrlsRef.current.add(url);
-        added = true;
-      }
-    }
-    if (added) playNextAudio();
-  }
-
-  // Auto-play for the acting player (result returned directly from the DM)
-  useEffect(() => {
-    if (latestResult?.audio_urls) queueAudio(latestResult.audio_urls);
-  }, [latestResult, voiceOn]);
-
-  // Auto-play for all players (narration entries arrive via real-time sync)
-  useEffect(() => {
-    if (!voiceOn) return;
-    for (const e of entries) {
-      if (e.entry_type === 'narration' && e.audio_urls) queueAudio(e.audio_urls);
-    }
-  }, [entries, voiceOn]);
-
-  function toggleVoice() {
-    setVoiceOn(prev => {
-      const next = !prev;
-      if (!next && audioRef.current) {
-        audioRef.current.pause();
-        audioQueueRef.current = [];
-      }
-      return next;
-    });
-  }
 
   // Live-sync out-of-character discussion messages so party members see each other's chat
   useEffect(() => {
@@ -155,8 +106,7 @@ export default function CampaignDetail() {
         campaign_id: campaignId,
         action: rollResult.summary,
         acting_character_id: myCharacter.id,
-        is_roll_result: true,
-        narrate_audio: voiceOn
+        is_roll_result: true
       });
       setLatestResult(res.data);
       setProcessing(false);
@@ -216,8 +166,7 @@ export default function CampaignDetail() {
       const res = await base44.functions.invoke('dungeonMaster', {
         campaign_id: campaignId,
         action: submittedAction,
-        acting_character_id: myCharacter.id,
-        narrate_audio: voiceOn
+        acting_character_id: myCharacter.id
       });
       const result = res.data;
       setLatestResult(result);
@@ -279,7 +228,6 @@ export default function CampaignDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      <audio ref={audioRef} onEnded={playNextAudio} />
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-5 flex-wrap">
         <div className="min-w-0">
@@ -372,13 +320,6 @@ export default function CampaignDetail() {
                 title={discussMode ? 'Discussing — the DM will not respond. Click to switch to actions.' : 'Switch to out-of-character party discussion (the DM will not respond).'}
               >
                 <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} /> {discussMode ? 'Discussing' : 'Discuss'}
-              </button>
-              <button
-                onClick={toggleVoice}
-                className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${voiceOn ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
-                title={voiceOn ? 'Voice narration on — the DM reads aloud. Click to mute.' : 'Voice narration off. Click to enable read-aloud.'}
-              >
-                {voiceOn ? <Volume2 className="w-3.5 h-3.5" strokeWidth={1.5} /> : <VolumeX className="w-3.5 h-3.5" strokeWidth={1.5} />} Voice
               </button>
               <button
                 onClick={() => setDiceOpen((o) => !o)}

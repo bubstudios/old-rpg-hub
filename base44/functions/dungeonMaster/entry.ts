@@ -1470,26 +1470,8 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       chapter: campaign.current_chapter
     });
 
-    // Generate spoken narration audio if requested (uses the "storm" voice — formal & authoritative)
-    let audio_urls = [];
-    if (narrate_audio && result.narration && result.narration.trim()) {
-      try {
-        const chunks = chunkNarration(result.narration, 4500);
-        for (const chunk of chunks) {
-          const speech = await base44.integrations.Core.GenerateSpeech({
-            text: chunk,
-            voice: 'storm',
-            language_code: 'en'
-          });
-          if (speech && speech.url) audio_urls.push(speech.url);
-        }
-        if (audio_urls.length) {
-          await base44.asServiceRole.entities.JournalEntry.update(narrationEntry.id, { audio_urls });
-        }
-      } catch (speechErr) {
-        console.log("Speech generation failed:", speechErr.message);
-      }
-    }
+    // Voice narration permanently disabled
+    const audio_urls = [];
 
     return Response.json({
       narration: result.narration,
