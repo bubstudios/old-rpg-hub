@@ -1287,14 +1287,23 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
     }
 
     // --- Apply state changes ---
+    if (!result || typeof result !== 'object') {
+      result = { narration: 'The Dungeon Master pauses, gathering their thoughts...' };
+    }
+    if (!result.narration || typeof result.narration !== 'string') {
+      result.narration = 'The Dungeon Master pauses, gathering their thoughts...';
+    }
 
     // Apply HP changes
     if (result.hp_changes && result.hp_changes.length) {
       for (const change of result.hp_changes) {
         const target = characters.find(c => c.name === change.character_name);
         if (target) {
-          const newHP = Math.max(0, Math.min(target.hp_max, target.hp_current + change.change));
-          await base44.asServiceRole.entities.Character.update(target.id, { hp_current: newHP });
+          const dmg = Number(change.change);
+          if (!isNaN(dmg)) {
+            const newHP = Math.max(0, Math.min(target.hp_max, target.hp_current + dmg));
+            await base44.asServiceRole.entities.Character.update(target.id, { hp_current: newHP });
+          }
         }
       }
     }
@@ -1304,7 +1313,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       for (const xpGain of result.xp_awarded) {
         const target = characters.find(c => c.name === xpGain.character_name);
         if (target) {
-          const newXp = target.xp + xpGain.amount;
+          const newXp = target.xp + Number(xpGain.amount);
           const updates = { xp: newXp };
           // Simple level-up check: if XP exceeds threshold, level up
           // We'll flag this in narration; actual level-up handled separately
@@ -1326,7 +1335,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
         });
         // Add gold to party (split among active characters)
         if (item.gold) {
-          const share = Math.floor(item.gold / characters.length);
+          const share = Math.floor(Number(item.gold) / characters.length);
           for (const c of characters) {
             await base44.asServiceRole.entities.Character.update(c.id, { gold: (c.gold || 0) + share });
           }
@@ -1358,7 +1367,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
           const itemName = String(eqChange.item || '').trim().toLowerCase();
           const updatedEquipment = target.equipment.map(e => {
             if (e && typeof e.name === 'string' && e.name.trim().toLowerCase() === itemName) {
-              const newQty = Math.max(0, (e.qty || 1) + (eqChange.change || 0));
+              const newQty = Math.max(0, (e.qty || 1) + Number(eqChange.change || 0));
               return newQty > 0 ? { ...e, qty: newQty } : null;
             }
             return e;
