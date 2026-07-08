@@ -62,7 +62,7 @@ export default function InviteDialog({ open, onOpenChange, campaign }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[100dvh] sm:max-h-[85vh] p-4 sm:p-6 overflow-y-auto overscroll-contain">
         <DialogHeader>
           <DialogTitle className="font-heading tracking-wide flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" /> Invite Adventurers
@@ -97,8 +97,8 @@ export default function InviteDialog({ open, onOpenChange, campaign }) {
         {/* QR code */}
         <div className="flex flex-col items-center gap-1.5 py-1">
           <p className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground self-start flex items-center gap-1"><QrCode className="w-3 h-3" /> QR CODE</p>
-          <div className="bg-white p-2 rounded-lg">
-            <img src={qrUrl} alt="QR code for invite link" className="w-40 h-40" />
+          <div className="bg-white p-1.5 sm:p-2 rounded-lg">
+            <img src={qrUrl} alt="QR code for invite link" className="w-32 h-32 sm:w-40 sm:h-40" />
           </div>
           <p className="text-[10px] text-muted-foreground/70 font-body text-center">Scan to join on mobile</p>
         </div>
