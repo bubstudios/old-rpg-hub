@@ -124,6 +124,35 @@
     },
     "active_session_id": {
       "type": "string"
+    },
+    "pending_actions": {
+      "type": "array",
+      "description": "Actions/agreements submitted this round, waiting for all party members to act before the DM responds",
+      "items": {
+        "type": "object",
+        "properties": {
+          "character_id": {
+            "type": "string"
+          },
+          "character_name": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "is_agree": {
+            "type": "boolean"
+          },
+          "submitted_at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dm_processing": {
+      "type": "boolean",
+      "default": false,
+      "description": "True while the DM is composing a response to the current round (blocks new submissions)"
     }
   },
   "required": [

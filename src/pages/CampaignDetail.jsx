@@ -18,12 +18,14 @@ import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
 import EndSessionDialog from '@/components/EndSessionDialog';
 import InviteDialog from '@/components/InviteDialog';
+import RoundStatus from '@/components/RoundStatus';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus
+  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
+  Check, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,11 +62,21 @@ export default function CampaignDetail() {
     }
   }, [entries, latestResult, processing]);
 
-  // Live-sync out-of-character discussion messages so party members see each other's chat
+  // Live-sync journal entries (discussion, narration, and declared actions) across the party
   useEffect(() => {
     const unsubscribe = base44.entities.JournalEntry.subscribe((event) => {
-      if (event.data?.campaign_id === campaignId && (event.data?.entry_type === 'discussion' || event.data?.entry_type === 'narration')) {
+      if (event.data?.campaign_id === campaignId && ['discussion', 'narration', 'action', 'dice_roll'].includes(event.data?.entry_type)) {
         reloadEntries();
+      }
+    });
+    return () => unsubscribe();
+  }, [campaignId]);
+
+  // Live-sync the round state (pending actions / DM processing) so every player sees who has acted
+  useEffect(() => {
+    const unsubscribe = base44.entities.Campaign.subscribe((event) => {
+      if (event.data?.id === campaignId) {
+        setCampaign(prev => prev ? { ...prev, pending_actions: event.data.pending_actions, dm_processing: event.data.dm_processing } : prev);
       }
     });
     return () => unsubscribe();
@@ -104,7 +116,7 @@ export default function CampaignDetail() {
 
   async function handleRollCompleted(rollResult) {
     await reloadEntries();
-    if (!rollResult?.summary || processing) return;
+    if (!rollResult?.summary || processing || campaign?.dm_processing) return;
     setDiceOpen(false);
     setProcessing(true);
     setLatestResult(null);
@@ -132,7 +144,6 @@ export default function CampaignDetail() {
     const submittedAction = action.trim();
     setAction('');
 
-    // Discuss mode: post an out-of-character message to the party (DM is NOT triggered)
     if (discussMode) {
       setPosting(true);
       const tempEntry = {
@@ -159,37 +170,74 @@ export default function CampaignDetail() {
       return;
     }
 
+    // Action mode: submit to the round system (the DM waits for every party member to act)
+    await submitTurn(submittedAction, false);
+  }
+
+  // Submit an action or agreement to the round. When all party members have acted,
+  // the DM is invoked with everyone's actions combined.
+  async function submitTurn(actionText, isAgree) {
+    if (processing) return;
     setProcessing(true);
     setLatestResult(null);
-
-    // Optimistically show the player's action
-    const tempActionEntry = {
-      entry_type: 'action',
-      player_action: submittedAction,
-      acting_character_name: myCharacter.name
-    };
-    setEntries(prev => [...prev, tempActionEntry]);
-
     try {
-      const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
-      const res = await base44.functions.invoke(dmFunc, {
+      const res = await base44.functions.invoke('campaignData', {
+        op: 'submitAction',
         campaign_id: campaignId,
-        action: submittedAction,
-        acting_character_id: myCharacter.id
+        acting_character_id: myCharacter.id,
+        action: actionText,
+        is_agree: isAgree
       });
-      const result = res.data;
-      setLatestResult(result);
-      setProcessing(false);
+      const data = res.data;
 
-      // Reload campaign + characters to reflect changes (narration now lives in entries)
-      await loadData();
-      setLatestResult(null);
+      // Reflect the round state immediately (avoids flicker before the subscription fires)
+      setCampaign(prev => prev ? {
+        ...prev,
+        pending_actions: data.pending_actions || prev.pending_actions,
+        dm_processing: !!data.should_invoke_dm
+      } : prev);
+
+      if (data.dm_processing) {
+        toast('The Dungeon Master is already responding — please wait...');
+        return;
+      }
+
+      if (data.should_invoke_dm) {
+        const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+        const dmRes = await base44.functions.invoke(dmFunc, {
+          campaign_id: campaignId,
+          action: data.combined_action,
+          acting_character_id: myCharacter.id,
+          skip_action_log: true
+        });
+        await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+        setLatestResult(dmRes.data);
+        setProcessing(false);
+        await loadData();
+        setLatestResult(null);
+      }
+      // else: waiting for other party members — the pending state updates via subscription
     } catch (e) {
       toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
-      setEntries(prev => prev.slice(0, -1));
-      setAction(submittedAction);
+      if (!isAgree) setAction(actionText);
     } finally {
       setProcessing(false);
+    }
+  }
+
+  async function handleAgree() {
+    if (processing || posting) return;
+    await submitTurn('', true);
+  }
+
+  async function handleResetRound() {
+    try {
+      await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+      setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+      toast.success('Round reset.');
+    } catch (e) {
+      toast.error('Failed to reset round');
     }
   }
 
@@ -234,6 +282,15 @@ export default function CampaignDetail() {
 
   const hasEntries = entries.length > 0;
   const isSetup = campaign.status === 'setup' || !hasEntries;
+
+  // Round state: the DM waits for every active party member to act before responding
+  const pendingActions = campaign.pending_actions || [];
+  const submittedIds = pendingActions.map(a => a.character_id);
+  const activeChars = characters.filter(c => c.status === 'active');
+  const mySubmitted = myCharacter ? submittedIds.includes(myCharacter.id) : false;
+  const missingCount = activeChars.filter(c => !submittedIds.includes(c.id)).length;
+  const allIn = missingCount === 0;
+  const dmResponding = !!campaign.dm_processing || processing;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -437,6 +494,21 @@ export default function CampaignDetail() {
                 />
               )
             )}
+            {dmResponding ? (
+              <div className="flex items-center justify-center gap-2 py-3">
+                <Flame className="w-4 h-4 text-primary animate-flicker" strokeWidth={1.5} />
+                <span className="font-tome italic text-sm text-muted-foreground">The Dungeon Master contemplates your fate...</span>
+                <Loader2 className="w-4 h-4 text-primary/40 animate-spin" />
+                {isOwner && (
+                  <button onClick={handleResetRound} className="ml-2 flex items-center gap-1 text-[10px] font-heading tracking-wider text-muted-foreground/60 hover:text-foreground transition-colors">
+                    <RefreshCw className="w-3 h-3" /> Reset
+                  </button>
+                )}
+              </div>
+            ) : (mySubmitted && !discussMode) ? (
+              <RoundStatus activeChars={activeChars} submittedIds={submittedIds} allIn={allIn} />
+            ) : (
+              <>
             <div className="flex gap-2">
               <textarea
                 value={action}
@@ -493,6 +565,17 @@ export default function CampaignDetail() {
               <p className="mt-1.5 text-[10px] font-body italic text-sky-400/70">
                 Out-of-character discussion — your message will be seen by the party, but the Dungeon Master will not respond.
               </p>
+            )}
+            {!discussMode && (
+              <button
+                onClick={handleAgree}
+                disabled={processing || posting}
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-border/50 text-[11px] font-heading tracking-wider text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-50"
+              >
+                <Check className="w-3.5 h-3.5" strokeWidth={1.5} /> I Agree — Stand Ready
+              </button>
+            )}
+              </>
             )}
           </div>
         </div>

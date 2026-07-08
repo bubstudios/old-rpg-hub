@@ -1209,6 +1209,88 @@ Extract:
       return Response.json({ success: true });
     }
 
+    // Submit a player's action (or agreement) for the round.
+    // The DM waits until every active party member has acted before responding.
+    if (op === 'submitAction') {
+      const { campaign_id, acting_character_id, action, is_agree } = body;
+      if (!campaign_id || !acting_character_id) return Response.json({ error: 'campaign_id and acting_character_id required' }, { status: 400 });
+
+      const campaign = await admin.entities.Campaign.get(campaign_id);
+      if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
+
+      // Block new submissions while the DM is already composing a response
+      if (campaign.dm_processing) {
+        return Response.json({ dm_processing: true, pending_actions: campaign.pending_actions || [] });
+      }
+
+      const characters = await admin.entities.Character.filter({ campaign_id, status: 'active' });
+      const myChar = characters.find(c => c.id === acting_character_id && c.created_by_id === user.id);
+      if (!myChar) return Response.json({ error: 'Character not found for this user' }, { status: 404 });
+
+      const agree = !!is_agree;
+      const actionText = String(action || '').trim();
+      if (!agree && !actionText) return Response.json({ error: 'Action text required' }, { status: 400 });
+
+      const newEntry = {
+        character_id: acting_character_id,
+        character_name: myChar.name,
+        action: actionText,
+        is_agree: agree,
+        submitted_at: new Date().toISOString()
+      };
+
+      // Atomically append (preserves concurrent submissions from different players)
+      await admin.entities.Campaign.updateMany({ id: campaign_id }, { $push: { pending_actions: newEntry } });
+
+      // Log the player's action as a journal entry so the whole party sees it in real time
+      if (!agree) {
+        await base44.entities.JournalEntry.create({
+          campaign_id,
+          entry_type: 'action',
+          player_action: actionText,
+          acting_character_name: myChar.name,
+          chapter: campaign.current_chapter
+        });
+      }
+
+      // Re-read to evaluate the full pending list
+      const updated = await admin.entities.Campaign.get(campaign_id);
+      const pending = Array.isArray(updated.pending_actions) ? updated.pending_actions : [];
+      const submittedIds = pending.map(a => a.character_id);
+      const missing = characters.filter(c => !submittedIds.includes(c.id));
+
+      if (missing.length > 0) {
+        return Response.json({
+          should_invoke_dm: false,
+          pending_actions: pending,
+          submitted_ids: submittedIds,
+          missing: missing.map(c => ({ id: c.id, name: c.name }))
+        });
+      }
+
+      // Every party member has acted — claim the DM invocation and build the combined action
+      await admin.entities.Campaign.update(campaign_id, { dm_processing: true });
+      const combined = pending.map(a =>
+        a.is_agree
+          ? `${a.character_name} agrees and stands ready (no specific action this turn).`
+          : `${a.character_name}: ${a.action}`
+      ).join('\n');
+
+      return Response.json({
+        should_invoke_dm: true,
+        combined_action: combined,
+        pending_actions: pending
+      });
+    }
+
+    // Clear the round after the DM has responded (or to reset a stuck round)
+    if (op === 'clearRound') {
+      const { campaign_id } = body;
+      if (!campaign_id) return Response.json({ error: 'campaign_id required' }, { status: 400 });
+      await admin.entities.Campaign.update(campaign_id, { pending_actions: [], dm_processing: false });
+      return Response.json({ success: true });
+    }
+
     return Response.json({ error: 'Unknown operation: ' + op }, { status: 400 });
 
   } catch (error) {

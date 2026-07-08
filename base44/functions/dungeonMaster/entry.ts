@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { campaign_id, action, acting_character_id, is_roll_result, narrate_audio } = body;
+    const { campaign_id, action, acting_character_id, is_roll_result, narrate_audio, skip_action_log } = body;
 
     if (!campaign_id || !action) {
       return Response.json({ error: 'campaign_id and action are required' }, { status: 400 });
@@ -1628,7 +1628,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
     await base44.asServiceRole.entities.Campaign.update(campaign_id, campaignUpdates);
 
     // Create journal entries: skip the action entry for roll results (already recorded as a dice_roll entry); always create the DM narration
-    if (!is_roll_result) {
+    if (!is_roll_result && !skip_action_log) {
       await base44.asServiceRole.entities.JournalEntry.create({
         campaign_id: campaign_id,
         entry_type: 'action',
