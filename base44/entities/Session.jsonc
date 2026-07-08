@@ -9,10 +9,12 @@
       "type": "number"
     },
     "title": {
-      "type": "string"
+      "type": "string",
+      "description": "AI-generated evocative session title"
     },
     "summary": {
-      "type": "string"
+      "type": "string",
+      "description": "Short recap text (mirror of recap)"
     },
     "status": {
       "type": "string",
@@ -20,17 +22,48 @@
         "open",
         "closed"
       ],
-      "default": "open"
+      "default": "closed"
     },
     "started_at": {
-      "type": "string"
+      "type": "string",
+      "description": "ISO timestamp when this session's play began"
     },
     "ended_at": {
-      "type": "string"
+      "type": "string",
+      "description": "ISO timestamp when the session was ended"
     },
     "xp_awarded": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Total XP earned across this session"
+    },
+    "recap": {
+      "type": "string",
+      "description": "AI-compiled narrative recap of what happened"
+    },
+    "rewards_summary": {
+      "type": "string",
+      "description": "XP earned and rewards/favors/boons gained"
+    },
+    "treasure_summary": {
+      "type": "string",
+      "description": "Treasure, gold, and gear gained this session"
+    },
+    "npc_changes": {
+      "type": "string",
+      "description": "Notable NPC developments \u2014 new contacts, shifts, deaths, revelations"
+    },
+    "unresolved_clues": {
+      "type": "string",
+      "description": "Open threads, mysteries, and plot hooks still unresolved"
+    },
+    "current_location": {
+      "type": "string",
+      "description": "Where the party is at session's end"
+    },
+    "next_session_hook": {
+      "type": "string",
+      "description": "A cliffhanger to draw the party back next session"
     }
   },
   "required": [

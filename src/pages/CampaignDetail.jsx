@@ -16,12 +16,13 @@ import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
 import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
+import EndSessionDialog from '@/components/EndSessionDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video
+  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,6 +45,7 @@ export default function CampaignDetail() {
   const [briefText, setBriefText] = useState('');
   const [savingBrief, setSavingBrief] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
+  const [endSessionOpen, setEndSessionOpen] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -280,6 +282,9 @@ export default function CampaignDetail() {
               <BookOpen className="w-3.5 h-3.5 mr-1" /> Journal
             </Button>
           </Link>
+          <Button variant="ghost" size="sm" onClick={() => setEndSessionOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
+            <Flag className="w-3.5 h-3.5 mr-1" /> End Session
+          </Button>
         </div>
       </div>
 
@@ -560,6 +565,8 @@ export default function CampaignDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EndSessionDialog open={endSessionOpen} onOpenChange={setEndSessionOpen} campaignId={campaignId} />
     </div>
   );
 }
