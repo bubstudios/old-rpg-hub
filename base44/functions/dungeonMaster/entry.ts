@@ -16,6 +16,71 @@ function chunkNarration(text, maxLen = 4500) {
   return chunks;
 }
 
+function npcKey(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+async function upsertNpcs(base44, campaign_id, chapter, npcUpdates) {
+  if (!Array.isArray(npcUpdates) || !npcUpdates.length) return;
+  let existing = [];
+  try { existing = await base44.asServiceRole.entities.NPC.filter({ campaign_id }); } catch (e) { existing = []; }
+  for (const n of npcUpdates) {
+    if (!n || typeof n.name !== 'string') continue;
+    const nameRaw = String(n.name).trim();
+    if (!nameRaw) continue;
+    const name = npcKey(nameRaw);
+    const aliases = Array.isArray(n.aliases) ? n.aliases.map(a => String(a).trim()).filter(Boolean) : [];
+    const aliasKeys = aliases.map(npcKey);
+    const match = existing.find(e => {
+      const eName = npcKey(e.name);
+      const eAliases = (Array.isArray(e.aliases) ? e.aliases : []).map(npcKey);
+      if (eName === name) return true;
+      if (eAliases.includes(name)) return true;
+      if (aliasKeys.includes(eName)) return true;
+      if (aliasKeys.some(ak => eAliases.includes(ak))) return true;
+      return false;
+    });
+    if (match) {
+      const updates = {};
+      if (typeof n.disposition === 'string' && n.disposition.trim()) updates.disposition = n.disposition.trim();
+      if (typeof n.description === 'string' && n.description.trim()) updates.description = n.description.trim();
+      if (typeof n.characteristics === 'string' && n.characteristics.trim()) updates.characteristics = n.characteristics.trim();
+      if (typeof n.attributes === 'string' && n.attributes.trim()) updates.attributes = n.attributes.trim();
+      if (typeof n.what_we_know === 'string' && n.what_we_know.trim()) {
+        const cur = typeof match.what_we_know === 'string' ? match.what_we_know : '';
+        const lines = cur.split('\n').map(s => s.trim()).filter(Boolean);
+        for (const f of n.what_we_know.split('\n').map(s => s.trim()).filter(Boolean)) {
+          if (!lines.some(l => l.toLowerCase() === f.toLowerCase())) lines.push(f);
+        }
+        updates.what_we_know = lines.join('\n');
+      }
+      if (!Array.isArray(match.aliases)) match.aliases = [];
+      if (aliases.length) {
+        const curAliases = match.aliases;
+        const merged = [...curAliases];
+        for (const a of aliases) if (!curAliases.some(b => npcKey(b) === npcKey(a))) merged.push(a);
+        if (merged.length !== curAliases.length) updates.aliases = merged;
+      }
+      if (Object.keys(updates).length) {
+        await base44.asServiceRole.entities.NPC.update(match.id, updates);
+        Object.assign(match, updates);
+      }
+    } else {
+      const created = await base44.asServiceRole.entities.NPC.create({
+        campaign_id,
+        name: nameRaw,
+        aliases,
+        disposition: typeof n.disposition === 'string' ? n.disposition.trim() : 'neutral',
+        description: typeof n.description === 'string' ? n.description.trim() : '',
+        characteristics: typeof n.characteristics === 'string' ? n.characteristics.trim() : '',
+        attributes: typeof n.attributes === 'string' ? n.attributes.trim() : '',
+        what_we_know: typeof n.what_we_know === 'string' ? n.what_we_know.trim() : '',
+        notes: typeof n.notes === 'string' ? n.notes.trim() : '',
+        first_met_chapter: chapter
+      });
+      existing.push(created);
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -92,6 +157,18 @@ Deno.serve(async (req) => {
       reputation: 0,
       chapter_log: []
     };
+
+    // Load NPC dossier (living, deduplicated entity records)
+    const npcList = await base44.asServiceRole.entities.NPC.filter({ campaign_id });
+    const npcRoster = (npcList || []).map(n => {
+      const parts = [];
+      if (n.description) parts.push(`Desc: ${n.description}`);
+      if (n.characteristics) parts.push(`Traits: ${n.characteristics}`);
+      if (n.attributes) parts.push(`Attributes: ${n.attributes}`);
+      if (n.what_we_know) parts.push(`Known: ${String(n.what_we_know).replace(/\n/g, '; ')}`);
+      const alias = Array.isArray(n.aliases) && n.aliases.length ? ` (aka ${n.aliases.join(', ')})` : '';
+      return `• ${n.name}${alias} [${n.disposition || 'unknown'}]${parts.length ? ' — ' + parts.join(' | ') : ''}`;
+    }).join('\n') || 'none yet';
 
     // Load the linked adventure module (if any) so the DM can run it faithfully
     let moduleBrief = '';
@@ -1226,15 +1303,25 @@ ${JSON.stringify(partySheets, null, 2)}
 
 ## World State
 Explored Locations: ${(worldState.locations_explored || []).join(', ') || 'none yet'}
-NPCs Met: ${(worldState.npcs_met || []).map(n => n.name + ' (' + (n.disposition || 'unknown') + ')').join(', ') || 'none yet'}
 Quest Flags: ${JSON.stringify(worldState.quest_flags || {})}
 Party Reputation: ${worldState.reputation || 0}
+
+## NPC Dossier (known entities)
+${npcRoster}
 
 ## Recent History
 ${history || 'The adventure has just begun.'}
 
 ## Current Action
 ${actionBlock}
+
+## NPC Dossier (all game systems)
+You maintain a living, DEDUPLICATED dossier of every notable NPC, creature, faction, or entity the party encounters. When the party meets a NEW entity OR learns something new about an existing one, include a top-level "npc_updates" array: [{"name":"canonical full name","aliases":["other names/titles they go by"],"disposition":"friendly/hostile/neutral","description":"the CURRENT full physical description and appearance","characteristics":"the CURRENT personality, mannerisms, traits, and speech","attributes":"the CURRENT notable abilities, gear, and status — e.g. 'armed with a hunting rifle; skilled surgeon; limping from an old wound'","what_we_know":"only the NEW facts learned THIS turn (these accumulate into a running biography)"}].
+Rules:
+- Use the SAME canonical full name for a recurring entity every turn. Never re-list the same person under different names or titles. If an entity goes by multiple names, set the canonical name and add the rest to "aliases".
+- Only include an entry when the party actually encounters the entity OR genuinely learns new information. Do NOT re-list an NPC merely because they spoke or were mentioned with no new info.
+- "description", "characteristics", and "attributes" reflect the CURRENT full state — give your latest complete understanding (they overwrite the prior value). "what_we_know" holds only NEW facts from this turn (the system appends them to a running log).
+- This applies to ALL game systems — people, aliens, mutants, ghosts, mob bosses, heroes, villains, creatures, factions, and any notable entity.
 
 ## Equipment & Consumables
 When a character uses, throws, fires, drinks, expends, buys, finds, or receives an item, include an "equipment_changes" array in your JSON response: [{"character_name": "name", "item": "Fragmentation Grenade", "change": -1, "reason": "thrown at enemy"}]. Use a NEGATIVE change (e.g. -1) to consume/expend an existing item, and a POSITIVE change (e.g. 20) to ADD a new item or increase a quantity — including items the character does NOT yet have on their sheet. For example, adding arrows: {"character_name": "name", "item": "Arrows", "change": 20, "reason": "purchased at market"}. Match the item name to the character's equipment list when modifying an existing item; otherwise just name it clearly and it will be added.
@@ -1262,6 +1349,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
           equipment_changes: { type: "array", items: { type: "object" } },
           equipment_transfers: { type: "array", items: { type: "object" } },
           deaths: { type: "array", items: { type: "object" } },
+          npc_updates: { type: "array", items: { type: "object" } },
           world_updates: { type: "object" },
           new_scene: { type: "string" },
           combat_active: { type: "boolean" },
@@ -1474,6 +1562,11 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       }
     }
 
+    // Upsert NPC dossier entries (deduplicated by name/aliases)
+    if (Array.isArray(result.npc_updates)) {
+      await upsertNpcs(base44, campaign_id, campaign.current_chapter, result.npc_updates);
+    }
+
     // Update world state (sanitized — LLM output may not match schema exactly)
     const newWorldState = { ...worldState };
     if (result.world_updates && typeof result.world_updates === 'object') {
@@ -1492,7 +1585,17 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
             disposition: typeof n.disposition === 'string' ? n.disposition : 'neutral',
             notes: typeof n.notes === 'string' ? n.notes : ''
           }));
-        newWorldState.npcs_met = [...(newWorldState.npcs_met || []), ...validNpcs];
+        const mergedNpcs = [...(newWorldState.npcs_met || [])];
+        for (const vn of validNpcs) {
+          const ex = mergedNpcs.find(m => npcKey(m.name) === npcKey(vn.name));
+          if (ex) {
+            if (vn.disposition) ex.disposition = vn.disposition;
+            if (vn.notes) ex.notes = (ex.notes ? ex.notes + ' ' : '') + vn.notes;
+          } else {
+            mergedNpcs.push(vn);
+          }
+        }
+        newWorldState.npcs_met = mergedNpcs;
       }
       if (wu.quest_flags && typeof wu.quest_flags === 'object' && !Array.isArray(wu.quest_flags)) {
         const flags = {};
@@ -1560,6 +1663,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       equipment_changes: result.equipment_changes || [],
       equipment_transfers: result.equipment_transfers || [],
       deaths: result.deaths || [],
+      npc_updates: result.npc_updates || [],
       world_updates: result.world_updates || null,
       combat_active: result.combat_active || false,
       combat_initiative: result.combat_initiative || [],

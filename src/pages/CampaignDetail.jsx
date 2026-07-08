@@ -15,6 +15,7 @@ import GBDiceRollerPanel from '@/components/GBDiceRollerPanel';
 import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
 import JitsiVideoPanel from '@/components/JitsiVideoPanel';
+import NpcDossier from '@/components/NpcDossier';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -516,14 +517,7 @@ export default function CampaignDetail() {
                     : 'Nothing yet'}
                 </p>
               </div>
-              <div>
-                <p className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">NPCS MET</p>
-                <p className="text-muted-foreground">
-                  {(campaign.world_state?.npcs_met || []).length
-                    ? (campaign.world_state?.npcs_met || []).map(n => n.name).join(', ')
-                    : 'No one yet'}
-                </p>
-              </div>
+              <NpcDossier campaignId={campaignId} />
               <div className="flex items-center justify-between pt-1 border-t border-border/30">
                 <span className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">REPUTATION</span>
                 <span className={`font-heading font-600 ${campaign.world_state?.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>

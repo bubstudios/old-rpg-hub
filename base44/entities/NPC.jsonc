@@ -1,0 +1,53 @@
+{
+  "name": "NPC",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "The campaign this NPC belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Canonical full name of the NPC, creature, faction, or entity"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Other names or titles this entity is known by"
+    },
+    "disposition": {
+      "type": "string",
+      "description": "Disposition toward the party: friendly, hostile, neutral, etc."
+    },
+    "description": {
+      "type": "string",
+      "description": "Current full physical description and appearance"
+    },
+    "characteristics": {
+      "type": "string",
+      "description": "Current personality, mannerisms, traits, and speech patterns"
+    },
+    "attributes": {
+      "type": "string",
+      "description": "Current notable abilities, gear, and status (e.g. 'armed with a hunting rifle; skilled surgeon; wounded')"
+    },
+    "what_we_know": {
+      "type": "string",
+      "description": "Running biography of facts the party has learned \u2014 one fact per line, accumulates over time"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Brief freeform notes"
+    },
+    "first_met_chapter": {
+      "type": "number",
+      "description": "Chapter number when the party first encountered this entity"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "name"
+  ]
+}
