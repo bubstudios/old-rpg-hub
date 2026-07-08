@@ -110,6 +110,50 @@ Deno.serve(async (req) => {
       return Response.json({ campaigns: result });
     }
 
+    // Dashboard: all the user's campaigns, their characters, and featured shared adventures
+    if (op === 'dashboard') {
+      const myChars = await admin.entities.Character.filter({ created_by_id: user.id }, '-updated_date', 50);
+      const createdCampaigns = await admin.entities.Campaign.filter({ created_by_id: user.id }, '-updated_date', 100);
+      const campaignIds = [...new Set([...myChars.map(c => c.campaign_id), ...createdCampaigns.map(c => c.id)])];
+      const campaigns = [];
+      for (const cid of campaignIds) {
+        try {
+          const camp = await admin.entities.Campaign.get(cid);
+          const partyCount = await admin.entities.Character.filter({ campaign_id: cid, status: 'active' });
+          campaigns.push({
+            id: camp.id, name: camp.name, game_system: camp.game_system || 'add1e',
+            status: camp.status, current_chapter: camp.current_chapter,
+            combat_active: camp.combat_active, invite_code: camp.invite_code,
+            updated_date: camp.updated_date, created_date: camp.created_date,
+            party_count: partyCount.length,
+            has_character: myChars.some(c => c.campaign_id === cid),
+            is_owner: camp.created_by_id === user.id
+          });
+        } catch (e) { /* campaign may be deleted */ }
+      }
+      campaigns.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
+
+      const characters = [];
+      for (const ch of myChars) {
+        let campaign_name = '';
+        let game_system = ch.game_system || 'add1e';
+        try {
+          const camp = await admin.entities.Campaign.get(ch.campaign_id);
+          campaign_name = camp.name;
+          game_system = camp.game_system || game_system;
+        } catch (e) { /* campaign may be deleted */ }
+        characters.push({
+          id: ch.id, name: ch.name, race: ch.race, character_class: ch.character_class,
+          level: ch.level, hp_current: ch.hp_current, hp_max: ch.hp_max, status: ch.status,
+          campaign_id: ch.campaign_id, campaign_name, game_system
+        });
+      }
+
+      const featured = await admin.entities.AdventureModule.filter({ visibility: 'shared' }, '-updated_date', 6);
+
+      return Response.json({ campaigns, characters, featured });
+    }
+
     // Load full campaign data
     if (op === 'load') {
       const { campaign_id } = body;

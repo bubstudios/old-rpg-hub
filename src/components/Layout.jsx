@@ -10,7 +10,6 @@ export default function Layout() {
   const gameMatch = location.pathname.match(/^\/game\/([^/]+)/);
   const activeGameId = gameMatch ? gameMatch[1] : null;
   const activeGame = activeGameId ? getGameSystem(activeGameId) : null;
-  const campaignsPath = activeGameId ? `/game/${activeGameId}` : '/';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -25,19 +24,19 @@ export default function Layout() {
                 OLD RPG HUB
               </span>
               <span className="hidden sm:block text-[10px] font-heading tracking-[0.2em] text-primary/70 mt-0.5">
-                {activeGame ? `${activeGame.short.toUpperCase()} · AI GAME MASTER` : 'CHOOSE YOUR REALM'}
+                {activeGame ? `${activeGame.short.toUpperCase()} · AI GAME MASTER` : location.pathname === '/games' ? 'CHOOSE YOUR REALM' : 'COMMAND CENTER'}
               </span>
             </div>
           </Link>
           <nav className="flex items-center gap-1">
             <Link
-              to={campaignsPath}
+              to="/"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
                 location.pathname === '/' || location.pathname.startsWith('/game/') ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
               }`}
             >
               <HomeIcon className="w-3.5 h-3.5" strokeWidth={1.5} />
-              Campaigns
+              Dashboard
             </Link>
             <Link
               to="/modules"

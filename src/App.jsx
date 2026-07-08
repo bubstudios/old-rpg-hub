@@ -9,6 +9,7 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Layout from '@/components/Layout';
 // Add page imports here
+import Dashboard from '@/pages/Dashboard';
 import Home from '@/pages/Home';
 import GameSelection from '@/pages/GameSelection';
 import CampaignDetail from '@/pages/CampaignDetail';
@@ -50,7 +51,8 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<GameSelection />} />
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/games" element={<GameSelection />} />
           <Route path="/game/:gameId" element={<Home />} />
           <Route path="/campaign/:id" element={<CampaignDetail />} />
           <Route path="/campaign/:id/create-character" element={<CharacterCreation />} />
