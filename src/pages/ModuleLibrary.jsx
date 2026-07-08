@@ -6,8 +6,11 @@ import { Library, Plus, Upload, Loader2, Globe, Lock, Trash2, BookOpen, X } from
 import ModuleUploadForm from '@/components/ModuleUploadForm';
 import { getGameSystem } from '@/lib/gameSystems';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function ModuleLibrary() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
@@ -116,7 +119,7 @@ export default function ModuleLibrary() {
                     {getGameSystem(m.game_system || 'add1e').short}
                   </span>
                 </div>
-                {m.is_mine && (
+                {(m.is_mine || isAdmin) && (
                   <button onClick={() => handleDelete(m.id)} className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground/50 hover:text-destructive transition-colors">
                     <Trash2 className="w-3 h-3" /> Remove
                   </button>

@@ -648,13 +648,15 @@ Rules:
       return Response.json({ module });
     }
 
-    // Delete a module (uploader only)
+    // Delete a module (uploader or admin)
     if (op === 'delete') {
       const { module_id } = body;
       if (!module_id) return Response.json({ error: 'module_id required' }, { status: 400 });
       const mod = await admin.entities.AdventureModule.get(module_id);
       if (!mod) return Response.json({ error: 'Module not found' }, { status: 404 });
-      if (mod.created_by_id !== user.id) return Response.json({ error: 'Only the uploader can remove a module' }, { status: 403 });
+      if (mod.created_by_id !== user.id && user.role !== 'admin') {
+        return Response.json({ error: 'Only the uploader or an admin can remove a module' }, { status: 403 });
+      }
       await base44.entities.AdventureModule.delete(module_id);
       return Response.json({ success: true });
     }
