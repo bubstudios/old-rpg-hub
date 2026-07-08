@@ -1239,6 +1239,9 @@ ${actionBlock}
 ## Equipment & Consumables
 When a character uses, throws, fires, drinks, or expends a consumable item (grenades, ammo, potions, scrolls, rations, batteries, etc.), include an "equipment_changes" array in your JSON response: [{"character_name": "name", "item": "Fragmentation Grenade", "change": -1, "reason": "thrown at enemy"}]. Use change: -1 per item consumed. Match the item name to what is in the character's equipment list above. Only include equipment_changes when items are actually used or expended this turn.
 
+## Gold Changes
+When a character's gold (or credits/domars/Nuyen/Eurodollars/etc. depending on the system) changes for ANY reason — finding treasure, receiving a reward, making a purchase, paying for services, or being awarded gold by the DM — you MUST include a "gold_changes" array: [{"character_name": "name", "change": 100, "reason": "reward from the baron"}]. Use positive change for gold gained, negative for gold spent or lost. This is the PRIMARY way gold is updated on character sheets — always use it whenever gold changes, even if you also list the treasure in the loot array.
+
 Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang || isLOD ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : isGang ? 'Gangbusters (d100)' : isLOD ? 'Legion of Doom (d20)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
@@ -1251,6 +1254,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
           hp_changes: { type: "array", items: { type: "object" } },
           xp_awarded: { type: "array", items: { type: "object" } },
           loot: { type: "array", items: { type: "object" } },
+          gold_changes: { type: "array", items: { type: "object" } },
           spells_learned: { type: "array", items: { type: "object" } },
           equipment_changes: { type: "array", items: { type: "object" } },
           deaths: { type: "array", items: { type: "object" } },
@@ -1337,7 +1341,24 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
         if (item.gold) {
           const share = Math.floor(Number(item.gold) / characters.length);
           for (const c of characters) {
-            await base44.asServiceRole.entities.Character.update(c.id, { gold: (c.gold || 0) + share });
+            const newGold = (c.gold || 0) + share;
+            await base44.asServiceRole.entities.Character.update(c.id, { gold: newGold });
+            c.gold = newGold;
+          }
+        }
+      }
+    }
+
+    // Apply gold changes (direct gold grants/deductions to specific characters)
+    if (result.gold_changes && result.gold_changes.length) {
+      for (const gc of result.gold_changes) {
+        const target = characters.find(c => c.name === gc.character_name);
+        if (target) {
+          const change = Number(gc.change);
+          if (!isNaN(change)) {
+            const newGold = Math.max(0, (target.gold || 0) + change);
+            await base44.asServiceRole.entities.Character.update(target.id, { gold: newGold });
+            target.gold = newGold;
           }
         }
       }
@@ -1479,6 +1500,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
       hp_changes: result.hp_changes || [],
       xp_awarded: result.xp_awarded || [],
       loot: result.loot || [],
+      gold_changes: result.gold_changes || [],
       spells_learned: result.spells_learned || [],
       equipment_changes: result.equipment_changes || [],
       deaths: result.deaths || [],
