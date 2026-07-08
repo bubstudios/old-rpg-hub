@@ -1262,7 +1262,7 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
         },
         required: ["narration"]
       },
-      model: "claude_sonnet_4_6"
+      model: "automatic"
     });
 
     console.log("LLM response type:", typeof llmResponse);
@@ -1284,86 +1284,6 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
     // Unwrap if nested in a "response" key
     if (result && result.response && typeof result.response === 'object') {
       result = result.response;
-    }
-
-    // --- Extraction pass: guarantee structured world state from narration ---
-    // The DM often narrates entering a town, meeting an NPC, or learning a spell
-    // without filling the structured world_updates / spells_learned fields.
-    // This focused pass reads the narration and guarantees the data is captured.
-    try {
-      const extraction = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are extracting structured world-state changes from a D&D adventure narration for a campaign tracker.
-
-## What Just Happened
-${action}
-
-## DM Narration
-${result.narration || ''}
-
-## Task
-Extract any NEW information introduced in this narration. Return a JSON object with these exact keys:
-{
-  "locations_explored": [place names the party entered, arrived at, or discovered this turn],
-  "npcs_met": [{"name": "NPC name", "disposition": "friendly|hostile|neutral", "notes": "brief note"}],
-  "spells_learned": [{"character_name": "name", "spells": ["spell names"], "source": "where from"}],
-  "equipment_consumed": [{"character_name": "name", "item": "item name", "qty": 1, "reason": "thrown/used/fired"}]
-}
-
-Rules:
-- Only include things that ACTUALLY appear in the narration above. Do not invent or assume.
-- If the party entered a town, tavern, dungeon, room, or any location, add it to locations_explored.
-- If they met, spoke with, or were introduced to a named NPC, add them to npcs_met.
-- If a character learned, copied, found, or was granted a spell, add it to spells_learned.
-- If a character used, threw, fired, drank, or expended a consumable item (grenade, ammo, potion, scroll, ration, etc.), add it to equipment_consumed with the quantity used.
-- If none of these occurred, return empty arrays.
-- Use exact names as written in the narration.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            locations_explored: { type: "array", items: { type: "string" } },
-            npcs_met: { type: "array", items: { type: "object", properties: { name: { type: "string" }, disposition: { type: "string" }, notes: { type: "string" } } } },
-            spells_learned: { type: "array", items: { type: "object", properties: { character_name: { type: "string" }, spells: { type: "array", items: { type: "string" } }, source: { type: "string" } } } },
-            equipment_consumed: { type: "array", items: { type: "object", properties: { character_name: { type: "string" }, item: { type: "string" }, qty: { type: "number" }, reason: { type: "string" } } } }
-          },
-          required: ["locations_explored", "npcs_met", "spells_learned", "equipment_consumed"]
-        }
-      });
-
-      let ext = extraction;
-      if (typeof ext === 'string') { try { ext = JSON.parse(ext); } catch { ext = {}; } }
-
-      if (!result.world_updates) result.world_updates = {};
-      const wu = result.world_updates;
-
-      // Locations: union with dedup
-      const locSet = new Set(Array.isArray(wu.locations_explored) ? wu.locations_explored.filter(l => typeof l === 'string' && l.trim()) : []);
-      (ext.locations_explored || []).forEach(l => { if (typeof l === 'string' && l.trim()) locSet.add(l.trim()); });
-      if (locSet.size) wu.locations_explored = [...locSet];
-
-      // NPCs: union with dedup by name
-      const npcMap = new Map();
-      (Array.isArray(wu.npcs_met) ? wu.npcs_met : []).forEach(n => { if (n && typeof n.name === 'string') npcMap.set(n.name, n); });
-      (ext.npcs_met || []).forEach(n => { if (n && typeof n.name === 'string' && !npcMap.has(n.name)) npcMap.set(n.name, n); });
-      if (npcMap.size) wu.npcs_met = [...npcMap.values()];
-
-      // Spells: merge
-      if (Array.isArray(ext.spells_learned) && ext.spells_learned.length) {
-        result.spells_learned = [...(result.spells_learned || []), ...ext.spells_learned];
-      }
-      // Equipment consumed: merge into equipment_changes
-      if (Array.isArray(ext.equipment_consumed) && ext.equipment_consumed.length) {
-        if (!result.equipment_changes) result.equipment_changes = [];
-        for (const ec of ext.equipment_consumed) {
-          result.equipment_changes.push({
-            character_name: ec.character_name,
-            item: ec.item,
-            change: -(ec.qty || 1),
-            reason: ec.reason || 'consumed'
-          });
-        }
-      }
-    } catch (extractErr) {
-      console.log("Extraction pass failed:", extractErr.message);
     }
 
     // --- Apply state changes ---
