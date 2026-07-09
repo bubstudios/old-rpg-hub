@@ -4,7 +4,10 @@ export default function JitsiVideoPanel({ roomName, displayName, onClose }) {
   // Jitsi room names: alphanumeric only — prefix with app slug for uniqueness
   const safeRoom = `OldRPGHub-${String(roomName || '').replace(/[^a-zA-Z0-9]/g, '')}`;
   const name = encodeURIComponent(displayName || 'Adventurer');
-  const jitsiSrc = `https://meet.jit.si/${safeRoom}#userInfo.displayName=${name}&config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.toolbarButtons=["microphone","camera","desktop","chat","tileview","hangup"]`;
+  // Keep config minimal: passing too many config options via the URL hash triggers
+  // meet.jit.si's "waiting for moderator" block (a known public-server issue).
+  // The first person to join a fresh room is automatically granted moderator.
+  const jitsiSrc = `https://meet.jit.si/${safeRoom}#userInfo.displayName=${name}&config.startWithAudioMuted=false&config.startWithVideoMuted=false`;
 
   return (
     <div className="border border-border/50 rounded-lg overflow-hidden bg-card/40 panel-glow mb-4 animate-ink">
