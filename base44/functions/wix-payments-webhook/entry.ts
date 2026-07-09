@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
         await admin.entities.SessionBlock.update(block.id, {
           status: "active",
           order_id: order.id,
+          remaining_ms: 4 * 60 * 60 * 1000,
         });
         console.log(`SessionBlock ${block.id} activated — order ${order.id}, type ${block.session_type}`);
       } else {

@@ -8,7 +8,7 @@
     },
     "campaign_id": {
       "type": "string",
-      "description": "Campaign this block grants access to"
+      "description": "Campaign where this block was purchased. Solo blocks are usable across ALL campaigns; table blocks are scoped to this campaign."
     },
     "session_type": {
       "type": "string",
@@ -39,13 +39,21 @@
       ],
       "default": "pending"
     },
+    "remaining_ms": {
+      "type": "number",
+      "description": "How much play time is left in this block (milliseconds). Set to 4 hours on activation. Only counts down while the user is actively playing."
+    },
+    "last_active_at": {
+      "type": "string",
+      "description": "ISO timestamp of the last timer tick. If the gap since this timestamp exceeds 5 minutes, the timer is considered paused (user stepped away)."
+    },
     "started_at": {
       "type": "string",
-      "description": "ISO timestamp when the 4-hour timer started (null = not yet started)"
+      "description": "(Deprecated) ISO timestamp when the timer originally started"
     },
     "expires_at": {
       "type": "string",
-      "description": "ISO timestamp when the block expires"
+      "description": "(Deprecated) ISO timestamp when the block expires"
     }
   },
   "required": [

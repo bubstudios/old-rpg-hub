@@ -34,7 +34,7 @@ export default function PurchaseSessionDialog({ open, onOpenChange, campaignId }
             <Clock className="w-4 h-4 text-primary" /> Purchase Session Time
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Each block grants 4 hours of AI Game Master play. The timer starts when you begin playing.
+            Each block grants 4 hours of AI Game Master play — usable across all your campaigns. Time only counts down while you're actively playing, and pauses when you step away.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 mt-2">
@@ -48,7 +48,7 @@ export default function PurchaseSessionDialog({ open, onOpenChange, campaignId }
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-heading font-600 text-sm text-foreground">Solo Session</p>
-              <p className="text-[11px] text-muted-foreground font-body">1 player + AI GM · 4 hours</p>
+              <p className="text-[11px] text-muted-foreground font-body">1 player + AI GM · 4 hours · Use in any campaign</p>
             </div>
             <span className="font-heading font-700 text-lg text-primary">$9.99</span>
             {purchasing === 'solo' && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
@@ -70,7 +70,7 @@ export default function PurchaseSessionDialog({ open, onOpenChange, campaignId }
           </button>
         </div>
         <p className="text-[10px] text-muted-foreground/60 font-body italic text-center mt-2">
-          You'll be redirected to secure checkout. Your session timer starts when you return and begin playing.
+          You'll be redirected to secure checkout. Your time follows you across all campaigns and pauses when you step away.
         </p>
       </DialogContent>
     </Dialog>

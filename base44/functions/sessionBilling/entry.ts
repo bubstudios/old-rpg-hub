@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const BLOCK_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
+const PAUSE_THRESHOLD_MS = 5 * 60 * 1000; // 5 min — gaps larger than this mean the user stepped away
 const MAX_FREE_FRIENDS = 3;
 
 Deno.serve(async (req) => {
@@ -31,7 +32,6 @@ Deno.serve(async (req) => {
     } catch (e) { /* not authenticated — use body fallback */ }
 
     if (!userId && (op === 'getStatus')) {
-      // For getStatus, try to look up user by body user_id
       if (bodyUserId) {
         userId = bodyUserId;
         try {
@@ -42,100 +42,103 @@ Deno.serve(async (req) => {
     }
 
     // ── getStatus: check billing access and timer ──
+    // Time is a GLOBAL, PAUSABLE balance:
+    //   • Solo blocks follow the user across ALL campaigns (not just where purchased)
+    //   • Table blocks are scoped to the campaign they were bought for
+    //   • The timer only counts down while the user is actively playing (polling).
+    //     If the gap since the last poll exceeds 5 minutes, time is paused.
     if (op === 'getStatus') {
       const freeFriends = (campaign.free_friend_emails || []).map(e => e.toLowerCase());
       const isFreeFriend = !!(userEmail && freeFriends.includes(userEmail.toLowerCase()));
-
-      // Find all active blocks for this campaign
-      const blocks = await admin.entities.SessionBlock.filter(
-        { campaign_id, status: 'active' },
-        'created_date', 20
-      );
-
+      const isOwner = campaign.created_by_id === userId;
       const now = Date.now();
 
-      // Expire any blocks whose timer has run out
-      for (const b of blocks) {
-        if (b.started_at && b.expires_at && now >= new Date(b.expires_at).getTime()) {
-          await admin.entities.SessionBlock.update(b.id, { status: 'expired' });
-        }
-      }
+      // 1. ALL active solo blocks for this user (global — any campaign)
+      const soloBlocks = userId
+        ? await admin.entities.SessionBlock.filter({ user_id: userId, session_type: 'solo', status: 'active' }, 'created_date', 50)
+        : [];
 
-      // Re-filter to only truly active (unexpired) blocks
-      const activeBlocks = blocks.filter(b =>
-        !b.started_at || !b.expires_at || now < new Date(b.expires_at).getTime()
-      );
+      // 2. Active table blocks for THIS campaign only
+      const tableBlocks = await admin.entities.SessionBlock.filter({ campaign_id, session_type: 'table', status: 'active' }, 'created_date', 20);
 
-      const running = activeBlocks.find(b => b.started_at && b.expires_at);
-      const unstarted = activeBlocks.filter(b => !b.started_at);
-
-      let activeBlock = null;
-
-      if (running) {
-        // Extend running block by 4h per unstarted block (one-click extend)
-        if (unstarted.length > 0) {
-          const extension = unstarted.length * BLOCK_DURATION_MS;
-          const newExpiry = new Date(
-            new Date(running.expires_at).getTime() + extension
-          ).toISOString();
-          await admin.entities.SessionBlock.update(running.id, { expires_at: newExpiry });
-          running.expires_at = newExpiry;
-          for (const b of unstarted) {
-            await admin.entities.SessionBlock.update(b.id, { status: 'expired' });
+      // 3. Process pausable timer for each block
+      async function processBlock(b) {
+        let remaining = b.remaining_ms;
+        // Migrate old blocks that don't have remaining_ms yet
+        if (remaining == null) {
+          if (b.started_at && b.expires_at) {
+            remaining = Math.max(0, new Date(b.expires_at).getTime() - now);
+          } else {
+            remaining = BLOCK_DURATION_MS;
           }
         }
-        activeBlock = running;
-      } else if (unstarted.length > 0) {
-        // Start the first unstarted block — merge all unstarted into one timer
-        const totalDuration = unstarted.length * BLOCK_DURATION_MS;
-        const startedAt = new Date().toISOString();
-        const expiresAt = new Date(now + totalDuration).toISOString();
-        const first = unstarted[0];
-        await admin.entities.SessionBlock.update(first.id, {
-          started_at: startedAt,
-          expires_at: expiresAt
-        });
-        for (let i = 1; i < unstarted.length; i++) {
-          await admin.entities.SessionBlock.update(unstarted[i].id, { status: 'expired' });
+        // If the block was ticking, count elapsed time — but only if the gap is small
+        // (a large gap means the user stepped away → time paused)
+        if (b.last_active_at) {
+          const elapsed = now - new Date(b.last_active_at).getTime();
+          if (elapsed > 0 && elapsed < PAUSE_THRESHOLD_MS) {
+            remaining = Math.max(0, remaining - elapsed);
+          }
         }
-        first.started_at = startedAt;
-        first.expires_at = expiresAt;
-        activeBlock = first;
+        // Expire if drained
+        if (remaining <= 0) {
+          await admin.entities.SessionBlock.update(b.id, { status: 'expired', remaining_ms: 0, last_active_at: null });
+          return { id: b.id, remaining_ms: 0, expired: true };
+        }
+        return { id: b.id, remaining_ms: remaining, expired: false };
       }
 
-      // Determine access
+      const processedSolo = [];
+      for (const b of soloBlocks) processedSolo.push(await processBlock(b));
+      const processedTable = [];
+      for (const b of tableBlocks) processedTable.push(await processBlock(b));
+
+      // 4. Mark the first active block as "currently ticking" (last_active_at = now)
+      const activeSolo = processedSolo.filter(b => !b.expired);
+      const activeTable = processedTable.filter(b => !b.expired);
+
+      if (activeSolo.length > 0) {
+        await admin.entities.SessionBlock.update(activeSolo[0].id, {
+          last_active_at: new Date(now).toISOString(),
+          remaining_ms: activeSolo[0].remaining_ms
+        });
+      }
+      if (activeTable.length > 0) {
+        await admin.entities.SessionBlock.update(activeTable[0].id, {
+          last_active_at: new Date(now).toISOString(),
+          remaining_ms: activeTable[0].remaining_ms
+        });
+      }
+
+      // 5. Total remaining = sum across all active blocks (solo global + table for this campaign)
+      const totalRemainingMs = [...activeSolo, ...activeTable].reduce((sum, b) => sum + b.remaining_ms, 0);
+
       let hasAccess = false;
+      let blockType = null;
       if (isFreeFriend) {
         hasAccess = true;
-      } else if (activeBlock) {
-        if (activeBlock.session_type === 'solo') {
-          hasAccess = activeBlock.user_id === userId;
-        } else {
-          hasAccess = true; // table block covers everyone
-        }
+        blockType = 'free_friend';
+      } else if (totalRemainingMs > 0) {
+        hasAccess = true;
+        blockType = activeTable.length > 0 ? 'table' : 'solo';
       }
 
       // Check for pending (payment processing) blocks
       let isPending = false;
       if (!hasAccess) {
-        const pendingBlocks = await admin.entities.SessionBlock.filter(
-          { campaign_id, status: 'pending' },
-          '-created_date', 5
-        );
-        isPending = pendingBlocks.length > 0;
+        const pendingSolo = userId
+          ? await admin.entities.SessionBlock.filter({ user_id: userId, session_type: 'solo', status: 'pending' }, '-created_date', 5)
+          : [];
+        const pendingTable = await admin.entities.SessionBlock.filter({ campaign_id, session_type: 'table', status: 'pending' }, '-created_date', 5);
+        isPending = pendingSolo.length > 0 || pendingTable.length > 0;
       }
-
-      const remainingMs = activeBlock?.expires_at
-        ? Math.max(0, new Date(activeBlock.expires_at).getTime() - now)
-        : 0;
 
       return Response.json({
         has_access: hasAccess,
         pending: isPending,
-        remaining_seconds: Math.floor(remainingMs / 1000),
-        block_type: isFreeFriend ? 'free_friend' : (activeBlock?.session_type || null),
-        expires_at: activeBlock?.expires_at || null,
-        is_owner: campaign.created_by_id === userId
+        remaining_seconds: Math.floor(totalRemainingMs / 1000),
+        block_type: blockType,
+        is_owner: isOwner
       });
     }
 

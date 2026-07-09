@@ -49,8 +49,7 @@ export default function SessionTimer({ campaignId, onAccessChange, onPurchaseCli
       setRemaining(prev => {
         if (prev <= 1) {
           clearInterval(tick);
-          setStatus('no_access');
-          onAccessChange?.(false);
+          checkStatus();
           return 0;
         }
         return prev - 1;
