@@ -58,8 +58,8 @@ Deno.serve(async (req) => {
             }],
           },
           callbackUrls: {
-            postFlowUrl: `${origin}/`,
-            thankYouPageUrl: `${origin}/session-complete`,
+            postFlowUrl: `${origin}/campaign/${campaign_id}`,
+            thankYouPageUrl: `${origin}/session-complete?campaign=${campaign_id}`,
           },
         }),
       }
