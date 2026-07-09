@@ -223,8 +223,12 @@ Deno.serve(async (req) => {
 
     // Create campaign
     if (op === 'createCampaign') {
-      const { name, mode, tone, world_setting, setting_notes, module_id, game_system } = body;
+      const { name, mode, tone, world_setting, setting_notes, module_id, game_system, play_mode } = body;
       if (!name) return Response.json({ error: 'name required' }, { status: 400 });
+
+      const isPJCanon = game_system === 'pathfinder' && play_mode === 'canon';
+      const pjClocks = { confluence_claim: 75, confluence_heat: 75, chen_countermeasures: 40, new_titan_stability: 50, resistance_spark: 25, sanctuary_trust: 35, crew_morale: 88, temporal_instability: 15, public_truth: 10 };
+      const pjShipStats = { hull: 82, shields: 76, engines: 70, ftl: 68, weapons: 65, sensors: 82, life_support: 94, fuel: 75 };
 
       const campaign = await base44.entities.Campaign.create({
         name: name.trim(),
@@ -232,16 +236,71 @@ Deno.serve(async (req) => {
         status: 'setup',
         mode: mode || 'async',
         tone: tone || 'balanced',
-        world_setting: (world_setting || '').trim(),
-        setting_notes: (setting_notes || '').trim(),
-        module_id: module_id || null,
+        world_setting: isPJCanon ? 'The Pathfinder Journeys' : (world_setting || '').trim(),
+        setting_notes: isPJCanon
+          ? 'Sandbox mode. Immediately after Arc 1. The Pathfinder has returned from the future with encoded memories. The Confluence is preparing to claim Earth and New Titan. Admiral Chen is secretly working with The Confluence. New Titan is in immediate danger. The resistance has begun.'
+          : (setting_notes || '').trim(),
+        module_id: isPJCanon ? null : (module_id || null),
         game_system: game_system || 'add1e',
+        play_mode: isPJCanon ? 'canon' : (play_mode || 'original'),
         current_chapter: 1,
-        current_scene: '',
+        current_scene: isPJCanon ? 'Edge of New Titan System. The UES Pathfinder drops out of FTL. The colony glows on the main viewer: two million humans, unaware they are being legally processed for harvest. Thirty-seven refugee ships from Sanctuary emerge behind you. New Titan Control is requesting identification.' : '',
         combat_active: false,
         combat_round: 0,
-        world_state: { locations_explored: [], npcs_met: [], quest_flags: {}, reputation: 0, chapter_log: [] }
+        world_state: isPJCanon
+          ? { locations_explored: [], npcs_met: [], quest_flags: { campaign_clocks: pjClocks, ship_stats: pjShipStats, evidence: ['Prometheus Warning','James Stellar Testimony','Korath Database','Novara Transaction Record','Sakura-Chen Technology Exchange','New Titan Claim File','Sarah Chen Testimony','Sanctuary Archive Records','Architect Future-History Data'], allies: ['Sarah Chen','James Stellar','Sanctuary refugee fleet','Councilor Verath','Commander Vex','37 allied ships','Mitchell'], enemies: ['The Confluence','Vescarri Sovereignty',"Collector's Guild",'Admiral Chen','Captain Vask','Confluence shapeshifters'], current_location: 'Edge of New Titan System', decisions: [] }, reputation: 0, chapter_log: [] }
+          : { locations_explored: [], npcs_met: [], quest_flags: {}, reputation: 0, chapter_log: [] }
       });
+
+      if (isPJCanon) {
+        const canonicalCrew = [
+          { name: 'Commander Farah Thorne', aliases: ['Thorne'], disposition: 'friendly', description: "A striking woman in her early thirties, dark hair cropped short, UES tactical uniform with sidearm at hip. Sharp eyes that scan every room for exits and threats.", characteristics: "Fierce, blunt, heroic, competitive, fiercely loyal to Bub. Speaks directly, rarely sugarcoats. First to volunteer for dangerous missions.", attributes: "Tactical/Security Officer. Expert in combat strategy, boarding actions, ship security, and small-unit tactics. Skilled marksman and hand-to-hand fighter.", what_we_know: "Thorne is the Pathfinder's Tactical and Security Officer. She is Bub's right hand and has proven her loyalty through fire." },
+          { name: 'Commander Clark', aliases: ['Clark'], disposition: 'friendly', description: "A lean man in his late thirties with unkempt brown hair and perpetually tired eyes behind wire-rimmed glasses. Lab coat over UES uniform.", characteristics: "Dry humor, brilliant, endlessly curious, professionally skeptical. Talks fast when excited. Tends to find danger 'fascinating.'", attributes: "Science Officer. Expert in sensor analysis, xenotechnology, hacking, and future-memory interpretation. The ship's resident genius.", what_we_know: "Clark is the Pathfinder's Science Officer. He interprets the encoded future memories and analyzes alien technology." },
+          { name: 'James Stellar', aliases: ['Grandpa','James'], disposition: 'friendly', description: "An older man in his sixties, silver-haired, weathered face bearing the marks of decades surviving under Confluence rule. Wears a patched flight jacket over civilian clothes. One eye is cybernetic — a Confluence augmentation.", characteristics: "Haunted, wise, regretful, disciplined. Speaks carefully, weighs every word. Carries guilt for surviving when others didn't. Loves Bub deeply but struggles to express it.", attributes: "Confluence survivor and Bub's grandfather. Expert in Confluence law, legal systems, augmentation technology, and survival under occupation. Has contacts in the Confluence underground.", what_we_know: "James Stellar is Bub's grandfather. He survived decades under Confluence rule and escaped to warn humanity." },
+          { name: 'Sarah Chen', aliases: ['Sarah'], disposition: 'friendly', description: "A woman in her late twenties, dark hair pulled back, sharp features. Wears resistance fatigues. Her eyes carry a haunted quality — the weight of betraying her own mother.", characteristics: "Desperate, brave, wounded, practical. Driven by guilt and conviction in equal measure. Willing to risk everything to stop her mother. Fiercely loyal to the resistance.", attributes: "Resistance agent and Admiral Chen's daughter. Expert in intelligence operations, resistance networks, Sanctuary politics, and Chen family dynamics.", what_we_know: "Sarah Chen is the daughter of Admiral Elizabeth Chen. She turned against her mother when she discovered the truth about Novara." },
+          { name: 'Professor Carmelon', aliases: ['Carmelon'], disposition: 'friendly', description: "An elderly alien scholar — tall, thin, with mottled blue-grey skin and large dark eyes. Wears flowing Sanctuary robes covered in small pockets stuffed with notes and specimens.", characteristics: "Old, brilliant, eccentric, thoughtful. Speaks in long, meandering sentences full of tangents. Endlessly curious. Tends to wander into danger because something is 'fascinating.'", attributes: "Sanctuary scholar. Expert in alien history, xenoarchaeology, biology, and ancient mysteries.", what_we_know: "Professor Carmelon is a Sanctuary scholar who joined the Pathfinder crew. He is the foremost expert on Architect sites." },
+          { name: 'Mitchell', aliases: [], disposition: 'friendly', description: "A large enhanced bald eagle with a wingspan of nearly three meters. Feathers are darker than a natural eagle, with an iridescent sheen. Eyes are unsettlingly intelligent. Wears a small specialized harness.", characteristics: "Intelligent, instinctive, loyal, mysterious. Communicates through screeches, clicks, body language, and behavioral cues. Reacts to temporal disturbances, deception, and danger. Not omniscient.", attributes: "Enhanced companion with mysterious origins connected to the Architects. Can sense danger, deception, temporal anomalies, and emotional truth.", what_we_know: "Mitchell is an enhanced bald eagle with mysterious origins. He is fiercely loyal to Bub and the crew." },
+          { name: 'Lieutenant Hayes', aliases: ['Hayes'], disposition: 'friendly', description: "A young woman in her mid-twenties, auburn hair in a neat bun, UES duty uniform with comms specialist badge. Bright eyes that carry both nervousness and growing determination.", characteristics: "Young, brave, nervous but growing into legend. Speaks clearly when on duty. Increasingly confident after the resistance broadcast.", attributes: "Communications Officer. Expert in signal encryption, tight-beam transmission, frequency analysis, and broadcast systems.", what_we_know: "Hayes is the Pathfinder's Communications Officer. She broadcast the first resistance message at the end of Arc 1." },
+          { name: 'Lieutenant Reeves', aliases: ['Reeves'], disposition: 'friendly', description: "A young man in his late twenties, clean-cut, flight suit always immaculate. Hands never stop moving — tapping, fidgeting — except when he's at the helm.", characteristics: "Young, talented, anxious under pressure but dependable. Talks through his anxiety. An exceptional pilot when focused.", attributes: "Pilot and Helm Officer. Expert in evasive maneuvers, dangerous FTL jumps, pursuit evasion, and combat flying.", what_we_know: "Reeves is the Pathfinder's pilot. He is anxious but exceptionally talented." },
+          { name: 'Chief Ramos', aliases: ['Ramos'], disposition: 'friendly', description: "A stocky woman in her fifties, coveralls stained with engine grease, sleeves rolled up. Thick forearms, grey-streaked hair tied back. Carries a wrench like an extension of her arm.", characteristics: "Veteran, tough, practical, gruff but caring. Complains about every system but keeps them all running. Calls everyone 'kid.'", attributes: "Chief Engineer. Master of the FTL drive, life support, power distribution, weapons systems, and emergency repairs. Can jury-rig anything.", what_we_know: "Ramos is the Chief Engineer. She has kept the Pathfinder flying through situations that should have destroyed her." },
+          { name: 'Dr. Voss', aliases: ['Voss'], disposition: 'friendly', description: "A tall man in his fifties, thin, with a sharp face and perpetually skeptical expression. Medical coat over UES uniform. Hands always clean.", characteristics: "Skeptical, dry, humane. Bedside manner is brusque but deeply caring underneath. Dark humor as a coping mechanism.", attributes: "Medical Officer. Expert in human and alien biology, trauma surgery, psychological care, and moral medical ethics.", what_we_know: "Dr. Voss is the Pathfinder's Medical Officer." },
+          { name: 'Ensign Patel', aliases: ['Patel'], disposition: 'friendly', description: "A young man in his early twenties, earnest face, dark eyes filled with worry. Engineer's coveralls, hands always busy. Wears a small photo of his family pinned inside his collar.", characteristics: "Earnest, emotional, capable. His family on New Titan is his driving fear and motivation. Works twice as hard as anyone.", attributes: "Junior Engineer. Expert in systems repair, power management, and emergency tech support. Native of New Titan.", what_we_know: "Patel is a junior engineer from New Titan. His family still lives there." }
+        ];
+        for (const crew of canonicalCrew) {
+          await base44.entities.NPC.create({ ...crew, campaign_id: campaign.id, notes: '', first_met_chapter: 1 });
+        }
+
+        await base44.entities.Character.create({
+          name: 'Bub Stellar',
+          campaign_id: campaign.id,
+          game_system: 'pathfinder',
+          race: 'Human',
+          character_class: 'Commander',
+          ability_scores: { cbt: 62, pil: 50, eng: 45, sci: 48, sec: 50, cmd: 80, com: 68, ath: 58 },
+          level: 1,
+          hp_current: 58,
+          hp_max: 58,
+          ac: 62,
+          thaco: 0,
+          xp: 0,
+          saving_throws: {},
+          gold: 500,
+          equipment: [
+            { name: 'Laser Pistol', qty: 1 },
+            { name: 'Command Override Codes', qty: 1 },
+            { name: 'Tactical Vest', qty: 1 },
+            { name: 'Commlink', qty: 1 }
+          ],
+          skills: [{ name: 'Leadership', level: 1 }],
+          mutations: [],
+          spells: [],
+          spell_slots: {},
+          appearance: "A weathered officer in his mid-forties, silver threading through dark hair at the temples. Clean-shaven with deep-set eyes that carry the weight of impossible knowledge — memories of a future war. Wears the standard United Earth Command duty uniform with captain's insignia.",
+          background: "Captain Bub Stellar commands the UES Pathfinder. He led his crew through Arc 1 and returned from 473 years in the future with encoded memories of how The Confluence fell. Now he stands at the edge of the New Titan system, ready to begin the fight that will topple an empire.",
+          status: 'active'
+        });
+        return Response.json({ campaign: { ...campaign, has_character: true } });
+      }
 
       return Response.json({ campaign });
     }
@@ -534,9 +593,9 @@ Deno.serve(async (req) => {
       }
 
       // Generic branch for all new game systems (Star Wars, Marvel, DC Heroes, James Bond, Shadowrun, Cyberpunk, Traveller, Ravenloft, D&D editions)
-      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e'];
+      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e', 'pathfinder'];
       if (NEW_SYSTEMS.includes(game_system)) {
-        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end' };
+        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end', pathfinder: 'ath' };
         const hpAttr = hpAttrMap[game_system];
         let hpMax;
         if (hpAttr) {

@@ -424,6 +424,21 @@ export const GAME_SYSTEMS = [
     icon: "scroll",
     enterLabel: "Gather Your Party"
   },
+  {
+    id: "pathfinder",
+    name: "Pathfinder Journeys",
+    short: "Pathfinder Journeys",
+    tagline: "Solo sandbox sci-fi resistance",
+    description:
+      "Captain Bub Stellar commands the UES Pathfinder, returned from a 473-year future war with encoded memories of how The Confluence fell. Now the galaxy is open: save New Titan, expose Admiral Chen, rescue Novara, build the resistance, and start the cascade that topples an empire. A solo sandbox sci-fi RPG with d100 roll-under mechanics, ship combat, future-memory flashes, and a living galaxy that reacts to your choices.",
+    dashboardTitle: "PATHFINDER JOURNEYS",
+    dashboardSubtitle:
+      "A solo sandbox sci-fi resistance campaign. Take the helm of the UES Pathfinder, build the resistance, and start the cascade that topples The Confluence. The future proved they can fall — now make it happen.",
+    cardImage:
+      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/a52699fbc_generated_image.png",
+    icon: "orbit",
+    enterLabel: "Board the Pathfinder"
+  }
 ];
 
 export const CATEGORY_MAP = {
@@ -445,7 +460,8 @@ export const CATEGORY_MAP = {
   // Classic Adventure
   ghostbusters: "Classic Adventure", jamesbond: "Classic Adventure",
   // Sword & Sorcery
-  conan: "Sword & Sorcery", redsonja: "Sword & Sorcery"
+  conan: "Sword & Sorcery", redsonja: "Sword & Sorcery",
+  pathfinder: "Science Fiction"
 };
 
 export const CATEGORIES = ["TSR Classics", "Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery"];
