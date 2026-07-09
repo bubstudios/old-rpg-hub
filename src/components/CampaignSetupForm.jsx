@@ -14,12 +14,6 @@ const DND_TONES = [
 ];
 
 const DND_WORLDS = [
-  'Greyhawk',
-  'Forgotten Realms',
-  'Blackmoor',
-  'Mystara',
-  'Ravenloft',
-  'The Iron Realm',
   'A custom world of my own'
 ];
 
