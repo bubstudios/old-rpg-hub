@@ -435,8 +435,8 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
     const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : isBR ? `Run to ${world}` : isGB ? `Ghosts of ${world}` : isGang ? `The ${world} Outfit` : isLOD ? `The ${world} Legion` : `Tales of ${world}`) : '';
-    const finalName = (overrideName || name.trim() || fallbackName).trim();
-    if (!finalName || creating) return;
+    const finalName = (overrideName || name.trim() || fallbackName || 'New Campaign').trim();
+    if (creating) return;
     setCreating(true);
     try {
       const res = await base44.functions.invoke('campaignData', {
@@ -621,7 +621,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
       </div>
 
       <div className="flex gap-2 pt-1">
-        <Button onClick={() => handleCreate()} disabled={creating || (!name.trim() && !worldSetting.trim())} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button onClick={() => handleCreate()} disabled={creating} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
           {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : setup.forgeLabel}
         </Button>
         <Button onClick={onCancel} variant="ghost" className="text-muted-foreground">Cancel</Button>
