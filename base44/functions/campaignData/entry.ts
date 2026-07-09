@@ -254,6 +254,16 @@ Deno.serve(async (req) => {
 
       // Canon Mode: auto-create Captain Marcus Vance as the player's character
       if (isPJCanon) {
+        // Pre-populate canonical crew NPCs so the DM uses them from turn one
+        const canonicalCrew = [
+          { name: 'Lt. Commander Hayes', aliases: ['Hayes'], disposition: 'friendly', description: "Human woman in her late thirties, clean UES duty uniform, comms badge at the collar. Brown hair pulled back, sharp eyes behind the console glow.", characteristics: "Steady, professional, dry wit. Speaks in clipped, efficient sentences. Loyal to the captain but not afraid to flag bad news.", attributes: "Communications Officer. Expert in signal encryption, tight-beam transmission, and frequency analysis.", what_we_know: "Hayes is the Pathfinder's Communications Officer. She has served with Vance for three years." },
+          { name: 'Chief Ramos', aliases: ['Ramos'], disposition: 'friendly', description: "Stocky human man in his fifties, coveralls stained with engine grease, sleeves rolled. Thick forearms, grey-flecked beard.", characteristics: "Gruff, meticulous, fiercely protective of the ship. Complains about every system but keeps them all running. Calls everyone 'kid.'", attributes: "Chief Engineer. Master of the FTL drive, life support, and power distribution. Can jury-rig anything.", what_we_know: "Ramos is the Chief Engineer. He has kept the Pathfinder flying through situations that should have killed her." },
+          { name: 'Lieutenant Thorne', aliases: ['Thorne'], disposition: 'friendly', description: "Young human woman in her late twenties, fresh-faced, flight suit crisp. Blonde hair in a tight bun, alert green eyes.", characteristics: "Eager, talented, keen to prove herself. Quick with calculations, sometimes too quick to volunteer.", attributes: "Navigator and Helm. Expert pilot and astrogator. Formally joins the crew at Episode 4.", what_we_know: "Thorne is the Pathfinder's Navigator. She is new to the crew — bright, capable, and untested in real danger." }
+        ];
+        for (const crew of canonicalCrew) {
+          await base44.entities.NPC.create({ ...crew, campaign_id: campaign.id, notes: '', first_met_chapter: 1 });
+        }
+
         await base44.entities.Character.create({
           name: 'Marcus Vance',
           campaign_id: campaign.id,
