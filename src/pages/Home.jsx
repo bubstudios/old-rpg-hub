@@ -39,7 +39,11 @@ export default function Home() {
 
   function handleCreated(campaign) {
     setShowCreate(false);
-    navigate(`/campaign/${campaign.id}/create-character`);
+    if (campaign.has_character) {
+      navigate(`/campaign/${campaign.id}`);
+    } else {
+      navigate(`/campaign/${campaign.id}/create-character`);
+    }
   }
 
   function handleImported(campaign) {
