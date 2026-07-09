@@ -65,6 +65,14 @@
       "type": "string",
       "description": "The group's custom Dungeon Master instructions \u2014 tone, pacing, narration length, dice philosophy, NPCs, and table discipline the DM follows over its defaults"
     },
+    "free_friend_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 3 friend email addresses who get free DM access in this campaign",
+      "default": []
+    },
     "current_chapter": {
       "type": "number",
       "default": 1

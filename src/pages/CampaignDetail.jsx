@@ -20,13 +20,16 @@ import LocationDossier from '@/components/LocationDossier';
 import EndSessionDialog from '@/components/EndSessionDialog';
 import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
+import SessionTimer from '@/components/SessionTimer';
+import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
+import FreeFriendsManager from '@/components/FreeFriendsManager';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw
+  Check, RefreshCw, Gift
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -51,6 +54,9 @@ export default function CampaignDetail() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [endSessionOpen, setEndSessionOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [hasBillingAccess, setHasBillingAccess] = useState(false);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -118,6 +124,10 @@ export default function CampaignDetail() {
   async function handleRollCompleted(rollResult) {
     await reloadEntries();
     if (!rollResult?.summary || processing || campaign?.dm_processing) return;
+    if (!hasBillingAccess) {
+      setPurchaseOpen(true);
+      return;
+    }
     setDiceOpen(false);
     setProcessing(true);
     setLatestResult(null);
@@ -142,6 +152,10 @@ export default function CampaignDetail() {
 
   async function handleAction() {
     if (!action.trim() || processing || posting) return;
+    if (!hasBillingAccess) {
+      setPurchaseOpen(true);
+      return;
+    }
     const submittedAction = action.trim();
     setAction('');
 
@@ -179,6 +193,10 @@ export default function CampaignDetail() {
   // the DM is invoked with everyone's actions combined.
   async function submitTurn(actionText, isAgree) {
     if (processing) return;
+    if (!hasBillingAccess) {
+      setPurchaseOpen(true);
+      return;
+    }
     setProcessing(true);
     setLatestResult(null);
     try {
@@ -318,6 +336,11 @@ export default function CampaignDetail() {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <SessionTimer
+            campaignId={campaignId}
+            onAccessChange={setHasBillingAccess}
+            onPurchaseClick={() => setPurchaseOpen(true)}
+          />
           <button
             onClick={() => setVideoOpen((o) => !o)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
@@ -334,6 +357,11 @@ export default function CampaignDetail() {
           {isOwner && (
             <Button variant="ghost" size="sm" onClick={() => setBriefOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
               <ScrollText className="w-3.5 h-3.5 mr-1" /> DM Brief
+            </Button>
+          )}
+          {isOwner && (
+            <Button variant="ghost" size="sm" onClick={() => setFriendsOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
+              <Gift className="w-3.5 h-3.5 mr-1" /> Free Friends
             </Button>
           )}
           <Link to={`/campaign/${campaignId}/journal`}>
@@ -646,6 +674,8 @@ export default function CampaignDetail() {
 
       <EndSessionDialog open={endSessionOpen} onOpenChange={setEndSessionOpen} campaignId={campaignId} />
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} campaign={campaign} />
+      <PurchaseSessionDialog open={purchaseOpen} onOpenChange={setPurchaseOpen} campaignId={campaignId} />
+      <FreeFriendsManager open={friendsOpen} onOpenChange={setFriendsOpen} campaignId={campaignId} />
     </div>
   );
 }

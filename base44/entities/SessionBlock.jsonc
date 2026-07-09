@@ -1,0 +1,56 @@
+{
+  "name": "SessionBlock",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User who purchased this block"
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign this block grants access to"
+    },
+    "session_type": {
+      "type": "string",
+      "enum": [
+        "solo",
+        "table"
+      ],
+      "description": "Solo ($9.99) or Table ($17.99)"
+    },
+    "price": {
+      "type": "number",
+      "default": 0
+    },
+    "checkout_id": {
+      "type": "string",
+      "description": "Wix checkout session ID for webhook matching"
+    },
+    "order_id": {
+      "type": "string",
+      "description": "Wix order ID from webhook"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "expired"
+      ],
+      "default": "pending"
+    },
+    "started_at": {
+      "type": "string",
+      "description": "ISO timestamp when the 4-hour timer started (null = not yet started)"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO timestamp when the block expires"
+    }
+  },
+  "required": [
+    "user_id",
+    "campaign_id",
+    "session_type"
+  ]
+}
