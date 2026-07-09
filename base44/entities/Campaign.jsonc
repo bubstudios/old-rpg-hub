@@ -15,15 +15,6 @@
       "description": "The RPG system this campaign uses (e.g. add1e, starfrontiers)",
       "default": "add1e"
     },
-    "play_mode": {
-      "type": "string",
-      "enum": [
-        "canon",
-        "original"
-      ],
-      "default": "original",
-      "description": "Pathfinder Journeys: 'canon' plays as Captain Marcus Vance with the written crew; 'original' lets players create their own officer"
-    },
     "status": {
       "type": "string",
       "enum": [

@@ -14,7 +14,6 @@ import HyDiceRollerPanel from '@/components/HyDiceRollerPanel';
 import GBDiceRollerPanel from '@/components/GBDiceRollerPanel';
 import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
-import PJDiceRollerPanel from '@/components/PJDiceRollerPanel';
 import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
 import LocationDossier from '@/components/LocationDossier';
@@ -24,7 +23,6 @@ import RoundStatus from '@/components/RoundStatus';
 import SessionTimer from '@/components/SessionTimer';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
-import PJCampaignStatus from '@/components/PJCampaignStatus';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -134,7 +132,7 @@ export default function CampaignDetail() {
     setProcessing(true);
     setLatestResult(null);
     try {
-      const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
       const res = await base44.functions.invoke(dmFunc, {
         campaign_id: campaignId,
         action: rollResult.summary,
@@ -224,7 +222,7 @@ export default function CampaignDetail() {
       }
 
       if (data.should_invoke_dm) {
-        const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+        const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
         const dmRes = await base44.functions.invoke(dmFunc, {
           campaign_id: campaignId,
           action: data.combined_action,
@@ -515,14 +513,6 @@ export default function CampaignDetail() {
                   onRolled={handleRollCompleted}
                   onClose={() => setDiceOpen(false)}
                 />
-              ) : campaign?.game_system === 'pathfinder' ? (
-                <PJDiceRollerPanel
-                  myCharacter={myCharacter}
-                  campaignId={campaignId}
-                  chapter={campaign.current_chapter}
-                  onRolled={handleRollCompleted}
-                  onClose={() => setDiceOpen(false)}
-                />
               ) : (
                 <DiceRollerPanel
                   myCharacter={myCharacter}
@@ -588,8 +578,6 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We walk into the speakeasy, hats low, looking for the boss..." : "What does your character do?")
                     : campaign?.game_system === 'legionofdoom'
                     ? (isSetup ? "e.g. We gather in the Hall of Doom, the hologram of the target spinning between us..." : "What does your villain do?")
-                    : campaign?.game_system === 'pathfinder'
-                    ? (isSetup ? "e.g. We bring the Pathfinder about and scan for Confluence traffic..." : "What does your officer do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}
@@ -649,10 +637,6 @@ export default function CampaignDetail() {
               </div>
             </div>
           </div>
-
-          {campaign?.game_system === 'pathfinder' && (
-            <PJCampaignStatus campaign={campaign} />
-          )}
 
           {myCharacter && (
             <Link to={`/campaign/${campaignId}/character/${myCharacter.id}`}>

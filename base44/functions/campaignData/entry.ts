@@ -223,12 +223,8 @@ Deno.serve(async (req) => {
 
     // Create campaign
     if (op === 'createCampaign') {
-      const { name, mode, tone, world_setting, setting_notes, module_id, game_system, play_mode } = body;
+      const { name, mode, tone, world_setting, setting_notes, module_id, game_system } = body;
       if (!name) return Response.json({ error: 'name required' }, { status: 400 });
-
-      const isPJCanon = game_system === 'pathfinder' && play_mode === 'canon';
-      const pjClocks = { confluence_claim: 14, confluence_heat: 0, chen_exposure: 0, sanctuary_trust: 20, resistance_spark: 0 };
-      const pjShipStats = { hull: 100, shields: 100, engines: 100, ftl: 100, weapons: 100, sensors: 100, life_support: 100, crew_morale: 100, fuel: 100, confluence_heat: 0 };
 
       const campaign = await base44.entities.Campaign.create({
         name: name.trim(),
@@ -236,65 +232,16 @@ Deno.serve(async (req) => {
         status: 'setup',
         mode: mode || 'async',
         tone: tone || 'balanced',
-        world_setting: isPJCanon ? 'The Pathfinder Journeys' : (world_setting || '').trim(),
-        setting_notes: isPJCanon
-          ? 'Arc 1: The Auction of Stars. The UES Pathfinder receives an invitation from The Confluence — Earth has been claimed as property. A warning arrives from the lost UES Prometheus: Do not attend. It is a trap. 10-episode arc: 1) The Auction of Stars, 2) The Prometheus Warning, 3) The Korath Graveyard, 4) Coordinates and Consequences, 5) The Novara Exchange, 6) The Traitor Revealed, 7) Sanctuary, 8) The Archive\'s Secret, 9) The Battle for Sanctuary, 10) Messages Across Time.'
-          : (setting_notes || '').trim(),
-        module_id: isPJCanon ? null : (module_id || null),
+        world_setting: (world_setting || '').trim(),
+        setting_notes: (setting_notes || '').trim(),
+        module_id: module_id || null,
         game_system: game_system || 'add1e',
-        play_mode: isPJCanon ? 'canon' : (play_mode || 'original'),
         current_chapter: 1,
-        current_scene: isPJCanon ? 'UES Pathfinder — Bridge. The Confluence invitation has just arrived.' : '',
+        current_scene: '',
         combat_active: false,
         combat_round: 0,
-        world_state: isPJCanon
-          ? { locations_explored: [], npcs_met: [], quest_flags: { campaign_clocks: pjClocks, ship_stats: pjShipStats, crew_loyalty: 'Loyal', evidence: [], decisions: [] }, reputation: 0, chapter_log: [] }
-          : { locations_explored: [], npcs_met: [], quest_flags: {}, reputation: 0, chapter_log: [] }
+        world_state: { locations_explored: [], npcs_met: [], quest_flags: {}, reputation: 0, chapter_log: [] }
       });
-
-      // Canon Mode: auto-create Captain Marcus Vance as the player's character
-      if (isPJCanon) {
-        // Pre-populate canonical crew NPCs so the DM uses them from turn one
-        const canonicalCrew = [
-          { name: 'Lt. Commander Hayes', aliases: ['Hayes'], disposition: 'friendly', description: "Human woman in her late thirties, clean UES duty uniform, comms badge at the collar. Brown hair pulled back, sharp eyes behind the console glow.", characteristics: "Steady, professional, dry wit. Speaks in clipped, efficient sentences. Loyal to the captain but not afraid to flag bad news.", attributes: "Communications Officer. Expert in signal encryption, tight-beam transmission, and frequency analysis.", what_we_know: "Hayes is the Pathfinder's Communications Officer. She has served with Vance for three years." },
-          { name: 'Chief Ramos', aliases: ['Ramos'], disposition: 'friendly', description: "Stocky human man in his fifties, coveralls stained with engine grease, sleeves rolled. Thick forearms, grey-flecked beard.", characteristics: "Gruff, meticulous, fiercely protective of the ship. Complains about every system but keeps them all running. Calls everyone 'kid.'", attributes: "Chief Engineer. Master of the FTL drive, life support, and power distribution. Can jury-rig anything.", what_we_know: "Ramos is the Chief Engineer. He has kept the Pathfinder flying through situations that should have killed her." },
-          { name: 'Lieutenant Thorne', aliases: ['Thorne'], disposition: 'friendly', description: "Young human woman in her late twenties, fresh-faced, flight suit crisp. Blonde hair in a tight bun, alert green eyes.", characteristics: "Eager, talented, keen to prove herself. Quick with calculations, sometimes too quick to volunteer.", attributes: "Navigator and Helm. Expert pilot and astrogator. Formally joins the crew at Episode 4.", what_we_know: "Thorne is the Pathfinder's Navigator. She is new to the crew — bright, capable, and untested in real danger." }
-        ];
-        for (const crew of canonicalCrew) {
-          await base44.entities.NPC.create({ ...crew, campaign_id: campaign.id, notes: '', first_met_chapter: 1 });
-        }
-
-        await base44.entities.Character.create({
-          name: 'Marcus Vance',
-          campaign_id: campaign.id,
-          game_system: 'pathfinder',
-          race: 'Human',
-          character_class: 'Commander',
-          ability_scores: { cbt: 62, pil: 50, eng: 45, sci: 48, sec: 50, cmd: 80, com: 68, ath: 58 },
-          level: 1,
-          hp_current: 58,
-          hp_max: 58,
-          ac: 62,
-          thaco: 0,
-          xp: 0,
-          saving_throws: {},
-          gold: 500,
-          equipment: [
-            { name: 'Laser Pistol', qty: 1 },
-            { name: 'Command Override Codes', qty: 1 },
-            { name: 'Tactical Vest', qty: 1 },
-            { name: 'Commlink', qty: 1 }
-          ],
-          skills: [{ name: 'Leadership', level: 1 }],
-          mutations: [],
-          spells: [],
-          spell_slots: {},
-          appearance: "A weathered officer in his mid-forties, silver threading through dark hair at the temples. Clean-shaven with deep-set eyes that carry the weight of two decades of command. Wears the standard United Earth Command duty uniform with captain's insignia.",
-          background: "Captain Marcus Vance has served United Earth Command for twenty years. He survived the loss of his first posting, the UES Horizon, and spent a decade in the outer colonies before being given command of the Pathfinder. He is principled, steady, and carries a quiet fury at the complacency of Earth Command. When the Confluence's invitation arrives, Vance is the one who must decide whether humanity fights.",
-          status: 'active'
-        });
-        return Response.json({ campaign: { ...campaign, has_character: true } });
-      }
 
       return Response.json({ campaign });
     }
@@ -587,9 +534,9 @@ Deno.serve(async (req) => {
       }
 
       // Generic branch for all new game systems (Star Wars, Marvel, DC Heroes, James Bond, Shadowrun, Cyberpunk, Traveller, Ravenloft, D&D editions)
-      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e', 'pathfinder'];
+      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e'];
       if (NEW_SYSTEMS.includes(game_system)) {
-        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end', pathfinder: 'ath' };
+        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end' };
         const hpAttr = hpAttrMap[game_system];
         let hpMax;
         if (hpAttr) {

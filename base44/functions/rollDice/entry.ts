@@ -45,7 +45,6 @@ Deno.serve(async (req) => {
     const isGB = body.game_system === 'ghostbusters';
     const isGang = body.game_system === 'gangbusters';
     const isLOD = body.game_system === 'legionofdoom';
-    const isPJ = body.game_system === 'pathfinder';
     const GW_ABILITY_LABELS = { ps: 'PS', ms: 'MS', dx: 'DX', cn: 'CN', in: 'IN', ch: 'CH', sn: 'SN' };
     const BH_ABILITY_LABELS = { spd: 'SPD', gacc: 'GACC', tacc: 'TACC', str: 'STR', brv: 'BRV', exp: 'EXP' };
     const BH_WEAPON_SKILLS = ['Brawling', 'Fast Draw', 'Pistol', 'Rifle', 'Shotgun'];
@@ -58,8 +57,6 @@ Deno.serve(async (req) => {
     const GANG_ABILITY_LABELS = { mus: 'MUS', agi: 'AGI', aim: 'AIM', sav: 'SAV', ner: 'NER', pan: 'PAN' };
     const GANG_WEAPON_SKILLS = ['Pistol', 'Rifle', 'Shotgun', 'Submachine Gun', 'Brawling', 'Melee', 'Thrown'];
     const LOD_ABILITY_LABELS = { mgt: 'MGT', cun: 'CUN', agi: 'AGI', tgh: 'TGH', wil: 'WIL', cha: 'CHA' };
-    const PJ_ABILITY_LABELS = { cbt: 'CBT', pil: 'PIL', eng: 'ENG', sci: 'SCI', sec: 'SEC', cmd: 'CMD', com: 'COM', ath: 'ATH' };
-    const PJ_COMBAT_SKILLS = ['Combat', 'Weapons Training', 'Infiltration'];
 
     // --- Star Frontiers roll types (percentile, roll-under) ---
     if (isSF && roll_type === 'attack') {
@@ -102,62 +99,6 @@ Deno.serve(async (req) => {
         target: `RS/10 = ${initMod}`
       });
       summary = `${char.name} initiative: RS/10 ${initMod} + d10 ${d10} = ${total}.`;
-    }
-    // --- Pathfinder Journeys roll types (d100 roll-under) ---
-    else if (isPJ && roll_type === 'attack') {
-      const cbt = scores.cbt || 50;
-      const charSkills = (char.skills || []).filter(s => PJ_COMBAT_SKILLS.includes(s.name));
-      const skillLvl = charSkills.length ? Math.max(...charSkills.map(s => Number(s.level) || 0)) : 0;
-      const hit = Math.min(95, Math.max(5, Math.floor(cbt / 2) + skillLvl * 10));
-      const d100 = rollDie(100);
-      const success = d100 <= hit;
-      rolls.push({
-        description: 'Attack',
-        die: 'd100', roll: d100, modifier: skillLvl * 10, total: d100,
-        result: success ? 'Hit' : 'Miss', target: `need ≤ ${hit}%`
-      });
-      summary = `${char.name} attacks: d100 = ${d100} vs ${hit}% — ${success ? 'HIT' : 'MISS'}.`;
-    }
-    else if (isPJ && roll_type === 'ability') {
-      const ability = body.ability;
-      if (!PJ_ABILITY_LABELS[ability]) return Response.json({ error: 'Invalid ability' }, { status: 400 });
-      const score = scores[ability] || 50;
-      const diffMod = Number(body.difficulty_mod) || 0;
-      const target = Math.min(95, Math.max(5, score + diffMod));
-      const useAdv = !!body.advantage;
-      const useDis = !!body.disadvantage;
-      let d100, rollDesc;
-      if (useAdv) {
-        const r1 = rollDie(100); const r2 = rollDie(100);
-        d100 = Math.min(r1, r2);
-        rollDesc = `2d100 (${r1}, ${r2}) take ${d100}`;
-      } else if (useDis) {
-        const r1 = rollDie(100); const r2 = rollDie(100);
-        d100 = Math.max(r1, r2);
-        rollDesc = `2d100 (${r1}, ${r2}) take ${d100}`;
-      } else {
-        d100 = rollDie(100);
-        rollDesc = `d100`;
-      }
-      const success = d100 <= target;
-      rolls.push({
-        description: `${PJ_ABILITY_LABELS[ability]} check`,
-        die: 'd100', roll: d100, modifier: diffMod, total: d100,
-        result: success ? 'Success' : 'Failure', target: `need ≤ ${target}${diffMod !== 0 ? ` (ability ${score} ${diffMod > 0 ? '+' : ''}${diffMod})` : ''}`
-      });
-      summary = `${char.name} ${PJ_ABILITY_LABELS[ability]} check: ${rollDesc} = ${d100} vs ${target} — ${success ? 'SUCCESS' : 'FAILURE'}.`;
-    }
-    else if (isPJ && roll_type === 'initiative') {
-      const ath = scores.ath || 50;
-      const initMod = Math.floor(ath / 10);
-      const d10 = rollDie(10);
-      const total = d10 + initMod;
-      rolls.push({
-        description: 'Initiative',
-        die: 'd10', roll: d10, modifier: initMod, total,
-        target: `ATH/10 = ${initMod}`
-      });
-      summary = `${char.name} initiative: ATH/10 ${initMod} + d10 ${d10} = ${total}.`;
     }
     // --- Gamma World roll types (d20 system) ---
     else if (isGW && roll_type === 'attack') {

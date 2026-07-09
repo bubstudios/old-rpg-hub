@@ -11,16 +11,16 @@
     },
     "game_system": {
       "type": "string",
-      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret, conan, redsonja, buckrogers, ghostbusters, gangbusters, legionofdoom, pathfinder)",
+      "description": "RPG system this character uses (e.g. add1e, starfrontiers, gammaworld, boothill, indianajones, topsecret, conan, redsonja, buckrogers, ghostbusters, gangbusters, legionofdoom)",
       "default": "add1e"
     },
     "race": {
       "type": "string",
-      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters, Legion of Doom, Pathfinder Journeys)"
+      "description": "Race (AD&D), species (Star Frontiers), genotype (Gamma World), background (Boot Hill), or archetype (Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters, Legion of Doom)"
     },
     "character_class": {
       "type": "string",
-      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters, Legion of Doom, Pathfinder Journeys)"
+      "description": "Class (AD&D), primary skill area (Star Frontiers), genotype (Gamma World), or background/archetype (Boot Hill, Indiana Jones, Top Secret, Hyborian, Ghostbusters, Gangbusters, Legion of Doom)"
     },
     "level": {
       "type": "number",
@@ -223,38 +223,6 @@
         "wil": {
           "type": "number",
           "description": "Will (Legion of Doom) \u2014 mental fortitude, ego, willpower; equals Ego pool"
-        },
-        "cbt": {
-          "type": "number",
-          "description": "Combat (Pathfinder Journeys) \u2014 weapons, hand-to-hand, tactical firefights"
-        },
-        "pil": {
-          "type": "number",
-          "description": "Piloting (Pathfinder Journeys) \u2014 flying ships, navigation, maneuvering, evasion"
-        },
-        "eng": {
-          "type": "number",
-          "description": "Engineering (Pathfinder Journeys) \u2014 repair, modify, hack systems and technology"
-        },
-        "sci": {
-          "type": "number",
-          "description": "Science (Pathfinder Journeys) \u2014 research, analysis, medicine, xenobiology"
-        },
-        "sec": {
-          "type": "number",
-          "description": "Security (Pathfinder Journeys) \u2014 stealth, infiltration, locks, security systems"
-        },
-        "cmd": {
-          "type": "number",
-          "description": "Command (Pathfinder Journeys) \u2014 leadership, tactics, fleet coordination, willpower"
-        },
-        "com": {
-          "type": "number",
-          "description": "Communications (Pathfinder Journeys) \u2014 broadcasting, signals, encryption, diplomacy"
-        },
-        "ath": {
-          "type": "number",
-          "description": "Athletics (Pathfinder Journeys) \u2014 running, climbing, endurance; equals Vitality"
         }
       }
     },
@@ -322,7 +290,7 @@
     },
     "skills": {
       "type": "array",
-      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, Top Secret weapon/tradecraft skills, Hyborian weapon/adventuring skills, Ghostbusters tag skills, Gangbusters weapon/underworld skills, Legion of Doom super-powers, or Pathfinder Journeys crew skills (level = skill rank)",
+      "description": "Skills (name + level): Star Frontiers PSA skills, Boot Hill weapon/work skills, Indiana Jones weapon/work skills, Top Secret weapon/tradecraft skills, Hyborian weapon/adventuring skills, Ghostbusters tag skills, Gangbusters weapon/underworld skills, or Legion of Doom super-powers",
       "items": {
         "type": "object",
         "properties": {
