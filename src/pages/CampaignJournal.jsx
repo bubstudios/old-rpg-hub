@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import JournalEntryCard from '@/components/JournalEntryCard';
+import LootCard from '@/components/LootCard';
 import { Button } from '@/components/ui/button';
 import {
-  ChevronLeft, Loader2, BookOpen, Coins, Skull, ScrollText, Package, Search, X, Sparkles
+  ChevronLeft, Loader2, BookOpen, Coins, Skull, ScrollText, Search, X, Sparkles
 } from 'lucide-react';
 import AskTheLog from '@/components/AskTheLog';
 import { toast } from 'sonner';
@@ -205,20 +206,7 @@ export default function CampaignJournal() {
                 <EmptyState icon={Coins} text="No treasure claimed yet. The hoards await..." />
               ) : (
                 loot.map((l, i) => (
-                  <div key={l.id || i} className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-card/40">
-                    <Package className="w-4 h-4 text-primary/60 shrink-0" strokeWidth={1.5} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-heading font-600 text-foreground">
-                        {l.item_name || 'Gold'}
-                        {l.gold > 0 && <span className="text-primary ml-1.5">+{l.gold} gp</span>}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground font-body">
-                        Found by {l.found_by || 'the party'}
-                        {l.source && <> · {l.source}</>}
-                      </p>
-                    </div>
-                    <span className="text-[10px] font-heading tracking-wide text-muted-foreground/50">Ch. {l.chapter}</span>
-                  </div>
+                  <LootCard key={l.id || i} loot={l} />
                 ))
               )}
             </div>

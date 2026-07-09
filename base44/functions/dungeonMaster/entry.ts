@@ -1389,6 +1389,19 @@ When a character gives, hands, passes, or trades an item to another character, i
 ## Gold Changes
 When a character's gold (or credits/domars/Nuyen/Eurodollars/etc. depending on the system) changes for ANY reason — finding treasure, receiving a reward, making a purchase, paying for services, or being awarded gold by the DM — you MUST include a "gold_changes" array: [{"character_name": "name", "change": 100, "reason": "reward from the baron"}]. Use positive change for gold gained, negative for gold spent or lost. This is the PRIMARY way gold is updated on character sheets — always use it whenever gold changes, even if you also list the treasure in the loot array.
 
+## Treasure & Loot Records
+When treasure, currency, gear, artifacts, or valuables are found, include a "loot" array. EVERY entry MUST have a meaningful "item_name" — never leave it blank or omit it. For currency-only finds, set item_name to the currency itself (e.g. "Credits", "Gold Pieces", "Domars") and use "quantity" for the amount found. Each loot entry uses this schema:
+{"item_name": "Silver Dagger", "quantity": 1, "value": 15, "currency_type": "gp", "found_by": "character who found it or 'the party'", "current_holder": "character name who holds it now, or 'unclaimed' if not yet divided", "identified_status": "identified" | "unidentified" | "unknown", "tradeable": true, "source": "where it came from (creature, location, chest)", "notes": "any notable detail or property"}.
+Rules:
+- "item_name" is REQUIRED and must be descriptive (e.g. "Alien Residue Sample", "Unknown Creature Specimen", "Stygian Relic"). For a pile of coins/credits, use the currency name as item_name and put the count in "quantity".
+- "quantity": how many (default 1). For 37 credits: item_name="Credits", quantity=37, currency_type="Credits".
+- "value": per-unit value in the campaign currency (0 if unknown or not applicable).
+- "currency_type": the currency for THIS system — gp (AD&D/generic fantasy), Credits (Star Frontiers/Buck Rogers/Traveller), domars (Gamma World), ceramic pieces (Dark Sun), dollars (Boot Hill/Indiana Jones/Top Secret/Gangbusters/Legion of Doom), BP (Ghostbusters).
+- "current_holder": the character who took possession, or "unclaimed" if the party hasn't divided it yet. Be specific — use the character's name.
+- "identified_status": "identified" for normal treasure; "unidentified" for magic items/strange artifacts not yet appraised; "unknown" when its nature is a mystery.
+- "tradeable": false if the item is bound, cursed, or otherwise cannot be traded.
+- "source": where it came from (creature defeated, location searched, chest opened, NPC gift).
+
 Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang || isLOD ? 'Game Master' : 'DM'} with the JSON object. Resolve the action using ${isSF ? 'Star Frontiers' : isGW ? 'Gamma World' : isBH ? 'Boot Hill' : isIJ ? 'Indiana Jones' : isSJ ? 'Spelljammer' : isDS ? 'Dark Sun' : isTS ? 'Top Secret' : isHW ? 'Hollow World (BECMI D&D)' : isHY ? 'Hyborian (d100)' : isBR ? 'Buck Rogers XXVc (AD&D 2e)' : isGB ? 'Ghostbusters (D6 System)' : isGang ? 'Gangbusters (d100)' : isLOD ? 'Legion of Doom (d20)' : 'AD&D 1st Edition'} rules. ${is_roll_result ? 'Continue the scene based on the roll outcome above.' : 'If this is the very first action and the scene is empty, open the campaign with atmospheric scene-setting narration that hooks the party into the adventure.'}`;
 
     const llmResponse = await base44.integrations.Core.InvokeLLM({
@@ -1479,12 +1492,23 @@ Respond as the ${isSF || isGW || isBH || isIJ || isTS || isHY || isGB || isGang 
     // Apply loot
     if (result.loot && result.loot.length) {
       for (const item of result.loot) {
+        const itemName = String(item.item_name || item.item || '').trim();
+        const qty = Math.max(1, Number(item.quantity) || 1);
+        const val = Number(item.value) || 0;
+        const goldAmt = Number(item.gold) || (val ? val * qty : 0);
         await base44.asServiceRole.entities.LootRecord.create({
           campaign_id: campaign_id,
-          item_name: item.item || null,
-          gold: item.gold || 0,
-          source: item.source || '',
-          found_by: actingChar.name,
+          item_name: itemName || null,
+          quantity: qty,
+          value: val,
+          currency_type: String(item.currency_type || '').trim(),
+          gold: goldAmt,
+          found_by: String(item.found_by || actingChar.name).trim(),
+          current_holder: String(item.current_holder || '').trim(),
+          source: String(item.source || '').trim(),
+          identified_status: String(item.identified_status || 'identified').trim(),
+          tradeable: item.tradeable === false ? false : true,
+          notes: String(item.notes || '').trim(),
           chapter: campaign.current_chapter
         });
         // Add gold to party (split among active characters)

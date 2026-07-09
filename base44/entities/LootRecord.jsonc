@@ -9,18 +9,54 @@
       "type": "string"
     },
     "item_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Name of the treasure item (e.g. 'Silver Dagger', 'Alien Residue Sample'). Never blank \u2014 for currency-only finds, use the currency name and put the count in quantity."
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "How many of this item were found"
+    },
+    "value": {
+      "type": "number",
+      "default": 0,
+      "description": "Per-unit value in the campaign's currency"
+    },
+    "currency_type": {
+      "type": "string",
+      "description": "Currency label for this system: gp, Credits, domars, dollars, ceramic pieces, BP, etc."
     },
     "gold": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Legacy total gold/credits amount (kept for backward compatibility and party gold-splitting)"
     },
     "found_by": {
       "type": "string"
     },
+    "current_holder": {
+      "type": "string",
+      "description": "Character who currently holds the item, or 'unclaimed' if not yet assigned"
+    },
     "source": {
       "type": "string",
       "description": "Where it came from (creature, location, chest)"
+    },
+    "identified_status": {
+      "type": "string",
+      "enum": [
+        "identified",
+        "unidentified",
+        "unknown"
+      ],
+      "default": "identified"
+    },
+    "tradeable": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
     },
     "chapter": {
       "type": "number"
