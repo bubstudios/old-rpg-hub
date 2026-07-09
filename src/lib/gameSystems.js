@@ -433,7 +433,7 @@ export const GAME_SYSTEMS = [
       "The UES Pathfinder receives an impossible invitation from an alien marketplace called The Confluence. Earth has been claimed as property by an ancient alien power, and humanity has fourteen cycles to contest the claim. Then a warning arrives from the long-lost UES Prometheus: Do not attend. It is a trap. Now the crew must uncover a conspiracy, expose a traitor inside Earth Command, find refugee allies, survive a galactic empire, and send the message that begins the war for freedom. A cinematic old-school sci-fi RPG campaign with d100 roll-under mechanics, ship combat, and a branching 10-episode narrative arc.",
     dashboardTitle: "PATHFINDER JOURNEYS",
     dashboardSubtitle:
-      "The Auction of Stars — a cinematic sci-fi resistance campaign, ruled by an AI Game Master. Take the helm of the UES Pathfinder, expose the traitor, defend Sanctuary, and broadcast the message that starts the war for freedom. Resistance is no longer futile.",
+      "The Auction of Stars — a cinematic sci-fi resistance campaign, ruled by an AI Game Master. Take the helm of the UES Pathfinder, expose the traitor, defend Sanctuary, and broadcast the message that starts the war for freedom. Now the resistance fights back.",
     cardImage:
       "https://media.base44.com/images/public/6a4af4087166276674b33cf8/a52699fbc_generated_image.png",
     icon: "orbit",
