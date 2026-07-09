@@ -532,9 +532,9 @@ Deno.serve(async (req) => {
       }
 
       // Generic branch for all new game systems (Star Wars, Marvel, DC Heroes, James Bond, Shadowrun, Cyberpunk, Traveller, Ravenloft, D&D editions)
-      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e'];
+      const NEW_SYSTEMS = ['starwars', 'marvel', 'dcheroes', 'jamesbond', 'shadowrun', 'cyberpunk', 'traveller', 'ravenloft', 'oddnd', 'bxdnd', 'add2e', 'dnd35', 'dnd4e', 'dnd5e', 'pathfinder'];
       if (NEW_SYSTEMS.includes(game_system)) {
-        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end' };
+        const hpAttrMap = { starwars: 'str', marvel: 'end', dcheroes: 'body', jamesbond: 'str', shadowrun: 'bod', cyberpunk: 'bod', traveller: 'end', pathfinder: 'ath' };
         const hpAttr = hpAttrMap[game_system];
         let hpMax;
         if (hpAttr) {
