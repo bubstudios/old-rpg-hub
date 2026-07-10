@@ -85,6 +85,15 @@ export default function CampaignDetail() {
     loadData();
   }, [campaignId]);
 
+  // Pre-fill action from character sheet special actions (Remember a Name, Accept Help)
+  useEffect(() => {
+    const pending = localStorage.getItem('pull_pending_action');
+    if (pending) {
+      setAction(pending);
+      localStorage.removeItem('pull_pending_action');
+    }
+  }, [campaignId]);
+
   useEffect(() => {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
