@@ -49,6 +49,7 @@ const RESPONSE_SCHEMA = {
     province_transition: { type: "object", properties: { to_province: { type: "number" }, reason: { type: "string" } } },
     enemy_turn: { type: "object", properties: { province_1_alert_change: { type: "number" }, hunter_proximity_change: { type: "number" }, action: { type: "string" } } },
     item_changes: { type: "array", items: { type: "object", properties: { action: { type: "string" }, item: { type: "string" }, notes: { type: "string" } } } },
+    pipe_state: { type: "string", description: "Updated pipe state: unfound, battered_metal_pipe, or radiant_sword" },
     shard_focus_unlocked: { type: "boolean" },
     spark_shard_acquired: { type: "boolean" },
     choices: { type: "array", items: { type: "string" }, description: "3-4 suggested player actions for the next turn" }
@@ -86,6 +87,7 @@ RULES:
 - Make survival costly. Make kindness matter. Make guilt matter. Make connection one of the few forces that can resist the realm.
 - Do not make self-harm a gameplay solution. Despair scenes should be crisis states that can be resisted, interrupted, or survived.
 - Blackout combat should create fear and consequence, not reward.
+- THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - Innocent suffering should have emotional weight, not be used casually.
 - Player choices should matter whenever possible.
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
@@ -99,6 +101,7 @@ Shard Resonance: ${ctx.shardResonance}
 HP: ${ctx.hpCurrent}/${ctx.hpMax}
 Conditions: ${conditionsStr}
 Inventory: ${equipmentStr}
+Pipe State: ${ctx.pipeState}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
 
@@ -187,6 +190,7 @@ Deno.serve(async (req) => {
       clocks,
       localClocks,
       codexUnlocks,
+      pipeState: flags.pipe_state || 'unfound',
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
       recentStory,
@@ -268,6 +272,9 @@ Deno.serve(async (req) => {
     // Spark shard acquired
     if (result.spark_shard_acquired) updatedFlags.spark_shard = true;
 
+    // Pipe state update
+    if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
+
     // Province transition
     let chapterUpdate = {};
     if (result.province_transition && typeof result.province_transition.to_province === 'number') {
@@ -337,6 +344,7 @@ Deno.serve(async (req) => {
       enemy_turn: result.enemy_turn || null,
       condition_changes: result.condition_changes || [],
       item_changes: result.item_changes || [],
+      pipe_state: updatedFlags.pipe_state,
       choices: result.choices || []
     });
 

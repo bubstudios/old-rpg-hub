@@ -328,8 +328,8 @@ Deno.serve(async (req) => {
               current_province: 618, province_history: [],
               campaign_clocks: pullClocks, local_clocks: pullLocalClocks,
               pull_intensity: 1, scar_state: 'pulse', shard_resonance: 5,
-              spark_shard: false, pipe_state: 'battered_metal_pipe', shard_focus_unlocked: false,
-              conditions: [], codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'pipe', 'province_618'],
+              spark_shard: false, pipe_state: 'unfound', shard_focus_unlocked: false,
+              conditions: [],               codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'province_618'],
               npc_relationships: {}, memories: [], guilt_echoes: [], phase: 'Lost Survivor'
             },
             reputation: 0, chapter_log: []
@@ -351,7 +351,6 @@ Deno.serve(async (req) => {
           gold: 0,
           equipment: [
             { name: 'Etched Shard', qty: 1, notes: 'Circle bisected by jagged line. Warm to the touch.' },
-            { name: 'Battered Metal Pipe', qty: 1, notes: 'Your main weapon and walking stick.' },
             { name: 'Torn Clothing', qty: 1, notes: 'Barely covering you. Barefoot.' }
           ],
           skills: [], mutations: [], spells: [], spell_slots: {},

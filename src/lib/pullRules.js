@@ -336,8 +336,8 @@ export const CODEX_ENTRIES = {
   },
   pipe: {
     category: 'pipe', title: 'The Pipe',
-    content: 'A battered metal pipe. It begins as a simple tool — a walking stick, a bar to pry things open. Over time it becomes Bullet\'s main weapon, an emotional anchor, and a symbol of survival. It collects scars and stories from every Province. In Province 1, after Michael awakens, the pipe briefly transforms into a radiant sword of white fire. After the final battle, it becomes the pipe again. The pipe is Bullet\'s survival. The sword is Michael\'s mission. Both are true.',
-    alwaysVisible: true
+    content: 'Bullet does not start with a weapon. The first time he faces a physical threat, he instinctively snatches up a battered metal pipe from the environment — his body remembering what his mind has forgotten. From that moment, it becomes his main weapon, walking stick, and emotional anchor. It collects scars and stories from every Province. In Province 1, after Michael awakens, the pipe briefly transforms into a radiant sword of white fire. After the final battle, it becomes the pipe again. The pipe is Bullet\'s survival. The sword is Michael\'s mission. Both are true.',
+    requiresUnlock: 'pipe'
   },
   shard_focus: {
     category: 'shard', title: 'Shard Focus',
@@ -487,10 +487,10 @@ export const PULL_INITIAL_STATE = {
   scar_state: 'pulse',
   shard_resonance: 5,
   spark_shard: false,
-  pipe_state: 'battered_metal_pipe',
+  pipe_state: 'unfound',
   shard_focus_unlocked: false,
   conditions: [],
-  codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'pipe', 'province_618'],
+  codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'province_618'],
   npc_relationships: {},
   memories: [],
   guilt_echoes: [],
