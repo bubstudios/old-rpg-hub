@@ -170,6 +170,24 @@
       "type": "boolean",
       "default": false,
       "description": "True while the DM is composing a response to the current round (blocks new submissions)"
+    },
+    "player_runtime_ms": {
+      "type": "number",
+      "default": 0,
+      "description": "Total real-world milliseconds the player has spent actively playing this campaign. Used by the Living Timeline Engine to unlock Arc 2 metaplot elements based on playtime."
+    },
+    "in_world_day": {
+      "type": "number",
+      "default": 0,
+      "description": "In-world day counter since the campaign began (post-Arc 1). Advances based on travel, repairs, recovery, and downtime actions reported by the DM."
+    },
+    "last_active_at": {
+      "type": "string",
+      "description": "ISO timestamp of the last DM interaction. Used to calculate active playtime deltas for the Living Timeline Engine."
+    },
+    "arc2_unlocks": {
+      "type": "object",
+      "description": "Tracks which Arc 2 metaplot elements have been introduced into the campaign. Keys: first_echo, suspicious_order, unity, new_titan, harvester_word, chen_wrong, black_site. Values are true when introduced."
     }
   },
   "required": [
