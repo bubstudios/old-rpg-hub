@@ -277,6 +277,23 @@ Deno.serve(async (req) => {
       return `${key} [${status}, Rel: ${rel}]${agenda}${lastAct}`;
     }).join('\n') || 'none tracked yet';
 
+    const gs = campaign.game_system || 'add1e';
+    const isSW = gs === 'starwars';
+    const isMSH = gs === 'marvel';
+    const isDCH = gs === 'dcheroes';
+    const isJB = gs === 'jamesbond';
+    const isSR = gs === 'shadowrun';
+    const isCP = gs === 'cyberpunk';
+    const isTrav = gs === 'traveller';
+    const isRL = gs === 'ravenloft';
+    const isOD = gs === 'oddnd';
+    const isBX = gs === 'bxdnd';
+    const is2e = gs === 'add2e';
+    const is35 = gs === 'dnd35';
+    const is4e = gs === 'dnd4e';
+    const is5e = gs === 'dnd5e';
+    const isPJ = gs === 'pathfinder';
+
     // Build evidence dossier (Pathfinder Journeys — playable evidence system)
     const evStates = worldState.evidence_states || {};
     const evidenceRoster = isPJ ? [
@@ -336,23 +353,6 @@ Deno.serve(async (req) => {
     const dmBriefBlock = campaign.dm_brief && String(campaign.dm_brief).trim()
       ? `\n## DM Brief — House Style (follow this over your defaults)\n${String(campaign.dm_brief).trim()}`
       : '';
-
-    const gs = campaign.game_system || 'add1e';
-    const isSW = gs === 'starwars';
-    const isMSH = gs === 'marvel';
-    const isDCH = gs === 'dcheroes';
-    const isJB = gs === 'jamesbond';
-    const isSR = gs === 'shadowrun';
-    const isCP = gs === 'cyberpunk';
-    const isTrav = gs === 'traveller';
-    const isRL = gs === 'ravenloft';
-    const isOD = gs === 'oddnd';
-    const isBX = gs === 'bxdnd';
-    const is2e = gs === 'add2e';
-    const is35 = gs === 'dnd35';
-    const is4e = gs === 'dnd4e';
-    const is5e = gs === 'dnd5e';
-    const isPJ = gs === 'pathfinder';
 
     // Build NPC disposition modifiers roster (background shifts from evidence discovery)
     const dispMods = worldState.npc_disposition_modifiers || {};
