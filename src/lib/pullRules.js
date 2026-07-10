@@ -311,7 +311,7 @@ export const CODEX_ENTRIES = {
   },
   bullet: {
     category: 'bullet', title: 'Bullet',
-    content: 'A wounded man with no memory. Named "Bullet" for the circular scar over his heart — like a bullet wound that never healed. Barefoot, exhausted, wearing torn clothing. Steel-gray eyes that carry something he cannot name. He survives on instinct, grit, and the warmth of the etched shard. He does not know why he keeps moving forward. He only knows that stopping feels wrong.',
+    content: 'Bullet is Michael. A divine being sent by Father to end the Provinces\' torment. To cross the veil, Michael shot himself in the heart at Father\'s command - the scar that named him Bullet. He forgot everything: his name, his purpose, his divinity. The etched shard (Father\'s own light) guided him through amnesia. The Pull was Father\'s will, driving him forward. He survived every province not because he knew he was divine, but because he chose righteousness even without memory. Both identities are true: Michael (divine mission) and Bullet (the scarred wanderer). After Cleanup, Michael ascends home to Father.',
     alwaysVisible: true
   },
   pull: {
@@ -321,12 +321,12 @@ export const CODEX_ENTRIES = {
   },
   scar: {
     category: 'scar', title: 'The Scar',
-    content: 'A circular scar over Bullet\'s heart — like a bullet wound. It reacts to the Pull, Province boundaries, shard activity, Sentinels, Wardens, memory fragments, and Province 1 signals. It can pulse, burn, flare, trigger blackouts, flash memories, protect against illusion, and warn of danger. The scar is not random. It means something.',
+    content: 'A circular scar over Bullet\'s heart - a bullet wound, self-inflicted at Father\'s command. To enter the realm of the damned, Michael had to commit an unforgivable sin: suicide. Father molded his heart to break it. Michael shot himself in the heart. That wound became the scar, which is why the camp named him Bullet. It reacts to the Pull, Province boundaries, shard activity, Sentinels, Wardens, memory fragments, and Province 1 signals. Not true suicide born of despair, but sacrifice born of mission.',
     alwaysVisible: true
   },
   etched_shard: {
     category: 'shard', title: 'The Etched Shard',
-    content: 'A shard of metal or glass, warm to the touch. Etched with a circle bisected by a jagged line. Early: passive warmth, minor healing, scar synchronization. Mid: resists venom, counters rust conversion, resonates with crystal structures. Late: reveals hidden doors, activates Shard Focus, breaks Province 1\'s barrier. The shard keeps Bullet moving. It does not make survival painless. Warning: the more Bullet survives through shard use, the easier he becomes to track.',
+    content: 'A shard of metal or glass, warm to the touch. Etched with a circle bisected by a jagged line. Father shaped it from His own light as a beacon through amnesia. Progression: Early (passive warmth, minor healing, scar sync), Mid (resists venom, counters rust, resonates with crystals, sonic weapon vs Shardswarms), Late (reveals hidden doors, Shard Focus, enhanced perception/strength), Province 1 (shatters the barrier, awakens Michael). After the final battle, Michael gives it to his brother - the Leader takes it home to Father. Its purpose fulfilled. Warning: the more Bullet uses it, the easier he is to track (shard resonance trail).',
     alwaysVisible: true
   },
   spark_shard: {
@@ -451,12 +451,17 @@ export const CODEX_ENTRIES = {
   },
   steel_gray_eyes: {
     category: 'bullet', title: 'Steel-Gray Eyes',
-    content: 'Bullet has steel-gray eyes. In Province 998, steel-gray eyes see him through an obelisk rift. In Province 1, the Leader has steel-gray eyes. This is not a coincidence.',
+    content: 'Bullet has steel-gray eyes. In Province 998, steel-gray eyes see him through an obelisk rift. In Province 1, the Leader has steel-gray eyes. They are brothers. This is not a coincidence.',
     requiresUnlock: 'steel_gray_eyes'
+  },
+  the_greatest_task: {
+    category: 'lore', title: 'The Greatest Task',
+    content: 'Father gave Michael the greatest task: enter the realm of torment, forget himself, suffer as the trapped souls suffer, and end the Provinces\' torment. Father shaped the etched shard from His own light as a beacon through amnesia. To cross the veil into the realm of the damned, Michael had to commit an unforgivable sin: suicide. Father molded his heart to break it. Michael shot himself in the heart - the bullet wound that became the scar, that named him Bullet. The amnesia was intentional: to choose righteousness, not divinity. The Pull was Father\'s will. After all provinces are cleansed, Michael ascends home. The light embraced him, and he was home.',
+    requiresProvince: 1
   },
   cleanup_mode: {
     category: 'cleanup', title: 'Cleanup Mode',
-    content: 'After Province 1, Michael returns through the Provinces to judge souls. Judgment outcomes: Send Home (innocent, repentant, redeemed), Cleanse (corrupted but recoverable), Release (artificial constructs, echoes, fragments), Unmake (irredeemable beings who embraced cruelty), Investigate (unclear cases). Core question: where does corruption end and choice begin?',
+    content: 'After Province 1, Michael walks back through every province in reverse, touching each soul. White light flares at each contact. The irredeemably bad dissolve into nothing - their existence erased. The good ascend home to the Garden. TWIST: some NPCs who seemed kind hide deeper sins (betrayal, cruelty, hidden crimes) and are irredeemable - Mist, Knell, Glim, Haze, and Veil from Province 512 included some who dissolved. Others who seemed corrupted were genuinely redeemed through choices made in nightmare circumstances. This takes centuries. After all provinces are cleansed and the realm is completely dismantled, Michael ascends home to Father.',
     requiresProvince: 1
   }
 };
