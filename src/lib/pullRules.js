@@ -244,11 +244,11 @@ export const PROVINCES = {
   1: {
     name: 'Province 1: Final Castle', biome: 'Black shore, obsidian shore, ferryman, castle barrier, bone shards, ash sky',
     theme: 'Final confrontation and identity reveal', danger: 'Seeker, Dreadwraith, Serpent of Province 1',
-    npcs: 'The Ferryman, The Leader',
-    enemy: 'Serpent of Province 1 (final boss, 8 phases)', mechanics: 'Barrier, Ferryman Payment, Serpent Phases, Identity Reveal',
+    npcs: 'The Ferryman, The Leader (fallen brother)',
+    enemy: 'Serpent of Province 1 (300ft, the provinces\' accumulated wrath incarnate, summoned by bone-tech whistle)', mechanics: 'Barrier (shattered by etched shard), Ferryman Payment (Spark\'s shard), Serpent Phases, Identity Reveal, Leader Redemption',
     choice: 'Throw the etched shard into the barrier to shatter it and awaken as Michael',
-    clue: 'Bullet is Michael, sent by Father to end the Provinces\' torment. The Leader is his fallen brother.',
-    cleanup: 'Begin Cleanup Mode'
+    clue: 'Bullet is Michael, sent by Father. The Leader is his fallen brother (the Star/Ember who defied Father). The Leader repents and returns home. "Only One can make the Garden." The amnesia was intentional — to choose righteousness, not divinity. Both identities remain true.',
+    cleanup: 'Begin Cleanup Mode — return through all Provinces, judge souls, dismantle corruption'
   },
   [-1]: {
     name: 'Cleanup Mode', biome: 'Return through all Provinces',
@@ -406,7 +406,7 @@ export const CODEX_ENTRIES = {
   },
   province_1: {
     category: 'provinces', title: 'Province 1: Final Castle',
-    content: 'A black shore. A ferryman. A castle barrier. The Seeker and Dreadwraith catch Bullet here. The etched shard breaks the barrier. Bullet remembers he is Michael. The Leader is his fallen brother. The Serpent of Province 1 is the final boss.',
+    content: 'A black shore. A ferryman demands payment — Bullet pays with Spark\'s unetched shard. A violet-green barrier blocks the castle; the etched shard shatters it, awakening Michael\'s divine memories. The Seeker and Dreadwraith are destroyed with a touch. The Leader is Michael\'s fallen brother — the Star who defied Father and built the Provinces. He summons the Serpent (the provinces\' accumulated wrath incarnate). Michael grows radiant wings; the pipe becomes a sword of white fire. After slaying the Serpent, Michael invites his brother home to the Garden. The Leader repents and returns to Father. The amnesia was intentional: to choose righteousness, not divinity. Both identities remain true: Michael and Bullet. The Pull vanishes. Cleanup begins.',
     requiresProvince: 1
   },
   seeker: {
@@ -430,13 +430,13 @@ export const CODEX_ENTRIES = {
     requiresUnlock: 'genesis'
   },
   architect_fall: {
-    category: 'lore', title: 'The Architect\'s Fall (Unverified)',
-    content: 'Myths speak of a Leader who began as a creator in white. He wanted to make beauty. His pride corrupted every creation. His suit became charcoal. The Provinces became torments. He tried to recreate the Garden and failed. Province cores were originally good or useful things, later corrupted. This is unverified.',
+    category: 'lore', title: 'The Leader\'s Fall',
+    content: 'The Leader is the Star-Crowned Ember from the creation myths — a divine being who defied Father (the Sovereign/Silent Pulse) and fell from the Celestial Assembly/Lattice of Sparks. He built the Provinces as his own corrupted kingdom, trying to recreate the Garden and failing. Every province, every torture, every trapped soul was his creation. His pride corrupted everything he touched. He is Michael\'s fallen brother. After the final battle, he repents: "Tell Father I\'m sorry. That I remember now." He returns home in white light.',
     requiresUnlock: 'architect_fall'
   },
   blade_of_dawn: {
-    category: 'myths', title: 'Blade of Dawn (Myth)',
-    content: 'A myth of a radiant sword of white fire that ends torment. The pipe may be connected to this myth. Unverified.',
+    category: 'myths', title: 'Blade of Dawn',
+    content: 'The myth of a radiant sword of white fire that ends torment. CONFIRMED: In Province 1, after Michael awakens, the battered pipe transforms into a majestic sword radiating white fire, humming with divine will. With it, Michael slays the Serpent of Province 1. After the final battle, the sword becomes the pipe again. The pipe is Bullet\'s survival. The sword is Michael\'s mission. Both are true.',
     requiresUnlock: 'blade_of_dawn'
   },
   star_wanderer: {
@@ -445,8 +445,8 @@ export const CODEX_ENTRIES = {
     requiresUnlock: 'star_wanderer'
   },
   father_garden: {
-    category: 'lore', title: 'Father and the Garden (Unverified)',
-    content: 'References to a Father and a Garden appear in visions and myths. They should remain mysterious. The Garden may be a place of origin. Father may be a creator above the Leader. Unverified.',
+    category: 'lore', title: 'Father and the Garden',
+    content: 'Father is the supreme being — the Sovereign/Silent Pulse from the creation myths. The Garden is the original home, a place of origin beyond the Provinces. The Leader tried to replicate the Garden in his corrupted kingdom and failed. "Only One can make the Garden." After the final battle, Michael invites the Leader home: "The family\'s waiting. In the Garden." The Leader repents and returns to Father. The Garden is real. Father is real. Home is real.',
     requiresUnlock: 'father_garden'
   },
   steel_gray_eyes: {
