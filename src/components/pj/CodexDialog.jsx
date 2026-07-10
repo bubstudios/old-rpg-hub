@@ -9,6 +9,8 @@ import {
   getSectionEntries, PJ_EPISODES, CODEX_LOCATIONS, isLocationVisible
 } from '@/lib/pjCodex';
 import LocationCard from '@/components/pj/LocationCard';
+import FactionCard from '@/components/pj/FactionCard';
+import { CODEX_FACTIONS, isFactionVisible } from '@/lib/pjFactions';
 
 const SECTION_ICONS = {
   story: BookOpen, mission: Target, crew: Users, allies: Heart,
@@ -129,7 +131,23 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
               </div>
             )}
 
-            {section === 'locations' ? (
+            {section === 'factions' ? (
+              <div className="space-y-2">
+                {CODEX_FACTIONS.filter((f) => isFactionVisible(campaign, f)).map((fac) => (
+                  <FactionCard
+                    key={fac.key}
+                    faction={fac}
+                    campaign={campaign}
+                    expanded={expanded.has(fac.key)}
+                    onToggle={() => toggle(fac.key)}
+                    onSuggestAction={onSuggestAction}
+                  />
+                ))}
+                <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
+                  Factions are living groups with their own goals. They do not wait passively — if ignored, they advance their agendas. Use Faction Interactions to monitor, negotiate, threaten, or recruit.
+                </p>
+              </div>
+            ) : section === 'locations' ? (
               <div className="space-y-2">
                 {CODEX_LOCATIONS.filter((loc) => isLocationVisible(campaign, loc)).map((loc) => (
                   <LocationCard

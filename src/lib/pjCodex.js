@@ -3,6 +3,7 @@
 // Spoiler-safe: future secrets (Arc 2+) are marked `locked: true` and omitted.
 
 import { PJ_REGIONS, PJ_EPISODES } from '@/lib/pjRules';
+import { CODEX_FACTIONS } from '@/lib/pjFactions';
 
 // Normalize a string to a stable key for matching live game data to codex entries.
 export function codexKey(s) {
@@ -503,62 +504,9 @@ export const CODEX_ENEMIES = [
   }
 ];
 
-export const CODEX_FACTIONS = [
-  {
-    key: 'the_confluence',
-    label: 'The Confluence',
-    fields: [
-      { label: 'Nature', value: 'An ancient galactic legal-commercial order that claims to maintain civilization through law, contracts, ownership, and enforcement.' },
-      { label: 'Relationship to player', value: 'Existential enemy. They claim Earth and are processing human colonies.' },
-      { label: 'What to know', value: 'They use calm, legalistic language. "Claim," "adjudication," "preserve," "compliance," "harvest."' }
-    ]
-  },
-  {
-    key: 'vescarri_sovereignty',
-    label: 'Vescarri Sovereignty',
-    fields: [
-      { label: 'Nature', value: 'Alien power claiming Earth and human colonies under ancient seeding law.' },
-      { label: 'Relationship to player', value: 'Legal adversary. Their claim triggered the Confluence process against Earth.' },
-      { label: 'What to know', value: 'They need legal proof. Public collapse of Confluence legitimacy would undermine their claim.' }
-    ]
-  },
-  {
-    key: 'collectors_guild',
-    label: "Collector's Guild",
-    fields: [
-      { label: 'Nature', value: 'Confluence-linked brokers who acquire, lease, trade, and manage sentient populations.' },
-      { label: 'Relationship to player', value: 'Slavers. Novara survivors were likely sold through them.' },
-      { label: 'What to know', value: 'They speak of people as "talent assets," "contract generations," and "preserved cultures."' }
-    ]
-  },
-  {
-    key: 'earth_command',
-    label: 'Earth Command (United Earth)',
-    fields: [
-      { label: 'Nature', value: 'Humanity\u2019s military and political leadership, based on Earth.' },
-      { label: 'Relationship to player', value: 'Compromised. Admiral Chen controls the narrative. Some captains may be loyal to humanity over Chen.' },
-      { label: 'What to know', value: 'The public does not know the truth about The Confluence. Earth Command may contain both allies and shapeshifter infiltrators.' }
-    ]
-  },
-  {
-    key: 'sanctuary_council',
-    label: 'Sanctuary Council',
-    fields: [
-      { label: 'Nature', value: 'A coalition of refugee species who survived The Confluence, hidden outside normal space routes.' },
-      { label: 'Relationship to player', value: 'Cautious allies. They provided ships, knowledge, and 37 vessels joined the Pathfinder.' },
-      { label: 'What to know', value: 'The council values survival over reckless war. Trust must be earned through actions, not words.' }
-    ]
-  },
-  {
-    key: 'the_resistance',
-    label: 'The Resistance',
-    fields: [
-      { label: 'Nature', value: 'The emerging movement Captain Stellar is building \u2014 a network of colonies, defectors, refugees, and allies who believe The Confluence can be fought.' },
-      { label: 'Relationship to player', value: 'You are its founder and leader. Its strength depends on your choices.' },
-      { label: 'What to know', value: 'The resistance began with a single broadcast from the Pathfinder. The galaxy is watching to see if defiance is real.' }
-    ]
-  }
-];
+// CODEX_FACTIONS now lives in pjFactions.js — deep, playable faction system.
+// Re-export the imported binding so getSectionEntries and other modules can use it.
+export { CODEX_FACTIONS };
 
 export const CODEX_FUTURE_MEMORIES = [
   {
@@ -684,6 +632,20 @@ export {
   getLocationState,
   isLocationVisible
 };
+
+export {
+  FACTION_STATUSES,
+  STATUS_TONE_CLASSES,
+  RELATIONSHIP_BANDS,
+  RELATIONSHIP_TONE_CLASSES,
+  FACTION_INTERACTIONS,
+  getFactionStatus,
+  getFactionRelationship,
+  getFactionAgenda,
+  getFactionLastAction,
+  isFactionVisible,
+  findFactionEntry
+} from '@/lib/pjFactions';
 
 export { PJ_EPISODES };
 
