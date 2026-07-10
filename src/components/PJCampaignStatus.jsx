@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Rocket, Shield, Activity, AlertTriangle, Users, FileText, MapPin, ChevronDown, ChevronUp, Lock } from 'lucide-react';
-import { PJ_CLOCKS, PJ_SHIP_STATS } from '@/lib/pjRules';
+import { PJ_SHIP_STATS } from '@/lib/pjRules';
 import { codexKey } from '@/lib/pjCodex';
+import { getVisibleMainClocks, findClock, getClockStatus, getClockTier } from '@/lib/pjClocks';
 
 function clockColor(val, highIsBad) {
   const pct = Math.max(0, Math.min(100, val));
@@ -38,23 +39,27 @@ export default function PJCampaignStatus({ campaign, onOpenCodex }) {
         </div>
       </div>
 
-      {/* Campaign Clocks */}
+      {/* Campaign Clocks — 4 most relevant for current scene */}
       <div>
         <div className="flex items-center gap-1.5 mb-2">
           <Activity className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
           <h3 className="font-heading text-[10px] tracking-[0.15em] text-foreground">SANDBOX CLOCKS</h3>
         </div>
         <div className="space-y-1.5">
-          {PJ_CLOCKS.map(c => {
-            const val = clocks[c.key] ?? c.start;
+          {getVisibleMainClocks(campaign).map(key => {
+            const clock = findClock(key);
+            if (!clock) return null;
+            const val = clocks[key] ?? clock.start;
+            const tier = getClockTier(val);
+            const status = getClockStatus(clock, val);
             return (
-              <button key={c.key} onClick={() => onOpenCodex?.('clocks', c.key)} className="block w-full text-left group">
+              <button key={key} onClick={() => onOpenCodex?.('clocks', key)} className="block w-full text-left group">
                 <div className="flex items-center justify-between text-[10px] mb-0.5">
-                  <span className="text-muted-foreground font-body truncate group-hover:text-foreground transition-colors" title={c.desc}>{c.label}</span>
-                  <span className={`font-heading tabular-nums ${c.highIsBad ? (val >= 75 ? 'text-red-400' : val >= 50 ? 'text-amber-400' : 'text-emerald-400') : (val >= 75 ? 'text-emerald-400' : val >= 50 ? 'text-amber-400' : 'text-red-400')}`}>{val}</span>
+                  <span className="text-muted-foreground font-body truncate group-hover:text-foreground transition-colors" title={clock.whatItMeans}>{clock.label}</span>
+                  <span className={`font-heading tabular-nums ${tier.text}`}>{val} <span className="text-[9px] opacity-70">— {status.label}</span></span>
                 </div>
                 <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${clockColor(val, c.highIsBad)}`} style={{ width: `${Math.max(0, Math.min(100, val))}%` }} />
+                  <div className={`h-full rounded-full transition-all duration-500 ${tier.color}`} style={{ width: `${Math.max(0, Math.min(100, val))}%` }} />
                 </div>
               </button>
             );

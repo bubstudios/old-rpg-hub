@@ -10,7 +10,9 @@ import {
 } from '@/lib/pjCodex';
 import LocationCard from '@/components/pj/LocationCard';
 import FactionCard from '@/components/pj/FactionCard';
+import ClockCard from '@/components/pj/ClockCard';
 import { CODEX_FACTIONS, isFactionVisible } from '@/lib/pjFactions';
+import { getAllClocks, getClockValue, isCrisisClockVisible } from '@/lib/pjClocks';
 
 const SECTION_ICONS = {
   story: BookOpen, mission: Target, crew: Users, allies: Heart,
@@ -161,6 +163,23 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
                 ))}
                 <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
                   Every location listed here is a playable destination. If it is unlocked or active, use the Player Actions to set course, send a probe, or plan a mission. Ignored crises can fall.
+                </p>
+              </div>
+            ) : section === 'clocks' ? (
+              <div className="space-y-2">
+                {getAllClocks().filter((c) => isCrisisClockVisible(campaign, c)).map((clock) => (
+                  <ClockCard
+                    key={clock.key}
+                    clock={clock}
+                    value={getClockValue(campaign, clock.key)}
+                    changes={(campaign?.world_state?.quest_flags?.clock_changes || []).filter((cc) => cc.clock === clock.key)}
+                    expanded={expanded.has(clock.key)}
+                    onToggle={() => toggle(clock.key)}
+                    onSuggestAction={onSuggestAction}
+                  />
+                ))}
+                <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
+                  Sandbox Clocks are story pressure meters. The AI GM manages them — you only need to understand what's getting better, what's getting worse, why it changed, and what you can do about it. Crisis clocks appear only when triggered by events in your campaign.
                 </p>
               </div>
             ) : entries && (

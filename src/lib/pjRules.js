@@ -92,13 +92,13 @@ export const PJ_REGIONS = [
 
 // === SANDBOX CLOCKS ===
 export const PJ_CLOCKS = [
-  { key: 'confluence_claim', label: 'Confluence Claim', desc: 'How close The Confluence is to processing Earth/New Titan.', start: 75, highIsBad: true },
-  { key: 'confluence_heat', label: 'Confluence Heat', desc: 'How hard The Confluence is hunting Bub.', start: 75, highIsBad: true },
-  { key: 'chen_countermeasures', label: 'Chen Countermeasures', desc: 'How aggressively Admiral Chen moves against Bub.', start: 40, highIsBad: true },
+  { key: 'confluence_claim', label: 'Confluence Claim', desc: 'How close The Confluence is to processing Earth/New Titan.', start: 70, highIsBad: true },
+  { key: 'confluence_heat', label: 'Confluence Heat', desc: 'How hard The Confluence is hunting Bub.', start: 65, highIsBad: true },
+  { key: 'chen_countermeasures', label: 'Chen Countermeasures', desc: 'How aggressively Admiral Chen moves against Bub.', start: 35, highIsBad: true },
   { key: 'new_titan_stability', label: 'New Titan Stability', desc: 'Calm, suspicious, panicking, or resisting.', start: 50, highIsBad: false },
-  { key: 'resistance_spark', label: 'Resistance Spark', desc: 'How much the galaxy believes resistance is possible.', start: 25, highIsBad: false },
-  { key: 'sanctuary_trust', label: 'Sanctuary Trust', desc: 'Confidence of alien allies in Bub.', start: 35, highIsBad: false },
-  { key: 'crew_morale', label: 'Crew Morale', desc: 'Inspired, strained, shaken, or breaking.', start: 88, highIsBad: false },
+  { key: 'resistance_spark', label: 'Resistance Spark', desc: 'How much the galaxy believes resistance is possible.', start: 20, highIsBad: false },
+  { key: 'sanctuary_trust', label: 'Sanctuary Trust', desc: 'Confidence of alien allies in Bub.', start: 55, highIsBad: false },
+  { key: 'crew_morale', label: 'Crew Morale', desc: 'Inspired, strained, shaken, or breaking.', start: 85, highIsBad: false },
   { key: 'temporal_instability', label: 'Temporal Instability', desc: 'Rises if future memories are used too aggressively.', start: 15, highIsBad: true },
   { key: 'public_truth', label: 'Public Truth', desc: 'How much the galaxy knows Chen and The Confluence are lying.', start: 10, highIsBad: false }
 ];
