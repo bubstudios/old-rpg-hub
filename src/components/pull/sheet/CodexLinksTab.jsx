@@ -1,22 +1,9 @@
 import { Link2, BookOpen } from 'lucide-react';
-import { CODEX_ENTRIES, CODEX_CATEGORIES, getProvinceInfo } from '@/lib/pullRules';
+import { CODEX_CATEGORIES } from '@/lib/pullRules';
+import { PLAYER_CODEX, getPlayerCodexContent, isPlayerCodexEntryVisible } from '@/lib/pullSheetData';
 
 export default function CodexLinksTab({ flags }) {
-  const codexUnlocks = flags.codex_unlocks || [];
-  const history = flags.province_history || [];
-  const currentProvince = flags.current_province || 618;
-
-  function isEntryVisible(entry) {
-    if (entry.alwaysVisible) return true;
-    if (codexUnlocks.includes(entry.key)) return true;
-    if (entry.requiresUnlock && codexUnlocks.includes(entry.requiresUnlock)) return true;
-    if (entry.requiresProvince != null) {
-      return history.includes(entry.requiresProvince) || currentProvince === entry.requiresProvince;
-    }
-    return false;
-  }
-
-  const visible = Object.entries(CODEX_ENTRIES).filter(([_, entry]) => isEntryVisible(entry));
+  const visible = Object.entries(PLAYER_CODEX).filter(([_, entry]) => isPlayerCodexEntryVisible(entry, flags));
 
   // Group by category
   const grouped = {};
@@ -40,15 +27,19 @@ export default function CodexLinksTab({ flags }) {
               <div key={cat.id}>
                 <p className="text-[10px] font-heading tracking-[0.15em] text-primary/60 uppercase mb-2">{cat.label}</p>
                 <div className="space-y-2">
-                  {entries.map(entry => (
-                    <div key={entry.key} className="border border-border/30 rounded-lg p-3 bg-secondary/5">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <BookOpen className="w-3 h-3 text-primary/50" strokeWidth={1.5} />
-                        <p className="font-heading text-xs text-foreground">{entry.title}</p>
+                  {entries.map(entry => {
+                    const content = getPlayerCodexContent(entry, flags);
+                    if (!content) return null;
+                    return (
+                      <div key={entry.title} className="border border-border/30 rounded-lg p-3 bg-secondary/5">
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <BookOpen className="w-3 h-3 text-primary/50" strokeWidth={1.5} />
+                          <p className="font-heading text-xs text-foreground">{entry.title}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground font-body leading-relaxed">{content}</p>
                       </div>
-                      <p className="text-[11px] text-muted-foreground font-body leading-relaxed">{entry.content}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );

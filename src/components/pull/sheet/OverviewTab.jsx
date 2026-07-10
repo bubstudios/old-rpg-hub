@@ -15,16 +15,16 @@ export default function OverviewTab({ character, flags, provinceInfo, isMichael 
 
   const truth = isMichael
     ? 'You are Michael, sent by Father to end the Provinces\' torment. The scar was a self-inflicted bullet wound at Father\'s command. The etched shard was Father\'s own light. The amnesia was intentional sacrifice. Both identities remain true: Michael and Bullet.'
-    : 'You woke in Province 618 with no name, no past, a scar over your heart, and a shard marked with a circle split by a jagged line. Something called the Pull drags you forward.';
+    : 'You woke in red sand with no memory, a scar over your heart, and a strange shard in your pocket. Something inside your chest is pulling you forward.';
 
   return (
     <div className="space-y-3">
       {/* Identity card */}
       <div className="border border-border/50 rounded-lg bg-card/40 p-4">
         <div className="grid grid-cols-2 gap-3 text-xs">
-          <InfoRow label="Known Identity" value={isMichael ? 'Restored' : 'No memory'} />
+          <InfoRow label="Known Identity" value={isMichael ? 'Restored' : 'Unknown'} />
           <InfoRow label="Current Province" value={provinceInfo.name} />
-          <InfoRow label="Current Objective" value={isMichael ? 'Clean up the Provinces' : 'Follow the Pull'} />
+          <InfoRow label="Current Objective" value={isMichael ? 'Clean up the Provinces' : 'Survive. Find water. Understand the Pull.'} />
           <InfoRow label="Current State" value={currentState} />
           <InfoRow label="Primary Weapon" value={primaryWeapon ? primaryWeapon.name : 'None yet'} />
           <InfoRow label="Special Items" value={specialItems.length ? specialItems.join(', ') : 'Etched Shard'} />

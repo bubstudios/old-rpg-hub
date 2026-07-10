@@ -1,6 +1,6 @@
 import { Compass, Zap } from 'lucide-react';
 import { PULL_SCALE, SCAR_STATES } from '@/lib/pullRules';
-import { SCAR_EFFECTS, derivePullBehavior, deriveResistanceCost } from '@/lib/pullSheetData';
+import { getScarEffects, derivePullBehavior, deriveResistanceCost } from '@/lib/pullSheetData';
 
 export default function PullScarTab({ flags, isMichael }) {
   const pullIntensity = flags.pull_intensity ?? 1;
@@ -8,6 +8,7 @@ export default function PullScarTab({ flags, isMichael }) {
   const scar = SCAR_STATES[flags.scar_state || 'pulse'] || SCAR_STATES.pulse;
   const behavior = derivePullBehavior(pullIntensity);
   const resistanceCost = deriveResistanceCost(pullIntensity);
+  const scarEffects = getScarEffects(flags);
 
   if (isMichael) {
     return (
@@ -63,12 +64,15 @@ export default function PullScarTab({ flags, isMichael }) {
         </div>
         <p className="text-xs text-muted-foreground font-body italic leading-relaxed mb-3">{scar.desc}</p>
         <div className="space-y-1">
-          {SCAR_EFFECTS.map(effect => (
+          {scarEffects.map(effect => (
             <div key={effect} className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-body">
               <span className="w-1 h-1 rounded-full bg-amber-500/50" />
               {effect}
             </div>
           ))}
+          {scarEffects.length === 0 && (
+            <p className="text-[10px] text-muted-foreground/40 italic font-body">No effects observed yet.</p>
+          )}
         </div>
       </div>
 

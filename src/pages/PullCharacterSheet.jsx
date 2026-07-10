@@ -127,11 +127,11 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
       {/* Special actions */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 backdrop-blur-sm px-4 py-3 flex items-center gap-2 justify-center">
         <button
-          onClick={() => setRememberOpen(true)}
+          onClick={() => visibleGuilt.length > 0 && setRememberOpen(true)}
           disabled={visibleGuilt.length === 0}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary text-xs font-heading tracking-wide hover:bg-primary/20 transition-colors disabled:opacity-30"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-primary/40 bg-primary/10 text-primary text-xs font-heading tracking-wide hover:bg-primary/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <Brain className="w-3.5 h-3.5" strokeWidth={1.5} /> Remember a Name
+          <Brain className="w-3.5 h-3.5" strokeWidth={1.5} /> {visibleGuilt.length > 0 ? 'Remember a Name' : 'No names remembered yet'}
         </button>
         {canAcceptHelp && (
           <button
@@ -153,19 +153,25 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
             Bullet focuses on someone who helped him, died near him, or was left behind. This can reduce despair, strengthen connection, or trigger a memory flash.
           </p>
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto scrollbar-thin">
-            {visibleGuilt.map(entry => (
-              <button
-                key={entry.name}
-                onClick={() => { handleRememberName(entry.name); setRememberOpen(false); }}
-                className="w-full flex items-center justify-between p-2.5 rounded-lg border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-colors text-left"
-              >
-                <div>
-                  <p className="text-sm font-heading text-foreground">{entry.name}</p>
-                  <p className="text-[10px] text-muted-foreground font-body">{entry.bond}</p>
-                </div>
-                <Brain className="w-3.5 h-3.5 text-primary/40" strokeWidth={1.5} />
-              </button>
-            ))}
+            {visibleGuilt.length === 0 ? (
+              <p className="text-xs text-muted-foreground font-body italic text-center py-4 leading-relaxed">
+                You do not remember anyone yet. Names become anchors after you meet people, lose people, help people, or leave them behind.
+              </p>
+            ) : (
+              visibleGuilt.map(entry => (
+                <button
+                  key={entry.name}
+                  onClick={() => { handleRememberName(entry.name); setRememberOpen(false); }}
+                  className="w-full flex items-center justify-between p-2.5 rounded-lg border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-colors text-left"
+                >
+                  <div>
+                    <p className="text-sm font-heading text-foreground">{entry.name}</p>
+                    <p className="text-[10px] text-muted-foreground font-body">{entry.bond}</p>
+                  </div>
+                  <Brain className="w-3.5 h-3.5 text-primary/40" strokeWidth={1.5} />
+                </button>
+              ))
+            )}
           </div>
         </DialogContent>
       </Dialog>
