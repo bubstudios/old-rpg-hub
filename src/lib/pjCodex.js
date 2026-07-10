@@ -1,0 +1,697 @@
+// Pathfinder Journeys — Lore Codex
+// Structured reference data for the in-game Codex and onboarding.
+// Spoiler-safe: future secrets (Arc 2+) are marked `locked: true` and omitted.
+
+import { PJ_REGIONS, PJ_EPISODES } from '@/lib/pjRules';
+
+// Normalize a string to a stable key for matching live game data to codex entries.
+export function codexKey(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\u2018\u2019']/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
+}
+
+export const SANDBOX_INTRO_TEXT =
+  'You are not replaying a novel. You are entering a living sandbox after Arc 1. The future is not fixed. Your choices decide what happens next.';
+
+export const STORY_SO_FAR_TEXT = `You are Captain Bub Stellar of the UES Pathfinder.
+
+Humanity has been invited to appear before an ancient galactic power known as The Confluence. The invitation was not friendly. The Vescarri Sovereignty has filed a legal claim over Earth and its colonies, arguing that humanity and human worlds fall under ancient seeding rights.
+
+The Confluence claims to be a lawful galactic forum. In truth, it is a system of ownership, harvest, contracts, and controlled "order." Civilizations that lose their claims are processed, relocated, altered, leased, or sold.
+
+The lost UES Prometheus, missing for seventy years, returned with a warning. Its survivors, including your grandfather James Stellar, had been forced into service by The Confluence. James revealed that Earth had been protected for decades by terrible bargains, and that Admiral Chen may have helped sell the lost human colony Novara in exchange for advanced propulsion technology.
+
+You and the Pathfinder uncovered records from the dead Korath civilization, proving The Confluence has destroyed or processed countless species using legal claims and enforcement fleets.
+
+You found Sanctuary, a hidden refuge of alien survivors. There you met Sarah Chen, James Stellar, Councilor Verath, Commander Vex, and many others who have resisted The Confluence in secret.
+
+During the Battle for Sanctuary, you activated ancient Architect technology and briefly saw a possible future where humanity eventually defeats The Confluence after centuries of resistance. You returned with encoded future memories: warnings, flashes, and fragments of what may come.
+
+Now the Pathfinder has arrived at the edge of the New Titan system.
+
+New Titan is home to two million humans. The colony does not yet understand that it is being legally processed for harvest.
+
+Thirty-seven refugee ships from Sanctuary have followed you.
+
+The Confluence is watching.
+
+Earth Command may be compromised.
+
+Admiral Chen may be an enemy, a victim, or something worse.
+
+Your mission is not to follow a fixed path.
+
+Your mission is to survive, expose the truth, protect humanity, build the resistance, and decide what kind of future is worth fighting for.`;
+
+export const CURRENT_MISSION = {
+  location: 'Edge of New Titan System',
+  problem:
+    'New Titan Control is requesting identification. They may have been warned by Admiral Chen that Captain Bub Stellar is a traitor.',
+  stakes:
+    'Two million humans live on New Titan. The Confluence has already filed a claim on the colony. If the Pathfinder fails to warn them, New Titan may surrender, be occupied, or be harvested.',
+  firstDecision: 'How does Captain Bub Stellar approach New Titan?',
+  approaches: [
+    'Open honest communications.',
+    'Hide the Sanctuary refugee fleet.',
+    'Send evidence immediately.',
+    'Ask Farrah Thorne about New Titan.',
+    'Scan for Confluence agents.',
+    'Contact Governor Marcus Thorne.',
+    'Broadcast the truth to the whole colony.'
+  ]
+};
+
+export const CODEX_SECTIONS = [
+  { id: 'story', label: 'Story So Far' },
+  { id: 'mission', label: 'Current Mission' },
+  { id: 'crew', label: 'Crew' },
+  { id: 'allies', label: 'Allies' },
+  { id: 'enemies', label: 'Enemies' },
+  { id: 'evidence', label: 'Evidence' },
+  { id: 'clocks', label: 'Sandbox Clocks' },
+  { id: 'factions', label: 'Factions' },
+  { id: 'locations', label: 'Locations' },
+  { id: 'future', label: 'Future Memories' },
+  { id: 'questions', label: 'Unresolved Questions' }
+];
+
+export const CODEX_CLOCKS = [
+  {
+    key: 'confluence_claim',
+    label: 'Confluence Claim',
+    fields: [
+      { label: 'What it means', value: 'How far The Confluence legal process has advanced against Earth, New Titan, and other human colonies.' },
+      { label: 'Why it matters', value: 'If this reaches 100, The Confluence can declare legal ownership or processing rights over a target.' },
+      { label: 'Raised by', value: 'Time passing, ignored legal summons, Confluence victories, colonies failing to contest claims.' },
+      { label: 'Lowered by', value: 'Strong evidence, public resistance, legal disruption, rescued witnesses, exposing Confluence fraud.' },
+      { label: 'Current meaning', value: 'The Confluence claim is already dangerously advanced. The player must act quickly.' }
+    ]
+  },
+  {
+    key: 'confluence_heat',
+    label: 'Confluence Heat',
+    fields: [
+      { label: 'What it means', value: 'How much hostile attention The Confluence is giving the Pathfinder and Captain Stellar.' },
+      { label: 'Why it matters', value: 'Higher Heat means more hunters, shapeshifters, legal threats, enforcement ships, and extreme measures.' },
+      { label: 'Raised by', value: 'Public broadcasts, rescuing prisoners, defeating Confluence agents, exposing secrets, recruiting colonies.' },
+      { label: 'Lowered by', value: 'Staying hidden, misdirection, false trails, quiet diplomacy.' },
+      { label: 'Current meaning', value: 'The Pathfinder is already a high-priority Confluence problem.' }
+    ]
+  },
+  {
+    key: 'chen_countermeasures',
+    label: 'Chen Countermeasures',
+    fields: [
+      { label: 'What it means', value: 'How aggressively Admiral Chen or Earth Command is acting against the Pathfinder.' },
+      { label: 'Why it matters', value: 'Higher values mean arrest orders, propaganda, fleet pursuit, sabotage, and political isolation.' },
+      { label: 'Raised by', value: 'Defying Earth Command, broadcasting evidence, approaching protected colonies, exposing Chen.' },
+      { label: 'Lowered by', value: 'Quiet evidence gathering, convincing Earth captains, proving Confluence infiltration.' },
+      { label: 'Current meaning', value: 'Chen has begun moving against Captain Stellar, but her control is not absolute.' }
+    ]
+  },
+  {
+    key: 'new_titan_stability',
+    label: 'New Titan Stability',
+    fields: [
+      { label: 'What it means', value: 'How calm, organized, and unified New Titan is.' },
+      { label: 'Why it matters', value: 'High Stability means the colony can prepare, debate, defend, and survive. Low Stability means panic, surrender factions, riots, or Confluence control.' },
+      { label: 'Raised by', value: 'Honest communication, strong leadership, evidence, successful defense planning, saving civilians.' },
+      { label: 'Lowered by', value: 'Panic, Confluence propaganda, attacks, hidden agents, delayed action.' },
+      { label: 'Current meaning', value: 'New Titan is uncertain. The colony can still be won over, but it may fracture.' }
+    ]
+  },
+  {
+    key: 'resistance_spark',
+    label: 'Resistance Spark',
+    fields: [
+      { label: 'What it means', value: 'How much hope the Pathfinder has created across human and alien space.' },
+      { label: 'Why it matters', value: 'High Resistance Spark causes colonies, refugees, defectors, and hidden allies to reach out.' },
+      { label: 'Raised by', value: 'Saving people, broadcasting truth, refusing surrender, protecting the weak, defeating impossible odds.' },
+      { label: 'Lowered by', value: 'Abandoning allies, hiding too long, failed rescues, public defeats.' },
+      { label: 'Current meaning', value: 'The resistance is only beginning. The galaxy is watching to see if Captain Stellar can make defiance real.' }
+    ]
+  },
+  {
+    key: 'sanctuary_trust',
+    label: 'Sanctuary Trust',
+    fields: [
+      { label: 'What it means', value: 'How much the Sanctuary refugees and alien allies trust Captain Stellar.' },
+      { label: 'Why it matters', value: 'High trust unlocks ships, intelligence, volunteers, alien technology, and political support.' },
+      { label: 'Raised by', value: 'Protecting refugees, respecting alien allies, keeping promises, avoiding reckless sacrifice.' },
+      { label: 'Lowered by', value: 'Using allies as shields, ignoring Sanctuary concerns, breaking agreements, causing civilian losses.' },
+      { label: 'Current meaning', value: 'Sanctuary is cautious but hopeful. They want to believe the Pathfinder can change the war.' }
+    ]
+  },
+  {
+    key: 'crew_morale',
+    label: 'Crew Morale',
+    fields: [
+      { label: 'What it means', value: 'The emotional strength, loyalty, and confidence of the Pathfinder crew.' },
+      { label: 'Why it matters', value: 'High morale improves performance, loyalty, and willingness to take risks. Low morale causes fear, mistakes, arguments, or refusal.' },
+      { label: 'Raised by', value: 'Clear leadership, saving lives, victories, honest briefings, crew bonding, protecting individuals.' },
+      { label: 'Lowered by', value: 'Casualties, lies, hopeless missions, ignored crew concerns, moral compromises.' },
+      { label: 'Current meaning', value: 'The crew believes in Captain Stellar, but the pressure is enormous.' }
+    ]
+  },
+  {
+    key: 'temporal_instability',
+    label: 'Temporal Instability',
+    fields: [
+      { label: 'What it means', value: 'How much the campaign is being affected by future memories, Architect technology, paradox, or time interference.' },
+      { label: 'Why it matters', value: 'High instability may unlock future warnings, strange events, timeline changes, or dangerous paradoxes.' },
+      { label: 'Raised by', value: 'Using future knowledge too directly, activating Architect technology, changing known future events.' },
+      { label: 'Lowered by', value: 'Letting events unfold naturally, avoiding overuse of future knowledge, stabilizing Architect systems.' },
+      { label: 'Current meaning', value: 'The timeline is mostly stable, but Bub carries memories of a possible future.' }
+    ]
+  },
+  {
+    key: 'public_truth',
+    label: 'Public Truth',
+    fields: [
+      { label: 'What it means', value: 'How much the public knows about The Confluence, Admiral Chen, Novara, New Titan, and the larger conspiracy.' },
+      { label: 'Why it matters', value: 'High truth can inspire resistance, but if raised too quickly without proof, it may cause panic or disbelief.' },
+      { label: 'Raised by', value: 'Broadcasts, evidence releases, freed prisoner testimony, public Confluence failures.' },
+      { label: 'Lowered by', value: 'Censorship, Chen propaganda, secrecy, misinformation, Confluence legal manipulation.' },
+      { label: 'Current meaning', value: 'Most people still do not know the truth. The player must decide when and how much to reveal.' }
+    ]
+  }
+];
+
+export const CODEX_EVIDENCE = [
+  {
+    key: 'prometheus_warning',
+    label: 'Prometheus Warning',
+    fields: [
+      { label: 'What it is', value: 'A warning transmission from the lost UES Prometheus, Earth\u2019s first deep-space exploration ship.' },
+      { label: 'How obtained', value: 'The Pathfinder received the message shortly after The Confluence invitation.' },
+      { label: 'Why it matters', value: 'The Prometheus warned that The Confluence does not negotiate fairly. It harvests species through law, coercion, and force.' },
+      { label: 'Risk', value: 'Some Earth officials may dismiss it as fake, corrupted, or enemy propaganda.' }
+    ]
+  },
+  {
+    key: 'james_stellar_testimony',
+    label: 'James Stellar Testimony',
+    fields: [
+      { label: 'What it is', value: 'Firsthand testimony from Commander James Stellar, survivor of the UES Prometheus and Captain Bub Stellar\u2019s grandfather.' },
+      { label: 'How obtained', value: 'James returned after seventy years of forced Confluence service.' },
+      { label: 'Why it matters', value: 'James knows Confluence tactics, legal systems, enforcement doctrine, and the truth of what happened to Prometheus.' },
+      { label: 'Risk', value: 'Because James was augmented and forced to serve The Confluence, enemies may claim he is compromised.' }
+    ]
+  },
+  {
+    key: 'korath_database',
+    label: 'Korath Database',
+    fields: [
+      { label: 'What it is', value: 'Records from the destroyed Korath civilization.' },
+      { label: 'How obtained', value: 'Recovered from a dead system where The Confluence once processed an entire civilization.' },
+      { label: 'Why it matters', value: 'The database proves The Confluence has used legal claims to destroy, relocate, or harvest species for centuries.' },
+      { label: 'Risk', value: 'The data is alien and old. Skeptics may question translation, context, or authenticity.' }
+    ]
+  },
+  {
+    key: 'novara_transaction_record',
+    label: 'Novara Transaction Record',
+    fields: [
+      { label: 'What it is', value: 'A record showing that the lost human colony Novara was sold into Confluence-linked custody.' },
+      { label: 'How obtained', value: 'Recovered from Korath/Confluence archive data.' },
+      { label: 'Why it matters', value: 'It proves human colonies have already been processed and that someone connected to Earth helped facilitate it.' },
+      { label: 'Risk', value: 'Public release could cause outrage, panic, or political collapse.' }
+    ]
+  },
+  {
+    key: 'sakura_chen_technology_exchange',
+    label: 'Sakura-Chen Technology Exchange',
+    fields: [
+      { label: 'What it is', value: 'Evidence that advanced human propulsion technology may have been obtained through a bargain with The Confluence.' },
+      { label: 'How obtained', value: 'Cross-referenced from Confluence records and Earth technology history.' },
+      { label: 'Why it matters', value: 'It suggests humanity\u2019s expansion was built on a terrible hidden transaction.' },
+      { label: 'Risk', value: 'Could shatter trust in Earth Command and cause colonies to reject all central authority.' }
+    ]
+  },
+  {
+    key: 'new_titan_claim_file',
+    label: 'New Titan Claim File',
+    fields: [
+      { label: 'What it is', value: 'A Confluence legal claim involving New Titan.' },
+      { label: 'How obtained', value: 'Recovered from Confluence and Sanctuary records.' },
+      { label: 'Why it matters', value: 'It proves New Titan is not just in danger someday. It is already being legally processed.' },
+      { label: 'Risk', value: 'If released without preparation, New Titan may panic, surrender, or fracture politically.' }
+    ]
+  },
+  {
+    key: 'sarah_chen_testimony',
+    label: 'Sarah Chen Testimony',
+    fields: [
+      { label: 'What it is', value: 'Testimony from Sarah Chen, daughter of Admiral Chen and resistance agent.' },
+      { label: 'How obtained', value: 'Sarah joined the Pathfinder after revealing her mother\u2019s involvement and warning about Confluence traps.' },
+      { label: 'Why it matters', value: 'Sarah provides insight into Admiral Chen, Earth Command, New Titan, and the hidden resistance.' },
+      { label: 'Risk', value: 'Enemies may claim she is unstable, traitorous, or motivated by family conflict.' }
+    ]
+  },
+  {
+    key: 'sanctuary_archive_records',
+    label: 'Sanctuary Archive Records',
+    fields: [
+      { label: 'What it is', value: 'Records from Sanctuary, a hidden refuge of species that survived The Confluence.' },
+      { label: 'How obtained', value: 'The Pathfinder reached Sanctuary after Sarah Chen led them there.' },
+      { label: 'Why it matters', value: 'The records contain Confluence legal precedents, resistance history, alien testimony, and warnings from other species.' },
+      { label: 'Risk', value: 'Sanctuary\u2019s existence must be protected. Revealing too much may put thousands of refugees at risk.' }
+    ]
+  },
+  {
+    key: 'architect_future_history_data',
+    label: 'Architect Future-History Data',
+    fields: [
+      { label: 'What it is', value: 'Encoded future memories and timeline data from ancient Architect technology.' },
+      { label: 'How obtained', value: 'During the Battle for Sanctuary, the Pathfinder encountered Architect temporal systems and glimpsed a future where The Confluence eventually falls.' },
+      { label: 'Why it matters', value: 'It proves The Confluence can be defeated, but not how to do it perfectly. It offers warnings, fragments, and possible futures.' },
+      { label: 'Risk', value: 'Overusing future knowledge may increase Temporal Instability or cause dangerous timeline changes.' }
+    ]
+  }
+];
+
+export const CODEX_ALLIES = [
+  {
+    key: 'sarah_chen',
+    label: 'Sarah Chen',
+    fields: [
+      { label: 'Who she is', value: 'Daughter of Admiral Chen, resistance agent, and survivor of Confluence-linked betrayal.' },
+      { label: 'How you met', value: 'Sarah contacted the Pathfinder after warning that the relay network was compromised. She led the crew to Sanctuary.' },
+      { label: 'Why she matters', value: 'Sarah knows Earth Command politics, resistance networks, and the emotional cost of Admiral Chen\u2019s choices.' },
+      { label: 'Current status', value: 'Ally, intelligence source, emotionally invested in exposing the truth about her mother.' }
+    ]
+  },
+  {
+    key: 'james_stellar',
+    label: 'James Stellar',
+    fields: [
+      { label: 'Who he is', value: 'Captain Bub Stellar\u2019s grandfather and survivor of the lost UES Prometheus.' },
+      { label: 'How you met', value: 'James returned after seventy years of forced service under The Confluence.' },
+      { label: 'Why he matters', value: 'He knows Confluence law, tactics, enforcement ships, and the cost of surrender.' },
+      { label: 'Current status', value: 'Trusted ally, haunted survivor, tactical advisor, family.' }
+    ]
+  },
+  {
+    key: 'sanctuary_refugee_fleet',
+    label: 'Sanctuary Refugee Fleet',
+    aliases: ['Sanctuary refugee fleet'],
+    fields: [
+      { label: 'Who they are', value: 'A hidden coalition of alien refugees and survivors from species harmed by The Confluence.' },
+      { label: 'How you met', value: 'Sarah Chen led the Pathfinder to Sanctuary, a secret refuge hidden outside normal Confluence routes.' },
+      { label: 'Why they matter', value: 'They provide ships, knowledge, alien technology, and proof that many species have resisted.' },
+      { label: 'Current status', value: 'Cautious allies. They want hope, but fear open war.' }
+    ]
+  },
+  {
+    key: 'councilor_verath',
+    label: 'Councilor Verath',
+    fields: [
+      { label: 'Who he is', value: 'A leader within Sanctuary\u2019s refugee council.' },
+      { label: 'How you met', value: 'At Sanctuary, during the Pathfinder\u2019s plea for aid against The Confluence.' },
+      { label: 'Why he matters', value: 'Verath represents cautious diplomacy. He wants survival, not reckless war.' },
+      { label: 'Current status', value: 'Political ally, but not blindly loyal. His trust must be maintained.' }
+    ]
+  },
+  {
+    key: 'commander_vex',
+    label: 'Commander Vex',
+    fields: [
+      { label: 'Who he is', value: 'Military commander of Sanctuary\u2019s defense forces.' },
+      { label: 'How you met', value: 'At Sanctuary, while reviewing the refugee fleet\u2019s military capabilities.' },
+      { label: 'Why he matters', value: 'Vex understands asymmetric warfare and the cost of fighting The Confluence directly.' },
+      { label: 'Current status', value: 'Military ally. Practical, skeptical, but willing to fight if the cause is real.' }
+    ]
+  },
+  {
+    key: '37_allied_ships',
+    label: '37 Allied Ships',
+    aliases: ['37 allied ships'],
+    fields: [
+      { label: 'Who they are', value: 'The refugee ships that returned with the Pathfinder after the Architect temporal event.' },
+      { label: 'How you met', value: 'They chose to follow Captain Stellar back into the war rather than remain safe.' },
+      { label: 'Why they matter', value: 'They are the first true resistance fleet.' },
+      { label: 'Current status', value: 'Fragile but committed. Losing them would be a major blow to Sanctuary Trust and Resistance Spark.' }
+    ]
+  },
+  {
+    key: 'mitchell',
+    label: 'Mitchell',
+    fields: [
+      { label: 'Who he is', value: 'A genetically enhanced bald eagle with unusual intelligence and the ability to sense deception, danger, emotional truth, and some temporal disturbances.' },
+      { label: 'How you met', value: 'Mitchell travels with Professor Carmelon and became deeply bonded to Captain Stellar and the Pathfinder crew.' },
+      { label: 'Why he matters', value: 'Mitchell can warn of lies, coercion, shapeshifters, danger, and future-memory disturbances. He is not perfect, but his instincts are often critical.' },
+      { label: 'Current status', value: 'Crew companion, truth-sensor, symbol of humanity\u2019s strange future.' }
+    ]
+  }
+];
+
+export const CODEX_CREW = [
+  {
+    key: 'bub_stellar',
+    label: 'Bub Stellar',
+    fields: [
+      { label: 'Who he is', value: 'Captain of the UES Pathfinder and player character.' },
+      { label: 'Role', value: 'Command, diplomacy, resistance leadership, tactical decisions.' },
+      { label: 'Current burden', value: 'Bub carries future memories of a war humanity can eventually win, but not without terrible cost.' }
+    ]
+  },
+  {
+    key: 'farrah_thorne',
+    label: 'Commander Farrah Thorne',
+    fields: [
+      { label: 'Who she is', value: 'Pathfinder tactical/security officer and one of Bub\u2019s closest allies.' },
+      { label: 'Role', value: 'Security, combat, tactical planning, away-team leadership.' },
+      { label: 'Important connection', value: 'Her father, Marcus Thorne, is Governor of New Titan.' },
+      { label: 'Personality', value: 'Blunt, brave, intense, loyal, and very dangerous in a fight.' }
+    ]
+  },
+  {
+    key: 'clark',
+    label: 'Commander Clark',
+    fields: [
+      { label: 'Who he is', value: 'Pathfinder science/sensors/communications expert.' },
+      { label: 'Role', value: 'Hacking, scans, analysis, alien systems, dry commentary.' },
+      { label: 'Personality', value: 'Brilliant, nervous, sarcastic, and more courageous than he thinks.' }
+    ]
+  },
+  {
+    key: 'hayes',
+    label: 'Lieutenant Hayes',
+    fields: [
+      { label: 'Who she is', value: 'Pathfinder communications officer.' },
+      { label: 'Role', value: 'Broadcasts, encryption, signal tracing, resistance messaging.' },
+      { label: 'Why she matters', value: 'Her messages may become central to spreading the resistance across human and alien space.' }
+    ]
+  },
+  {
+    key: 'reeves',
+    label: 'Lieutenant Reeves',
+    fields: [
+      { label: 'Who he is', value: 'Pathfinder pilot.' },
+      { label: 'Role', value: 'Flight, evasive maneuvers, dangerous FTL jumps, shuttle operations.' },
+      { label: 'Personality', value: 'Talented, anxious under pressure, but dependable when it counts.' }
+    ]
+  },
+  {
+    key: 'ramos',
+    label: 'Chief Ramos',
+    fields: [
+      { label: 'Who she is', value: 'Pathfinder chief engineer.' },
+      { label: 'Role', value: 'Repairs, power systems, engine miracles, battlefield improvisation.' },
+      { label: 'Personality', value: 'Practical, tough, loyal, and allergic to impossible deadlines.' }
+    ]
+  },
+  {
+    key: 'voss',
+    label: 'Dr. Voss',
+    locked: true,
+    spoilerNote: 'Some details about this crew member are locked until discovered through play.',
+    fields: [
+      { label: 'Who she is', value: 'Pathfinder medical officer.' },
+      { label: 'Role', value: 'Medical care, trauma response, alien biology, crew survival.' },
+      { label: 'Personality', value: 'Dry, clinical, skeptical, but effective.' }
+    ]
+  },
+  {
+    key: 'carmelon',
+    label: 'Professor Carmelon',
+    fields: [
+      { label: 'Who he is', value: 'Alien history, biology, and ancient technology expert.' },
+      { label: 'Role', value: 'Archaeology, alien motives, weird science, Mitchell interpretation.' },
+      { label: 'Personality', value: 'Brilliant, old, eccentric, thoughtful, and deeply protective of Mitchell.' }
+    ]
+  },
+  {
+    key: 'patel',
+    label: 'Ensign Patel',
+    fields: [
+      { label: 'Who he is', value: 'Young Pathfinder engineer.' },
+      { label: 'Role', value: 'Engineering support, repairs, technical problem-solving.' },
+      { label: 'Important connection', value: 'Patel has personal ties to New Titan, making the colony crisis deeply personal.' }
+    ]
+  }
+];
+
+export const CODEX_ENEMIES = [
+  {
+    key: 'the_confluence',
+    label: 'The Confluence',
+    fields: [
+      { label: 'Who they are', value: 'An ancient galactic legal-commercial order that claims to maintain civilization through law, contracts, ownership, and enforcement.' },
+      { label: 'Why they are dangerous', value: 'They harvest species through legal claims, coercion, relocation, debt, genetic precedent, and military force.' },
+      { label: 'How you know them', value: 'They invited Earth to defend itself against a claim, but Prometheus and Sanctuary revealed the truth.' },
+      { label: 'Threat level', value: 'Existential.' }
+    ]
+  },
+  {
+    key: 'vescarri_sovereignty',
+    label: 'Vescarri Sovereignty',
+    fields: [
+      { label: 'Who they are', value: 'Alien power claiming rights over Earth and human colonies based on ancient seeding law.' },
+      { label: 'Why they are dangerous', value: 'Their legal claim may allow The Confluence to process humanity.' },
+      { label: 'How you know them', value: 'They filed the claim that brought Earth into The Confluence\u2019s system.' },
+      { label: 'Threat level', value: 'High legal/political threat.' }
+    ]
+  },
+  {
+    key: 'collectors_guild',
+    label: "Collector's Guild",
+    aliases: ['Collectors Guild'],
+    fields: [
+      { label: 'Who they are', value: 'Confluence-linked brokers who acquire, lease, trade, and manage sentient populations.' },
+      { label: 'Why they are dangerous', value: 'They turn people into "contract assets" and disguise slavery as employment or preservation.' },
+      { label: 'How you know them', value: 'Records suggest Novara survivors may have been sold through them.' },
+      { label: 'Threat level', value: 'High moral and rescue priority.' }
+    ]
+  },
+  {
+    key: 'admiral_chen',
+    label: 'Admiral Chen',
+    locked: true,
+    spoilerNote: "Chen's true nature and history remain to be discovered through play.",
+    fields: [
+      { label: 'Who she is', value: 'Head of Earth Command and central figure in the hidden bargains that may have endangered humanity.' },
+      { label: 'Why she is dangerous', value: 'She may be traitor, victim, shapeshifter, compromised leader, or political weapon.' },
+      { label: 'How you know her', value: 'Evidence links Chen to Novara, Sakura-Chen technology, and Confluence dealings.' },
+      { label: 'Threat level', value: 'Unknown but critical.' }
+    ]
+  },
+  {
+    key: 'captain_vask',
+    label: 'Captain Vask',
+    aliases: ['Captain Vask', 'Helena Vask'],
+    fields: [
+      { label: 'Who she is', value: 'A human commander serving The Confluence.' },
+      { label: 'Why she is dangerous', value: 'She commands Confluence forces and represents what humanity can become when survival is purchased through surrender.' },
+      { label: 'How you know her', value: 'She appeared during the Battle for Sanctuary as a dark mirror of James Stellar.' },
+      { label: 'Threat level', value: 'Military and ideological rival.' }
+    ]
+  },
+  {
+    key: 'confluence_shapeshifters',
+    label: 'Confluence Shapeshifters',
+    fields: [
+      { label: 'Who they are', value: 'Confluence infiltration agents capable of mimicking people.' },
+      { label: 'Why they are dangerous', value: 'They can replace leaders, steal identities, manipulate governments, and sabotage resistance efforts.' },
+      { label: 'How you know them', value: 'One infiltrated Sanctuary. Others may already be hidden inside human society.' },
+      { label: 'Threat level', value: 'Extreme paranoia threat.' }
+    ]
+  }
+];
+
+export const CODEX_FACTIONS = [
+  {
+    key: 'the_confluence',
+    label: 'The Confluence',
+    fields: [
+      { label: 'Nature', value: 'An ancient galactic legal-commercial order that claims to maintain civilization through law, contracts, ownership, and enforcement.' },
+      { label: 'Relationship to player', value: 'Existential enemy. They claim Earth and are processing human colonies.' },
+      { label: 'What to know', value: 'They use calm, legalistic language. "Claim," "adjudication," "preserve," "compliance," "harvest."' }
+    ]
+  },
+  {
+    key: 'vescarri_sovereignty',
+    label: 'Vescarri Sovereignty',
+    fields: [
+      { label: 'Nature', value: 'Alien power claiming Earth and human colonies under ancient seeding law.' },
+      { label: 'Relationship to player', value: 'Legal adversary. Their claim triggered the Confluence process against Earth.' },
+      { label: 'What to know', value: 'They need legal proof. Public collapse of Confluence legitimacy would undermine their claim.' }
+    ]
+  },
+  {
+    key: 'collectors_guild',
+    label: "Collector's Guild",
+    fields: [
+      { label: 'Nature', value: 'Confluence-linked brokers who acquire, lease, trade, and manage sentient populations.' },
+      { label: 'Relationship to player', value: 'Slavers. Novara survivors were likely sold through them.' },
+      { label: 'What to know', value: 'They speak of people as "talent assets," "contract generations," and "preserved cultures."' }
+    ]
+  },
+  {
+    key: 'earth_command',
+    label: 'Earth Command (United Earth)',
+    fields: [
+      { label: 'Nature', value: 'Humanity\u2019s military and political leadership, based on Earth.' },
+      { label: 'Relationship to player', value: 'Compromised. Admiral Chen controls the narrative. Some captains may be loyal to humanity over Chen.' },
+      { label: 'What to know', value: 'The public does not know the truth about The Confluence. Earth Command may contain both allies and shapeshifter infiltrators.' }
+    ]
+  },
+  {
+    key: 'sanctuary_council',
+    label: 'Sanctuary Council',
+    fields: [
+      { label: 'Nature', value: 'A coalition of refugee species who survived The Confluence, hidden outside normal space routes.' },
+      { label: 'Relationship to player', value: 'Cautious allies. They provided ships, knowledge, and 37 vessels joined the Pathfinder.' },
+      { label: 'What to know', value: 'The council values survival over reckless war. Trust must be earned through actions, not words.' }
+    ]
+  },
+  {
+    key: 'the_resistance',
+    label: 'The Resistance',
+    fields: [
+      { label: 'Nature', value: 'The emerging movement Captain Stellar is building \u2014 a network of colonies, defectors, refugees, and allies who believe The Confluence can be fought.' },
+      { label: 'Relationship to player', value: 'You are its founder and leader. Its strength depends on your choices.' },
+      { label: 'What to know', value: 'The resistance began with a single broadcast from the Pathfinder. The galaxy is watching to see if defiance is real.' }
+    ]
+  }
+];
+
+export const CODEX_FUTURE_MEMORIES = [
+  {
+    key: 'cascade_message',
+    label: 'The Cascade Message',
+    fields: [
+      { label: 'Memory', value: '"The cascade began with a message. Silence delayed the war by thirty years."' },
+      { label: 'Interpretation', value: 'Broadcasting the truth matters. Staying silent has a cost measured in decades.' }
+    ]
+  },
+  {
+    key: 'new_titan_twelve_hours',
+    label: 'Twelve Hours',
+    fields: [
+      { label: 'Memory', value: '"New Titan did not fall because they had twelve hours to prepare."' },
+      { label: 'Interpretation', value: 'Warning New Titan early enough could save two million people. Delay could doom them.' }
+    ]
+  },
+  {
+    key: 'pathfinder_believed',
+    label: 'The Pathfinder Believed',
+    fields: [
+      { label: 'Memory', value: '"We believed because the Pathfinder believed first."' },
+      { label: 'Interpretation', value: 'Your conviction is contagious. The resistance lives or dies on whether Captain Stellar shows courage.' }
+    ]
+  },
+  {
+    key: 'only_wanted_to_save',
+    label: 'I Only Wanted to Save Them',
+    fields: [
+      { label: 'Memory', value: '"I only wanted to save them."' },
+      { label: 'Interpretation', value: 'A fragment of regret. Even good intentions can lead to terrible outcomes. The cost of heroism is real.' }
+    ]
+  },
+  {
+    key: 'law_victims_court',
+    label: 'The Law and the Victims',
+    fields: [
+      { label: 'Memory', value: '"The law works only when the victims accept the court."' },
+      { label: 'Interpretation', value: 'The Confluence\u2019s power depends on compliance. Refusing to recognize their authority may be a weapon.' }
+    ]
+  }
+];
+
+export const CODEX_QUESTIONS = [
+  {
+    key: 'real_admiral_chen',
+    label: 'What happened to the real Admiral Chen?',
+    fields: [
+      { label: 'The question', value: 'Evidence links Chen to Novara and Confluence dealings, but her true nature \u2014 traitor, victim, or something else \u2014 remains unknown.' }
+    ]
+  },
+  {
+    key: 'novara_survivors',
+    label: 'Where are the Novara survivors?',
+    fields: [
+      { label: 'The question', value: 'The lost colony was sold to the Collector\u2019s Guild. Survivors may exist as contract labor. Finding and freeing them is a moral and strategic priority.' }
+    ]
+  },
+  {
+    key: 'new_titan_warning',
+    label: 'Can New Titan be warned in time?',
+    fields: [
+      { label: 'The question', value: 'Two million humans are being legally processed. The Pathfinder has arrived at the edge of the system, but Confluence agents may already be inside.' }
+    ]
+  },
+  {
+    key: 'architect_protocol',
+    label: 'What is the Architect Protocol\u2019s full purpose?',
+    fields: [
+      { label: 'The question', value: 'Ancient temporal technology was activated during the Battle for Sanctuary, showing a possible future. Its full capabilities and dangers are not yet understood.' }
+    ]
+  },
+  {
+    key: 'shapeshifter_replacements',
+    label: 'Who else has been replaced by shapeshifters?',
+    fields: [
+      { label: 'The question', value: 'One infiltrator was caught at Sanctuary. Others may be hidden inside Earth Command, colonial governments, or even the Pathfinder crew.' }
+    ]
+  },
+  {
+    key: 'earth_claim',
+    label: 'Will the Confluence claim on Earth hold?',
+    fields: [
+      { label: 'The question', value: 'The 14-cycle claim process is underway. If uncontested, Earth could be legally processed. The Pathfinder carries the evidence to fight it \u2014 but must survive long enough to use it.' }
+    ]
+  },
+  {
+    key: 'resistance_cascade',
+    label: 'Can the resistance cascade actually succeed?',
+    fields: [
+      { label: 'The question', value: 'The future showed The Confluence eventually falling. But that was one possible timeline. Captain Stellar\u2019s choices will determine whether that future comes to pass.' }
+    ]
+  },
+  {
+    key: 'future_memory_unlocks',
+    label: 'What other future memories will unlock?',
+    fields: [
+      { label: 'The question', value: 'Bub carries encoded memories of a 473-year future war. They surface as flashes, dreams, deja vu, and tactical instincts. More will emerge over time \u2014 but using them too aggressively may destabilize the timeline.' }
+    ]
+  }
+];
+
+export const CODEX_LOCATIONS = PJ_REGIONS.map((r) => ({
+  key: codexKey(r.name),
+  label: r.name,
+  fields: [{ label: 'Description', value: r.desc }]
+}));
+
+export { PJ_EPISODES };
+
+// Look up a crew codex entry by NPC name (fuzzy match) — used by NpcDossier.
+export function findCrewBio(name) {
+  const key = codexKey(name);
+  return CODEX_CREW.find(
+    (c) =>
+      codexKey(c.label) === key ||
+      (c.aliases || []).some((a) => codexKey(a) === key)
+  );
+}
+
+// Map a section id to its entry array.
+export function getSectionEntries(sectionId) {
+  const map = {
+    crew: CODEX_CREW,
+    allies: CODEX_ALLIES,
+    enemies: CODEX_ENEMIES,
+    evidence: CODEX_EVIDENCE,
+    clocks: CODEX_CLOCKS,
+    factions: CODEX_FACTIONS,
+    locations: CODEX_LOCATIONS,
+    future: CODEX_FUTURE_MEMORIES,
+    questions: CODEX_QUESTIONS
+  };
+  return map[sectionId] || null;
+}

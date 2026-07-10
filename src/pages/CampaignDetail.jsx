@@ -25,13 +25,15 @@ import SessionTimer from '@/components/SessionTimer';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
 import PJCampaignStatus from '@/components/PJCampaignStatus';
+import StorySoFarModal from '@/components/pj/StorySoFarModal';
+import CodexDialog from '@/components/pj/CodexDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift
+  Check, RefreshCw, Gift, Library
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -59,6 +61,10 @@ export default function CampaignDetail() {
   const [hasBillingAccess, setHasBillingAccess] = useState(false);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(false);
+  const [codexOpen, setCodexOpen] = useState(false);
+  const [codexSection, setCodexSection] = useState(null);
+  const [codexEntryKey, setCodexEntryKey] = useState(null);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -90,6 +96,25 @@ export default function CampaignDetail() {
     });
     return () => unsubscribe();
   }, [campaignId]);
+
+  // Show Story So Far onboarding for new Pathfinder campaigns
+  useEffect(() => {
+    if (campaign?.game_system === 'pathfinder' && !localStorage.getItem(`pj_story_${campaignId}`)) {
+      setStoryOpen(true);
+    }
+  }, [campaign, campaignId]);
+
+  function openCodex(section, entryKey) {
+    setStoryOpen(false);
+    setCodexSection(section);
+    setCodexEntryKey(entryKey || null);
+    setCodexOpen(true);
+  }
+
+  function handleBeginAdventure() {
+    localStorage.setItem(`pj_story_${campaignId}`, '1');
+    setStoryOpen(false);
+  }
 
   async function loadData() {
     try {
@@ -343,6 +368,14 @@ export default function CampaignDetail() {
             onAccessChange={setHasBillingAccess}
             onPurchaseClick={() => setPurchaseOpen(true)}
           />
+          {campaign?.game_system === 'pathfinder' && (
+            <button
+              onClick={() => openCodex('story')}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Library className="w-3.5 h-3.5" strokeWidth={1.5} /> Codex
+            </button>
+          )}
           <button
             onClick={() => setVideoOpen((o) => !o)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
@@ -651,7 +684,7 @@ export default function CampaignDetail() {
           </div>
 
           {campaign?.game_system === 'pathfinder' && (
-            <PJCampaignStatus campaign={campaign} />
+            <PJCampaignStatus campaign={campaign} onOpenCodex={openCodex} />
           )}
 
           {myCharacter && (
@@ -680,6 +713,9 @@ export default function CampaignDetail() {
             className="min-h-[320px] font-body text-sm"
           />
           <DialogFooter>
+            <Button variant="ghost" onClick={() => { setBriefOpen(false); setStoryOpen(true); }} className="text-muted-foreground hover:text-foreground">
+              <BookOpen className="w-3.5 h-3.5 mr-1.5" /> Story So Far
+            </Button>
             <Button variant="ghost" onClick={() => setBriefOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveBrief} disabled={savingBrief} className="bg-primary text-primary-foreground hover:bg-primary/90">
               {savingBrief ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Brief'}
@@ -692,6 +728,21 @@ export default function CampaignDetail() {
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} campaign={campaign} />
       <PurchaseSessionDialog open={purchaseOpen} onOpenChange={setPurchaseOpen} campaignId={campaignId} />
       <FreeFriendsManager open={friendsOpen} onOpenChange={setFriendsOpen} campaignId={campaignId} />
+      {campaign?.game_system === 'pathfinder' && (
+        <>
+          <StorySoFarModal
+            open={storyOpen}
+            onBegin={handleBeginAdventure}
+            onNavigate={(section) => openCodex(section)}
+          />
+          <CodexDialog
+            open={codexOpen}
+            onOpenChange={setCodexOpen}
+            initialSection={codexSection}
+            initialEntryKey={codexEntryKey}
+          />
+        </>
+      )}
     </div>
   );
 }

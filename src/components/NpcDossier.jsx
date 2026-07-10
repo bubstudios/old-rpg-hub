@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { MapPin, Sparkles, Sword, BookOpen } from 'lucide-react';
+import { MapPin, Sparkles, Sword, BookOpen, Lock } from 'lucide-react';
+import { findCrewBio } from '@/lib/pjCodex';
 
 function dispositionColor(d) {
   const s = String(d || '').toLowerCase();
@@ -35,6 +36,8 @@ export default function NpcDossier({ campaignId }) {
   const knownFacts = selected?.what_we_know
     ? String(selected.what_we_know).split('\n').map(s => s.trim()).filter(Boolean)
     : [];
+
+  const crewBio = selected ? findCrewBio(selected.name) : null;
 
   return (
     <>
@@ -104,6 +107,16 @@ export default function NpcDossier({ campaignId }) {
                       ))}
                     </ul>
                   </DossierSection>
+                )}
+                {crewBio && (crewBio.fields || []).map((f, i) => (
+                  <DossierSection key={i} icon={Sparkles} label={f.label}>
+                    <p className="text-foreground/80 leading-relaxed">{f.value}</p>
+                  </DossierSection>
+                ))}
+                {crewBio?.locked && crewBio.spoilerNote && (
+                  <p className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 italic pt-1 border-t border-border/30">
+                    <Lock className="w-3 h-3 shrink-0" /> {crewBio.spoilerNote}
+                  </p>
                 )}
                 {selected.first_met_chapter && (
                   <p className="text-[10px] text-muted-foreground/50 italic pt-1 border-t border-border/30">
