@@ -116,6 +116,13 @@ export default function CampaignDetail() {
     setStoryOpen(false);
   }
 
+  function handleSuggestAction(command) {
+    setAction(command);
+    setCodexOpen(false);
+    setStoryOpen(false);
+    toast.success('Command ready — review and send when ready.');
+  }
+
   async function loadData() {
     try {
       setLoading(true);
@@ -740,6 +747,8 @@ export default function CampaignDetail() {
             onOpenChange={setCodexOpen}
             initialSection={codexSection}
             initialEntryKey={codexEntryKey}
+            campaign={campaign}
+            onSuggestAction={handleSuggestAction}
           />
         </>
       )}

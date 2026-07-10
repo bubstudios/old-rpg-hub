@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import {
   CODEX_SECTIONS, STORY_SO_FAR_TEXT, SANDBOX_INTRO_TEXT, CURRENT_MISSION,
-  getSectionEntries, PJ_EPISODES
+  getSectionEntries, PJ_EPISODES, CODEX_LOCATIONS, isLocationVisible
 } from '@/lib/pjCodex';
+import LocationCard from '@/components/pj/LocationCard';
 
 const SECTION_ICONS = {
   story: BookOpen, mission: Target, crew: Users, allies: Heart,
@@ -15,7 +16,7 @@ const SECTION_ICONS = {
   factions: Flag, locations: MapPin, future: Clock, questions: HelpCircle
 };
 
-export default function CodexDialog({ open, onOpenChange, initialSection, initialEntryKey }) {
+export default function CodexDialog({ open, onOpenChange, initialSection, initialEntryKey, campaign, onSuggestAction }) {
   const [section, setSection] = useState('story');
   const [expanded, setExpanded] = useState(new Set());
   const [showEpisodes, setShowEpisodes] = useState(false);
@@ -128,7 +129,23 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
               </div>
             )}
 
-            {entries && (
+            {section === 'locations' ? (
+              <div className="space-y-2">
+                {CODEX_LOCATIONS.filter((loc) => isLocationVisible(campaign, loc)).map((loc) => (
+                  <LocationCard
+                    key={loc.key}
+                    location={loc}
+                    campaign={campaign}
+                    expanded={expanded.has(loc.key)}
+                    onToggle={() => toggle(loc.key)}
+                    onSuggestAction={onSuggestAction}
+                  />
+                ))}
+                <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
+                  Every location listed here is a playable destination. If it is unlocked or active, use the Player Actions to set course, send a probe, or plan a mission. Ignored crises can fall.
+                </p>
+              </div>
+            ) : entries && (
               <div className="space-y-2">
                 {entries.map((entry) => (
                   <EntryCard

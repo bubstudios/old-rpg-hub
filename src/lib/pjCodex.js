@@ -662,11 +662,28 @@ export const CODEX_QUESTIONS = [
   }
 ];
 
-export const CODEX_LOCATIONS = PJ_REGIONS.map((r) => ({
-  key: codexKey(r.name),
-  label: r.name,
-  fields: [{ label: 'Description', value: r.desc }]
-}));
+// Playable location nodes live in pjLocations.js — each is a real game destination
+// with state, purpose, triggers, arrival events, and consequences.
+import {
+  CODEX_LOCATIONS,
+  LOCATION_STATES,
+  STATE_TONE_CLASSES,
+  RISK_TONE_CLASSES,
+  LOCATION_ACTIONS,
+  findLocationEntry,
+  getLocationState,
+  isLocationVisible
+} from '@/lib/pjLocations';
+export {
+  CODEX_LOCATIONS,
+  LOCATION_STATES,
+  STATE_TONE_CLASSES,
+  RISK_TONE_CLASSES,
+  LOCATION_ACTIONS,
+  findLocationEntry,
+  getLocationState,
+  isLocationVisible
+};
 
 export { PJ_EPISODES };
 
