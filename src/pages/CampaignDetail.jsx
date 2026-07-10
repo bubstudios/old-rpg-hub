@@ -27,13 +27,14 @@ import FreeFriendsManager from '@/components/FreeFriendsManager';
 import PJCampaignStatus from '@/components/PJCampaignStatus';
 import StorySoFarModal from '@/components/pj/StorySoFarModal';
 import CodexDialog from '@/components/pj/CodexDialog';
+import MissionsPanel from '@/components/pj/MissionsPanel';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library
+  Check, RefreshCw, Gift, Library, Target
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -65,6 +66,7 @@ export default function CampaignDetail() {
   const [codexOpen, setCodexOpen] = useState(false);
   const [codexSection, setCodexSection] = useState(null);
   const [codexEntryKey, setCodexEntryKey] = useState(null);
+  const [missionsOpen, setMissionsOpen] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -381,6 +383,14 @@ export default function CampaignDetail() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Library className="w-3.5 h-3.5" strokeWidth={1.5} /> Codex
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
+              onClick={() => setMissionsOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Target className="w-3.5 h-3.5" strokeWidth={1.5} /> Missions
             </button>
           )}
           <button
@@ -747,6 +757,12 @@ export default function CampaignDetail() {
             onOpenChange={setCodexOpen}
             initialSection={codexSection}
             initialEntryKey={codexEntryKey}
+            campaign={campaign}
+            onSuggestAction={handleSuggestAction}
+          />
+          <MissionsPanel
+            open={missionsOpen}
+            onOpenChange={setMissionsOpen}
             campaign={campaign}
             onSuggestAction={handleSuggestAction}
           />
