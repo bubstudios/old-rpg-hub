@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   BookOpen, Target, Users, Heart, AlertTriangle, FileText, Activity,
-  Flag, MapPin, Clock, HelpCircle, Lock, ChevronDown, ChevronUp, Compass
+  Flag, MapPin, Clock, HelpCircle, Lock, ChevronDown, ChevronUp, Compass, Package
 } from 'lucide-react';
 import {
   CODEX_SECTIONS, STORY_SO_FAR_TEXT, SANDBOX_INTRO_TEXT, CURRENT_MISSION,
@@ -11,8 +11,11 @@ import {
 import LocationCard from '@/components/pj/LocationCard';
 import FactionCard from '@/components/pj/FactionCard';
 import ClockCard from '@/components/pj/ClockCard';
+import EvidenceCard from '@/components/pj/EvidenceCard';
+import EvidencePackageDialog from '@/components/pj/EvidencePackageDialog';
 import { CODEX_FACTIONS, isFactionVisible } from '@/lib/pjFactions';
 import { getAllClocks, getClockValue, isCrisisClockVisible } from '@/lib/pjClocks';
+import { PJ_EVIDENCE, isEvidenceVisible, isEvidenceDiscovered } from '@/lib/pjEvidence';
 
 const SECTION_ICONS = {
   story: BookOpen, mission: Target, crew: Users, allies: Heart,
@@ -24,6 +27,7 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
   const [section, setSection] = useState('story');
   const [expanded, setExpanded] = useState(new Set());
   const [showEpisodes, setShowEpisodes] = useState(false);
+  const [packageOpen, setPackageOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -133,7 +137,30 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
               </div>
             )}
 
-            {section === 'factions' ? (
+            {section === 'evidence' ? (
+              <div className="space-y-2">
+                <button
+                  onClick={() => setPackageOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-primary/40 bg-primary/10 text-primary text-xs font-heading tracking-wide hover:bg-primary/20 transition-colors"
+                >
+                  <Package className="w-3.5 h-3.5" strokeWidth={1.5} /> BUILD EVIDENCE PACKAGE
+                </button>
+                {PJ_EVIDENCE.filter((e) => isEvidenceVisible(campaign, e)).map((ev) => (
+                  <EvidenceCard
+                    key={ev.key}
+                    evidence={ev}
+                    campaign={campaign}
+                    discoveredEvidence={PJ_EVIDENCE.filter((e2) => e2.key !== ev.key && isEvidenceDiscovered(campaign, e2.key))}
+                    expanded={expanded.has(ev.key)}
+                    onToggle={() => toggle(ev.key)}
+                    onSuggestAction={onSuggestAction}
+                  />
+                ))}
+                <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
+                  Evidence is a command tool — use it to persuade, broadcast, challenge claims, recruit factions, and expose enemies. Reveal it too soon and enemies react; reveal it too late and crises worsen. Once shown to someone, they remember it.
+                </p>
+              </div>
+            ) : section === 'factions' ? (
               <div className="space-y-2">
                 {CODEX_FACTIONS.filter((f) => isFactionVisible(campaign, f)).map((fac) => (
                   <FactionCard
@@ -196,6 +223,13 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
             )}
           </div>
         </div>
+
+        <EvidencePackageDialog
+          open={packageOpen}
+          onOpenChange={setPackageOpen}
+          campaign={campaign}
+          onSuggestAction={onSuggestAction}
+        />
       </DialogContent>
     </Dialog>
   );
