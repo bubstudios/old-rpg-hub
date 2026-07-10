@@ -3,13 +3,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Target, Activity, Users, AlertTriangle, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import {
   CODEX_LOCATIONS, getLocationState, isLocationVisible,
-  LOCATION_STATES, STATE_TONE_CLASSES, RISK_TONE_CLASSES
+  LOCATION_STATES, STATE_TONE_CLASSES
 } from '@/lib/pjLocations';
 import { findClock, getClockValue, getClockTier, getClockStatus } from '@/lib/pjClocks';
 import { CODEX_ALLIES, codexKey } from '@/lib/pjCodex';
 import { getAllyState, getAllyRelationshipBand } from '@/lib/pjAllies';
 
 const STATE_ORDER = { ACTIVE: 0, DANGEROUS: 1, UNLOCKED: 2, RUMORED: 3, VISITED: 4, LOCKED: 5, UNKNOWN: 6 };
+
+// Filled risk pills — literal class strings so Tailwind purge keeps them.
+const RISK_PILL = {
+  Low: 'border-emerald-500/30 bg-emerald-500/15 text-emerald-300',
+  'Medium-Low': 'border-lime-500/30 bg-lime-500/15 text-lime-300',
+  Medium: 'border-amber-500/30 bg-amber-500/15 text-amber-300',
+  'Medium-High': 'border-orange-500/30 bg-orange-500/15 text-orange-300',
+  High: 'border-orange-500/40 bg-orange-500/20 text-orange-400',
+  Extreme: 'border-red-500/40 bg-red-500/20 text-red-400',
+  Variable: 'border-sky-500/30 bg-sky-500/15 text-sky-300',
+  Unknown: 'border-violet-500/30 bg-violet-500/15 text-violet-300'
+};
 
 // Match NPC names from relatedNpcs to ally entries in CODEX_ALLIES.
 function findMissionAllies(relatedNpcs) {
@@ -65,7 +77,7 @@ function MissionCard({ loc, state, campaign, onSuggestAction }) {
   const [expanded, setExpanded] = useState(state === 'ACTIVE' || state === 'DANGEROUS');
   const stateInfo = LOCATION_STATES[state] || LOCATION_STATES.UNKNOWN;
   const stateTone = STATE_TONE_CLASSES[stateInfo.tone] || STATE_TONE_CLASSES.muted;
-  const riskTone = RISK_TONE_CLASSES[loc.risk] || RISK_TONE_CLASSES.Unknown;
+  const riskPill = RISK_PILL[loc.risk] || RISK_PILL.Unknown;
   const { allies, others } = findMissionAllies(loc.relatedNpcs);
   const clocks = (loc.relatedClocks || []).map((k) => findClock(k)).filter(Boolean);
   const isUrgent = state === 'ACTIVE' || state === 'DANGEROUS';
@@ -82,13 +94,54 @@ function MissionCard({ loc, state, campaign, onSuggestAction }) {
           </span>
           <span className="font-heading text-sm text-foreground truncate">{loc.label}</span>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0">
-          <span className={`text-[10px] font-heading tracking-wide ${riskTone}`}>{loc.risk} RISK</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-[9px] font-heading tracking-wide px-2 py-0.5 rounded-full border ${riskPill}`}>
+            {loc.risk} RISK
+          </span>
           {expanded
             ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
             : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />}
         </div>
       </button>
+
+      {/* At-a-glance summary — risk, clock, and allies always visible */}
+      <div className="px-3 pb-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-border/30">
+        {clocks.length > 0 ? (
+          clocks.map((clock) => {
+            const val = getClockValue(campaign, clock.key);
+            const tier = getClockTier(val);
+            return (
+              <div key={clock.key} className="flex items-center gap-1.5">
+                <Activity className="w-3 h-3 text-muted-foreground/50" strokeWidth={1.5} />
+                <span className="text-[10px] font-body text-muted-foreground truncate max-w-[6.5rem]" title={clock.label}>{clock.label}</span>
+                <div className="w-10 h-1 rounded-full bg-secondary overflow-hidden">
+                  <div className={`h-full rounded-full ${tier.color}`} style={{ width: `${Math.max(0, Math.min(100, val))}%` }} />
+                </div>
+                <span className={`text-[9px] font-heading tabular-nums ${tier.text}`}>{val}</span>
+              </div>
+            );
+          })
+        ) : (
+          <span className="text-[9px] font-heading tracking-wide text-muted-foreground/40 flex items-center gap-1">
+            <Activity className="w-3 h-3" strokeWidth={1.5} /> NO ACTIVE CLOCK
+          </span>
+        )}
+        {allies.length > 0 && (
+          <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+            <Users className="w-3 h-3 text-muted-foreground/50" strokeWidth={1.5} />
+            {allies.map((ally) => {
+              const allyState = getAllyState(campaign, ally.key);
+              const band = allyState ? getAllyRelationshipBand(allyState.relationship) : null;
+              return (
+                <span key={ally.key} className="text-[9px] font-body text-foreground/70 flex items-center gap-0.5" title={band ? `${ally.label}: ${band.tier} (${allyState.relationship})` : `${ally.label}: untracked`}>
+                  {ally.label}
+                  <span className={`w-1.5 h-1.5 rounded-full ${band ? band.bar : 'bg-muted-foreground/40'}`} />
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {expanded && (
         <div className="px-3 pb-3 space-y-3">
