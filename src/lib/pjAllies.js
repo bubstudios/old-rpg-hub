@@ -155,6 +155,13 @@ export function getAllyLastAction(campaign, key) {
   return states[key]?.last_action || null;
 }
 
+// Recent relationship changes with reasons — shown on the AllyCard so the player
+// sees WHY each ally's score moved (relationship-pressure system, not a betrayal meter).
+export function getAllyChanges(campaign, key) {
+  const states = campaign?.world_state?.ally_states || {};
+  return states[key]?.recent_changes || [];
+}
+
 export function isAllyVisible(campaign, ally) {
   if (!ally) return false;
   if (ally.locked) return false;

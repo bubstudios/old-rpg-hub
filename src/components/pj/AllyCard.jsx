@@ -1,10 +1,11 @@
 import { ChevronDown, ChevronUp, Heart, AlertTriangle, Ship, Users, Lock, Shield } from 'lucide-react';
-import { getAllyState, getAllyNeed, getAllyLastAction, getAllyRelationshipBand, ALLY_BREAKING_POINTS, SANCTUARY_SHIPS, SANCTUARY_INTERNAL_FACTIONS } from '@/lib/pjAllies';
+import { getAllyState, getAllyNeed, getAllyLastAction, getAllyChanges, getAllyRelationshipBand, ALLY_BREAKING_POINTS, SANCTUARY_SHIPS, SANCTUARY_INTERNAL_FACTIONS } from '@/lib/pjAllies';
 
 export default function AllyCard({ ally, campaign, expanded, onToggle, onSuggestAction }) {
   const state = getAllyState(campaign, ally.key);
   const need = getAllyNeed(campaign, ally.key);
   const lastAction = getAllyLastAction(campaign, ally.key);
+  const changes = getAllyChanges(campaign, ally.key);
   const isFleet = ally.key === 'sanctuary_refugee_fleet';
   const band = state ? getAllyRelationshipBand(state.relationship) : null;
   const breakingPoints = ALLY_BREAKING_POINTS[ally.key];
@@ -55,6 +56,21 @@ export default function AllyCard({ ally, campaign, expanded, onToggle, onSuggest
                 <span className="text-[10px] font-heading tracking-[0.12em] text-amber-400/60">LAST ACTION: </span>
                 <span className="text-sm font-body text-foreground/80">{lastAction}</span>
               </div>
+            </div>
+          )}
+          {changes.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-[10px] font-heading tracking-[0.12em] text-primary/60">RECENT RELATIONSHIP CHANGES</p>
+              {changes.slice(0, 3).map((c, i) => (
+                <div key={i} className="flex items-start gap-1.5">
+                  <span className={`text-[10px] font-heading tabular-nums shrink-0 mt-0.5 ${c.change > 0 ? 'text-emerald-400' : c.change < 0 ? 'text-red-400' : 'text-muted-foreground'}`}>
+                    {c.change > 0 ? '+' : ''}{c.change}
+                  </span>
+                  <span className="text-[10px] font-body text-foreground/70 leading-relaxed">
+                    {c.reason ? `because ${c.reason}` : 'relationship shifted'}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
           {breakingPoints && (
