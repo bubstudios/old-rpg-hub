@@ -1,7 +1,7 @@
 import { Package } from 'lucide-react';
 import { INVENTORY_DETAILS } from '@/lib/pullSheetData';
 
-export default function InventoryTab({ character, flags }) {
+export default function InventoryTab({ character, flags, isMichael }) {
   const equipment = character?.equipment || [];
   const sparkShard = flags.spark_shard;
 
@@ -23,7 +23,11 @@ export default function InventoryTab({ character, flags }) {
         ) : (
           <div className="space-y-3">
             {items.map((item, i) => {
-              const detail = INVENTORY_DETAILS[item.name];
+              const rawDetail = INVENTORY_DETAILS[item.name];
+              // Etched Shard has early/late variants — show masked info until the Province 1 reveal
+              const detail = rawDetail
+                ? (rawDetail.early && rawDetail.late ? (isMichael ? rawDetail.late : rawDetail.early) : rawDetail)
+                : null;
               return (
                 <div key={i} className="border border-border/30 rounded-lg p-3 bg-secondary/10">
                   <div className="flex items-start justify-between gap-2 mb-1">

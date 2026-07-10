@@ -46,9 +46,11 @@ export default function ShardPowersTab({ flags }) {
                     </span>
                   )}
                 </div>
-                <p className={`text-[10px] font-body leading-relaxed ${unlocked ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
-                  {power.desc}
-                </p>
+                {unlocked ? (
+                  <p className="text-[10px] font-body leading-relaxed text-muted-foreground">{power.desc}</p>
+                ) : (
+                  <p className="text-[10px] font-body italic text-muted-foreground/30">Locked. Unknown.</p>
+                )}
               </div>
             );
           })}

@@ -158,9 +158,16 @@ export const SHARD_POWERS = [
 // ─── Inventory Details ───
 export const INVENTORY_DETAILS = {
   'Etched Shard': {
-    type: 'Divine Beacon', condition: 'Warm to the touch',
-    uses: ['Passive healing', 'Scar resonance', 'Venom resistance', 'Hidden truth detection', 'Rift interference', 'Barrier breaking'],
-    meaning: 'Father shaped it from His own light. A beacon through amnesia.'
+    early: {
+      type: 'Unknown Shard', condition: 'Warm to the touch',
+      uses: ['Passive warmth'],
+      meaning: 'A shard of metal or glass. Warm. Etched with a circle bisected by a jagged line. You do not know what it is — only that it feels important.'
+    },
+    late: {
+      type: 'Divine Beacon', condition: 'Warm to the touch',
+      uses: ['Passive healing', 'Scar resonance', 'Venom resistance', 'Hidden truth detection', 'Rift interference', 'Barrier breaking'],
+      meaning: 'Father shaped it from His own light. A beacon through amnesia.'
+    }
   },
   'Battered Metal Pipe': {
     type: 'Weapon / Anchor', condition: 'battered',
