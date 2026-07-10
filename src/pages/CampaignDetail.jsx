@@ -34,6 +34,8 @@ import { buildDecisionImpact } from '@/lib/pjDecisionImpact';
 import PullStatusPanel from '@/components/pull/PullStatusPanel';
 import PullCodex from '@/components/pull/PullCodex';
 import PullDecisionImpact from '@/components/pull/PullDecisionImpact';
+import PullUnlockNotifications from '@/components/pull/PullUnlockNotifications';
+import { buildUnlockNotifications } from '@/lib/pullUnlockNotifications';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -79,6 +81,7 @@ export default function CampaignDetail() {
   const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
   const [pullCodexOpen, setPullCodexOpen] = useState(false);
   const [pullImpact, setPullImpact] = useState(null);
+  const [pullUnlocks, setPullUnlocks] = useState([]);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -147,20 +150,29 @@ export default function CampaignDetail() {
   }
 
   function processDecisionImpact(dmData, decisionText) {
-    // The Pull: GM returns decision_impact directly
+    // The Pull: GM returns decision_impact directly + unlock notifications
     if (campaign?.game_system === 'thepull') {
       const impact = dmData?.decision_impact;
-      if (!impact || !impact.is_meaningful) return;
-      base44.functions.invoke('campaignData', {
-        op: 'saveDecisionLog',
-        campaign_id: campaignId,
-        chapter: campaign?.current_chapter || 1,
-        decision: decisionText || '',
-        impacts: impact.impacts || [],
-        future_consequence: impact.future_consequence || ''
-      }).catch(() => {});
-      if (popupSetting !== 'off') {
-        setPullImpact(impact);
+      const oldFlags = campaign?.world_state?.quest_flags || {};
+
+      // Build unlock notifications from the GM response (spoiler-gated)
+      const unlocks = buildUnlockNotifications(dmData, oldFlags, popupSetting);
+      if (unlocks.length > 0) {
+        setPullUnlocks(unlocks);
+      }
+
+      if (impact && impact.is_meaningful) {
+        base44.functions.invoke('campaignData', {
+          op: 'saveDecisionLog',
+          campaign_id: campaignId,
+          chapter: campaign?.current_chapter || 1,
+          decision: decisionText || '',
+          impacts: impact.impacts || [],
+          future_consequence: impact.future_consequence || ''
+        }).catch(() => {});
+        if (popupSetting !== 'off') {
+          setPullImpact(impact);
+        }
       }
       return;
     }
@@ -757,7 +769,20 @@ export default function CampaignDetail() {
         {/* Party sidebar (or Pull status for solo) */}
         <aside className="space-y-4">
           {campaign?.game_system === 'thepull' ? (
-            <PullStatusPanel campaign={campaign} onOpenCodex={() => setPullCodexOpen(true)} />
+            <>
+              <PullStatusPanel campaign={campaign} onOpenCodex={() => setPullCodexOpen(true)} />
+              <button
+                onClick={() => {
+                  const order = ['minimal', 'normal', 'detailed', 'off'];
+                  const next = order[(order.indexOf(popupSetting) + 1) % order.length];
+                  handlePopupSettingChange(next);
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/40 bg-card/30 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
+              >
+                <span>IMPACT DETAIL</span>
+                <span className="text-primary/80 capitalize">{popupSetting}</span>
+              </button>
+            </>
           ) : (
           <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-3">
             <div className="flex items-center gap-2 mb-3">
@@ -866,6 +891,10 @@ export default function CampaignDetail() {
             impact={pullImpact}
             onDismiss={() => setPullImpact(null)}
             setting={popupSetting}
+          />
+          <PullUnlockNotifications
+            notifications={pullUnlocks}
+            onDismiss={() => setPullUnlocks([])}
           />
         </>
       )}

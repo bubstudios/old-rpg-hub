@@ -345,6 +345,8 @@ Deno.serve(async (req) => {
       condition_changes: result.condition_changes || [],
       item_changes: result.item_changes || [],
       pipe_state: updatedFlags.pipe_state,
+      shard_focus_unlocked: !!result.shard_focus_unlocked,
+      spark_shard_acquired: !!result.spark_shard_acquired,
       choices: result.choices || []
     });
 
