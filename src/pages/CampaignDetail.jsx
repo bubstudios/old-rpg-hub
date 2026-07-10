@@ -48,6 +48,7 @@ export default function CampaignDetail() {
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState('');
   const [processing, setProcessing] = useState(false);
+  const processingRef = useRef(false);
   const [latestResult, setLatestResult] = useState(null);
   const [diceOpen, setDiceOpen] = useState(false);
   const [discussMode, setDiscussMode] = useState(false);
@@ -228,8 +229,10 @@ export default function CampaignDetail() {
   // Submit an action or agreement to the round. When all party members have acted,
   // the DM is invoked with everyone's actions combined.
   async function submitTurn(actionText, isAgree) {
-    if (processing) return;
+    if (processing || processingRef.current) return;
+    processingRef.current = true;
     if (!hasBillingAccess) {
+      processingRef.current = false;
       setPurchaseOpen(true);
       return;
     }
@@ -278,6 +281,7 @@ export default function CampaignDetail() {
       if (!isAgree) setAction(actionText);
     } finally {
       setProcessing(false);
+      processingRef.current = false;
     }
   }
 
