@@ -277,6 +277,11 @@ export default function CampaignDetail() {
       }
       // else: waiting for other party members — the pending state updates via subscription
     } catch (e) {
+      // If the DM call failed after dm_processing was claimed, reset the round so the campaign doesn't get stuck
+      try {
+        await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+      } catch { /* ignore */ }
       toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
       if (!isAgree) setAction(actionText);
     } finally {
