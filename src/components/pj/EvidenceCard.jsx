@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import {
-  ChevronDown, ChevronUp, Lightbulb, Crosshair, AlertTriangle, Target, ScrollText
+  ChevronDown, ChevronUp, Lightbulb, Crosshair, AlertTriangle, Target, ScrollText,
+  Sparkles, MapPin, Users
 } from 'lucide-react';
 import {
   STATE_META, CREDIBILITY_META, EVIDENCE_USAGE_ACTIONS,
   getEvidenceStatus, getEvidenceCredibility, getEvidenceShownTo, getEvidenceStateObject
 } from '@/lib/pjEvidence';
+import { getDiscoveryEffects, getLocationLabel } from '@/lib/pjDiscoveryTriggers';
 
 export default function EvidenceCard({
   evidence, campaign, discoveredEvidence, expanded, onToggle, onSuggestAction
@@ -55,6 +57,34 @@ export default function EvidenceCard({
           <div>
             <p className="text-sm font-body text-foreground/80 leading-relaxed">{evidence.explanation}</p>
           </div>
+
+          {/* Discovery effects (automatic — fires when evidence is found) */}
+          {(() => {
+            const fx = getDiscoveryEffects(evidence.key);
+            if (!fx || (fx.unlockLocations.length === 0 && fx.npcShifts.length === 0)) return null;
+            return (
+              <div className="border border-violet-500/20 rounded p-2 bg-violet-950/20 space-y-1.5">
+                <p className="flex items-center gap-1.5 text-[10px] font-heading tracking-[0.12em] text-violet-300/70">
+                  <Sparkles className="w-3 h-3" /> DISCOVERY EFFECTS (automatic)
+                </p>
+                {fx.unlockLocations.map((loc, i) => (
+                  <div key={'loc' + i} className="text-xs font-body text-foreground/70 flex gap-1.5">
+                    <MapPin className="w-3 h-3 text-violet-400/60 shrink-0 mt-0.5" />
+                    <span>Unlocks <span className="text-violet-300">{getLocationLabel(loc.key)}</span> → {loc.newState}</span>
+                  </div>
+                ))}
+                {fx.npcShifts.map((npc, i) => (
+                  <div key={'npc' + i} className="text-xs font-body text-foreground/70 flex gap-1.5">
+                    <Users className="w-3 h-3 text-violet-400/60 shrink-0 mt-0.5" />
+                    <span>{npc.name} → <span className="text-violet-300">{npc.disposition}</span></span>
+                  </div>
+                ))}
+                {fx.hint && (
+                  <p className="text-[10px] font-body italic text-muted-foreground/60 pt-0.5">{fx.hint}</p>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Clock effects */}
           {evidence.clockEffects?.length > 0 && (

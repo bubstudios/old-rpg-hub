@@ -131,6 +131,68 @@ async function upsertLocations(base44, campaign_id, chapter, locUpdates) {
   }
 }
 
+// === Discovery Triggers (Pathfinder Journeys) ===
+// When evidence transitions to DISCOVERED, automatically unlock location nodes
+// and shift NPC dispositions in the background — deterministic, not GM-discretion.
+const DISCOVERY_TRIGGERS = {
+  prometheus_warning: { onState: 'DISCOVERED', unlockLocations: [], npcShifts: [{ name: 'Admiral Chen', disposition: 'suspicious', notes: 'Chen increases surveillance on deep-space comms — the Prometheus warning is circulating.' }] },
+  james_stellar_testimony: { onState: 'DISCOVERED', unlockLocations: [], npcShifts: [{ name: 'Captain Vask', disposition: 'hostile', notes: 'Vask learns James survived — she hunts to silence his testimony.' }] },
+  korath_database: { onState: 'DISCOVERED', unlockLocations: [{ key: 'dead_civilization_graveyards', newState: 'UNLOCKED', reason: 'Korath records contain graveyard coordinates.' }], npcShifts: [{ name: 'Vescarri Claim-Lords', disposition: 'defensive', notes: 'Korath precedent threatens their legal standing.' }] },
+  novara_transaction_record: { onState: 'DISCOVERED', unlockLocations: [{ key: 'novara_system', newState: 'UNLOCKED', reason: 'Transaction record contains last-known Novara coordinates.' }, { key: 'collectors_guild_routes', newState: 'UNLOCKED', reason: 'Transaction trail leads to Guild trade lanes.' }], npcShifts: [{ name: 'Admiral Chen', disposition: 'hostile', notes: 'Chen is directly implicated — will move to suppress.' }] },
+  sakura_chen_technology_exchange: { onState: 'DISCOVERED', unlockLocations: [], npcShifts: [{ name: 'Admiral Chen', disposition: 'hostile', notes: 'Darkest secret exposed — will counterattack hard.' }, { name: 'Sarah Chen', disposition: 'strained', notes: 'Devastated — her mother sold humanity for engines.' }] },
+  new_titan_claim_file: { onState: 'DISCOVERED', unlockLocations: [{ key: 'new_titan_system', newState: 'ACTIVE', reason: 'Claim confirms New Titan is being processed now.' }], npcShifts: [{ name: 'Governor Marcus Thorne', disposition: 'alarmed', notes: 'Senses Confluence interest is wrong — begins quiet preparations.' }] },
+  sarah_chen_testimony: { onState: 'DISCOVERED', unlockLocations: [], npcShifts: [{ name: 'Admiral Chen', disposition: 'hostile', notes: "Daughter's betrayal is personal — will not forgive." }, { name: 'Sarah Chen', disposition: 'invested', notes: 'Committed everything to exposing the truth.' }] },
+  sanctuary_archive_records: { onState: 'DISCOVERED', unlockLocations: [{ key: 'architect_sites', newState: 'RUMORED', reason: 'Archive references Architect temporal sites.' }], npcShifts: [{ name: 'Councilor Verath', disposition: 'cautiously_trusting', notes: 'Archive access deepens the alliance.' }] },
+  architect_future_history_data: { onState: 'DISCOVERED', unlockLocations: [{ key: 'architect_sites', newState: 'UNLOCKED', reason: 'Future-history data contains site coordinates.' }], npcShifts: [{ name: 'Mitchell', disposition: 'agitated', notes: 'Senses temporal instability from the encoded data.' }] }
+};
+
+async function applyDiscoveryTriggers(base44, campaign_id, chapter, oldEvidenceStates, newEvidenceStates, npcList, newWorldState) {
+  const fired = [];
+  for (const [key, trigger] of Object.entries(DISCOVERY_TRIGGERS)) {
+    const oldState = (oldEvidenceStates && oldEvidenceStates[key] && oldEvidenceStates[key].state) || 'UNKNOWN';
+    const newState = (newEvidenceStates && newEvidenceStates[key] && newEvidenceStates[key].state) || 'UNKNOWN';
+    const target = trigger.onState || 'DISCOVERED';
+    if (newState === target && oldState !== target) {
+      fired.push({ key, trigger });
+    }
+  }
+  if (!fired.length) return [];
+
+  const effects = [];
+
+  // Apply location unlocks
+  const locStates = { ...(newWorldState.location_states || {}) };
+  for (const { key, trigger } of fired) {
+    for (const loc of (trigger.unlockLocations || [])) {
+      locStates[loc.key] = loc.newState;
+      effects.push({ type: 'location_unlock', location_key: loc.key, new_state: loc.newState, reason: loc.reason, evidence_key: key });
+    }
+  }
+  newWorldState.location_states = locStates;
+
+  // Apply NPC disposition shifts
+  const dispMods = { ...(newWorldState.npc_disposition_modifiers || {}) };
+  for (const { key, trigger } of fired) {
+    for (const npc of (trigger.npcShifts || [])) {
+      dispMods[npc.name] = { disposition: npc.disposition, notes: npc.notes, source: key };
+      effects.push({ type: 'npc_shift', npc_name: npc.name, disposition: npc.disposition, notes: npc.notes, evidence_key: key });
+      // Update existing NPC entity disposition if the NPC is already in this campaign
+      const match = (npcList || []).find(n =>
+        npcKey(n.name) === npcKey(npc.name) ||
+        (Array.isArray(n.aliases) && n.aliases.some(a => npcKey(a) === npcKey(npc.name)))
+      );
+      if (match) {
+        try {
+          await base44.asServiceRole.entities.NPC.update(match.id, { disposition: npc.disposition });
+        } catch (e) { /* modifier still tracked in world_state */ }
+      }
+    }
+  }
+  newWorldState.npc_disposition_modifiers = dispMods;
+
+  return effects;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -292,6 +354,12 @@ Deno.serve(async (req) => {
     const is5e = gs === 'dnd5e';
     const isPJ = gs === 'pathfinder';
 
+    // Build NPC disposition modifiers roster (background shifts from evidence discovery)
+    const dispMods = worldState.npc_disposition_modifiers || {};
+    const dispModRoster = isPJ && Object.keys(dispMods).length
+      ? Object.entries(dispMods).map(([name, d]) => '• ' + name + ' [BG: ' + d.disposition + '] — ' + d.notes + ' (source: ' + d.source + ')').join('\n')
+      : '';
+
     // Living Timeline Engine (Pathfinder Journeys only)
     const timeline = isPJ ? calculateTimeline(campaign) : null;
 
@@ -413,6 +481,9 @@ If the player has relevant evidence in a conversation (e.g. meeting Governor Tho
 
 ### Evidence Memory Rule (CRITICAL)
 Once evidence is shown to a person or faction, they REMEMBER it. Do not make the player re-prove the same thing every scene. Track who has seen each item, whether they believe it, whether they dispute it, and whether enemies know it has been revealed. Report all changes in evidence_updates.
+
+### Discovery Triggers (Automatic — CRITICAL)
+When certain evidence is DISCOVERED for the first time (UNKNOWN → DISCOVERED), the system AUTOMATICALLY unlocks hidden location/mission nodes and shifts NPC dispositions in the background. You do NOT need to manually apply these — the system handles it. The results appear in the next turn's state. You MAY weave the consequences naturally into your narration (e.g., if the Novara Transaction Record unlocks Novara System coordinates, mention the crew plotting a course; if Admiral Chen's disposition shifts hostile, show her moving against Bub). Do NOT re-apply effects the system already handled.
 
 ### Player Agency Rule (CRITICAL)
 Evidence is a tool. The player decides: who sees it, when they see it, whether it is verified first, whether it is released quietly or publicly, whether it is combined with other evidence, and whether the audience is ready to believe it. NEVER force a clock change just because evidence exists in the Codex. NEVER reveal evidence for the player. Offer dialogue and usage options, then let the player choose. The same evidence item can have very different consequences depending on how it is used.
@@ -774,6 +845,7 @@ Party Reputation: ${worldState.reputation || 0}
 
 ## NPC Dossier (known entities)
 ${npcRoster}
+${dispModRoster ? '\n## NPC Disposition Modifiers (background shifts from evidence discovery — use these dispositions when the NPC appears)\n' + dispModRoster : ''}
 
 ## Faction Status (living groups — they do NOT wait passively)
 ${factionRoster}
@@ -1128,6 +1200,9 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
       newWorldState.quest_flags = flags;
     }
 
+    // Save old evidence states for discovery trigger comparison
+    const oldEvidenceStates = JSON.parse(JSON.stringify(worldState.evidence_states || {}));
+
     // Apply evidence updates (Pathfinder Journeys — playable evidence system)
     if (Array.isArray(result.evidence_updates) && result.evidence_updates.length) {
       const evStatesMap = { ...(newWorldState.evidence_states || {}) };
@@ -1153,6 +1228,13 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
       }
       newWorldState.evidence_states = evStatesMap;
     }
+
+    // Apply discovery triggers (auto-unlock locations, shift NPC dispositions when evidence is found)
+    const discoveryEffects = await applyDiscoveryTriggers(
+      base44, campaign_id, campaign.current_chapter,
+      oldEvidenceStates, newWorldState.evidence_states || {},
+      npcList, newWorldState
+    );
 
     // Apply ally updates (living relationships — Pathfinder Journeys)
     if (Array.isArray(result.ally_updates) && result.ally_updates.length) {
@@ -1243,6 +1325,7 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
       clock_changes: result.clock_changes || [],
       evidence_updates: result.evidence_updates || [],
       ally_updates: result.ally_updates || [],
+      discovery_effects: discoveryEffects || [],
       player_runtime_hours: timeline ? timeline.runtimeHours : 0,
       in_world_day: timeline ? (campaignUpdates.in_world_day || timeline.inWorldDays) : 0,
       pending_arc2_unlocks: timeline ? timeline.pendingUnlocks : [],
