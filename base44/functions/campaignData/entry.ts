@@ -302,6 +302,75 @@ Deno.serve(async (req) => {
         return Response.json({ campaign: { ...campaign, has_character: true } });
       }
 
+      // The Pull — solo dark fantasy survival mystery RPG
+      if (game_system === 'thepull') {
+        const pullClocks = { province_1_alert: 0, hunter_proximity: 0, seeker_frustration: 0, dreadwraith_adaptation: 0, shard_resonance_trail: 0, bond_threat: 0, council_fracture: 0, ruler_strain: 50, realm_stability: 50, bullet_mystery: 0, fear_of_self: 0, soul_fracture: 0, witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100 };
+        const pullLocalClocks = { thirst: 20, camp_trust: 30, purifier_stability: 60, raider_threat: 20 };
+
+        const campaign = await base44.entities.Campaign.create({
+          name: name.trim(),
+          invite_code: generateInviteCode(),
+          status: 'active',
+          mode: 'async',
+          tone: 'balanced',
+          world_setting: 'The Provinces',
+          setting_notes: 'A dark fantasy survival mystery RPG. Bullet wakes in Province 618 with no memory, a circular scar over his heart, and an etched shard. The Pull drags him forward through nightmare Provinces toward Province 1.',
+          module_id: null,
+          game_system: 'thepull',
+          play_mode: 'original',
+          current_chapter: 1,
+          current_scene: 'You wake face-down in red sand. Heat presses against your back. Your mouth is dry enough to crack. You do not know your name. There is a circular scar over your heart. Something hard presses against your thigh — a shard, etched with a circle split by a jagged line. And inside your chest, something pulls. Forward.',
+          combat_active: false,
+          combat_round: 0,
+          world_state: {
+            locations_explored: [], npcs_met: [],
+            quest_flags: {
+              current_province: 618, province_history: [],
+              campaign_clocks: pullClocks, local_clocks: pullLocalClocks,
+              pull_intensity: 1, scar_state: 'pulse', shard_resonance: 5,
+              spark_shard: false, pipe_state: 'battered_metal_pipe', shard_focus_unlocked: false,
+              conditions: [], codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'pipe', 'province_618'],
+              npc_relationships: {}, memories: [], guilt_echoes: [], phase: 'Lost Survivor'
+            },
+            reputation: 0, chapter_log: []
+          }
+        });
+
+        // Auto-create Bullet
+        await base44.entities.Character.create({
+          name: 'Bullet',
+          campaign_id: campaign.id,
+          game_system: 'thepull',
+          race: 'Amnesiac',
+          character_class: 'Wanderer',
+          ability_scores: {},
+          level: 1,
+          hp_current: 10, hp_max: 10,
+          ac: 0, thaco: 0, xp: 0,
+          saving_throws: {},
+          gold: 0,
+          equipment: [
+            { name: 'Etched Shard', qty: 1, notes: 'Circle bisected by jagged line. Warm to the touch.' },
+            { name: 'Battered Metal Pipe', qty: 1, notes: 'Your main weapon and walking stick.' },
+            { name: 'Torn Clothing', qty: 1, notes: 'Barely covering you. Barefoot.' }
+          ],
+          skills: [], mutations: [], spells: [], spell_slots: {},
+          appearance: 'A wounded man with no memory. A circular scar — like a bullet wound — over his heart. Barefoot, exhausted, wearing torn clothing. Steel-gray eyes that carry something he cannot name.',
+          background: 'You woke face-down in red sand with no memory of who you are. The camp called you Bullet for the scar over your heart.',
+          status: 'active'
+        });
+
+        // Create opening narration
+        await base44.entities.JournalEntry.create({
+          campaign_id: campaign.id,
+          entry_type: 'narration',
+          narration: 'You wake face-down in red sand.\n\nHeat presses against your back. Your mouth is dry enough to crack. You do not know your name.\n\nThere is a circular scar over your heart.\n\nSomething hard presses against your thigh inside your pocket. A shard. Metal or glass. Warm. Etched with a circle split by a jagged line.\n\nAnd inside your chest, something pulls.\n\nNot a thought. Not a voice. A direction.\n\nForward.',
+          chapter: 1
+        });
+
+        return Response.json({ campaign: { ...campaign, has_character: true } });
+      }
+
       return Response.json({ campaign });
     }
 

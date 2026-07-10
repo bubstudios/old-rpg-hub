@@ -13,9 +13,7 @@ const DND_TONES = [
   { id: 'character_driven', label: 'Character-Driven', icon: Drama, desc: 'Story, roleplay, and personal arcs' }
 ];
 
-const DND_WORLDS = [
-  'A custom world of my own'
-];
+const DND_WORLDS = ['A custom world of my own'];
 
 const SF_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Rocket, desc: 'A mix of combat, exploration, and story' },
@@ -25,32 +23,9 @@ const SF_TONES = [
   { id: 'character_driven', label: 'Character-Driven', icon: Users, desc: 'Story, roleplay, and personal arcs' }
 ];
 
-const SF_WORLDS = [
-  'Mars',
-  'Aqualand',
-  'Volturnus',
-  'Gran Quivera',
-  'Clarion',
-  'Outer Reach',
-  'A custom world of my own'
-];
-
-const DND_SETUP = {
-  worldLabel: 'WORLD SETTING',
-  worldPlaceholder: 'Name your realm (or pick a preset above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or any details you want the DM to weave in. e.g. 'A grim low-magic frontier town besieged by winter wolves, where the party are the only defenders.'",
-  namePlaceholder: 'e.g. Shadows of Greyhawk',
-  forgeLabel: 'Forge Campaign'
-};
-
-const SF_SETUP = {
-  worldLabel: 'NAME YOUR WORLD',
-  worldPlaceholder: 'Name a world (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A 95% waterworld of floating cities and deep-sea leviathans, where the party are salvage divers.'",
-  namePlaceholder: 'e.g. Voyage to Volturnus',
-  forgeLabel: 'Launch Campaign'
-};
-
+const SF_WORLDS = ['Mars', 'Aqualand', 'Volturnus', 'Gran Quivera', 'Clarion', 'Outer Reach', 'A custom world of my own'];
+const DND_SETUP = { worldLabel: 'WORLD SETTING', worldPlaceholder: 'Name your realm (or pick a preset above)', visionPlaceholder: "Describe the tone, themes, starting situation, or any details you want the DM to weave in. e.g. 'A grim low-magic frontier town besieged by winter wolves, where the party are the only defenders.'", namePlaceholder: 'e.g. Shadows of Greyhawk', forgeLabel: 'Forge Campaign' };
+const SF_SETUP = { worldLabel: 'NAME YOUR WORLD', worldPlaceholder: 'Name a world (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A 95% waterworld of floating cities and deep-sea leviathans, where the party are salvage divers.'", namePlaceholder: 'e.g. Voyage to Volturnus', forgeLabel: 'Launch Campaign' };
 const GW_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Atom, desc: 'A mix of exploration, combat, survival, and discovery' },
   { id: 'combat_heavy', label: 'Combat-Heavy', icon: Swords, desc: 'Frequent mutant brawls and salvage firefights' },
@@ -58,23 +33,8 @@ const GW_TONES = [
   { id: 'sandbox', label: 'Blasted Wastes', icon: Map, desc: 'Open wasteland, roam where you dare' },
   { id: 'character_driven', label: 'Survivor Saga', icon: Users, desc: 'Faction politics, survival, and personal arcs' }
 ];
-
-const GW_WORLDS = [
-  'Gamma Terra',
-  'The Bonelands',
-  'The Glowing Sea',
-  'Old Earth',
-  'A custom wasteland of my own'
-];
-
-const GW_SETUP = {
-  worldLabel: 'NAME YOUR WASTELAND',
-  worldPlaceholder: 'Name the region or wasteland (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A sprawling dead arcology where rival mutant clans war over a functioning water purifier, and the party are scavengers who just found a map to the lower levels.'",
-  namePlaceholder: 'e.g. Ashes of the Ancients',
-  forgeLabel: 'Venture Forth'
-};
-
+const GW_WORLDS = ['Gamma Terra', 'The Bonelands', 'The Glowing Sea', 'Old Earth', 'A custom wasteland of my own'];
+const GW_SETUP = { worldLabel: 'NAME YOUR WASTELAND', worldPlaceholder: 'Name the region or wasteland (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A sprawling dead arcology where rival mutant clans war over a functioning water purifier, and the party are scavengers who just found a map to the lower levels.'", namePlaceholder: 'e.g. Ashes of the Ancients', forgeLabel: 'Venture Forth' };
 const BH_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Crosshair, desc: 'A mix of gunfights, frontier drama, and exploration' },
   { id: 'combat_heavy', label: 'Gunfighter', icon: Swords, desc: 'Frequent shootouts and quick-draw showdowns' },
@@ -82,24 +42,8 @@ const BH_TONES = [
   { id: 'sandbox', label: 'Open Range', icon: Map, desc: 'A free-roaming territory, go where you please' },
   { id: 'character_driven', label: 'Frontier Saga', icon: Drama, desc: 'Saloon politics, feuds, and personal legends' }
 ];
-
-const BH_WORLDS = [
-  'Tombstone Territory',
-  'Dodge City',
-  'Abilene',
-  'The Dakota Badlands',
-  'Promise City',
-  'A custom frontier of my own'
-];
-
-const BH_SETUP = {
-  worldLabel: 'NAME YOUR TERRITORY',
-  worldPlaceholder: 'Name the town or territory (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A dying silver-mining town where a cattle baron hires guns to run roughshod over the locals, and the party drift in looking for work — and trouble.'",
-  namePlaceholder: 'e.g. High Noon at Promise City',
-  forgeLabel: 'Saddle Up'
-};
-
+const BH_WORLDS = ['Tombstone Territory', 'Dodge City', 'Abilene', 'The Dakota Badlands', 'Promise City', 'A custom frontier of my own'];
+const BH_SETUP = { worldLabel: 'NAME YOUR TERRITORY', worldPlaceholder: 'Name the town or territory (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A dying silver-mining town where a cattle baron hires guns to run roughshod over the locals, and the party drift in looking for work — and trouble.'", namePlaceholder: 'e.g. High Noon at Promise City', forgeLabel: 'Saddle Up' };
 const IJ_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Compass, desc: 'A mix of action, exploration, puzzle-solving, and derring-do' },
   { id: 'combat_heavy', label: 'Two-Fisted', icon: Swords, desc: 'Frequent fistfights, shootouts, chases, and pulp peril' },
@@ -107,24 +51,8 @@ const IJ_TONES = [
   { id: 'sandbox', label: 'Globe-Trotting', icon: Globe, desc: 'A 1930s world to roam at your own pace and direction' },
   { id: 'character_driven', label: 'Pulp Saga', icon: Drama, desc: 'Rivalry, romance, personal legends, and dashing arcs' }
 ];
-
-const IJ_WORLDS = [
-  'The Lost Temple of Ikammanen',
-  'The Egyptian Desert',
-  'The Amazon',
-  'The Himalayas',
-  'The Streets of Cairo',
-  'A custom expedition of my own'
-];
-
-const IJ_SETUP = {
-  worldLabel: 'NAME YOUR EXPEDITION',
-  worldPlaceholder: 'Name the region, site, or expedition (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A 1936 race against Nazi archaeologists to reach a lost Sumerian ziggurat deep in the desert, where the party are a mismatched crew of scholars and hired guns.'",
-  namePlaceholder: 'e.g. The Ikons of Ikammanen',
-  forgeLabel: 'Begin the Expedition'
-};
-
+const IJ_WORLDS = ['The Lost Temple of Ikammanen', 'The Egyptian Desert', 'The Amazon', 'The Himalayas', 'The Streets of Cairo', 'A custom expedition of my own'];
+const IJ_SETUP = { worldLabel: 'NAME YOUR EXPEDITION', worldPlaceholder: 'Name the region, site, or expedition (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A 1936 race against Nazi archaeologists to reach a lost Sumerian ziggurat deep in the desert, where the party are a mismatched crew of scholars and hired guns.'", namePlaceholder: 'e.g. The Ikons of Ikammanen', forgeLabel: 'Begin the Expedition' };
 const SJ_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of ship combat, exploration, and swashbuckling' },
   { id: 'combat_heavy', label: 'Void Battles', icon: Swords, desc: 'Frequent skirmishes and boarding actions' },
@@ -132,24 +60,8 @@ const SJ_TONES = [
   { id: 'sandbox', label: 'Open Spheres', icon: Globe, desc: 'The crystal spheres and the Flow, go where you please' },
   { id: 'character_driven', label: 'Crew Saga', icon: Drama, desc: 'Faction politics, crew bonds, and personal legends' }
 ];
-
-const SJ_WORLDS = [
-  'Krynnspace',
-  'Realmspace',
-  'Greyspace',
-  'The Rock of Bral',
-  'The Tears of Selûne',
-  'A custom sphere of my own'
-];
-
-const SJ_SETUP = {
-  worldLabel: 'CRYSTAL SPHERE / SETTING',
-  worldPlaceholder: 'Name the sphere, rock, or region (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A crew of free traders on a battered Squid Ship, fleeing a neogi slave fleet through the Flow toward the Rock of Bral, carrying a stolen helm the Arcane want back.'",
-  namePlaceholder: 'e.g. Voyage Beyond the Crystal Sphere',
-  forgeLabel: 'Set Sail'
-};
-
+const SJ_WORLDS = ['Krynnspace', 'Realmspace', 'Greyspace', 'The Rock of Bral', 'The Tears of Selûne', 'A custom sphere of my own'];
+const SJ_SETUP = { worldLabel: 'CRYSTAL SPHERE / SETTING', worldPlaceholder: 'Name the sphere, rock, or region (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A crew of free traders on a battered Squid Ship, fleeing a neogi slave fleet through the Flow toward the Rock of Bral, carrying a stolen helm the Arcane want back.'", namePlaceholder: 'e.g. Voyage Beyond the Crystal Sphere', forgeLabel: 'Set Sail' };
 const DS_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of brutal combat, desert survival, and story' },
   { id: 'combat_heavy', label: 'Arena Blood', icon: Swords, desc: 'Frequent arena fights, raids, and lethal clashes' },
@@ -157,26 +69,8 @@ const DS_TONES = [
   { id: 'sandbox', label: 'Tablelands', icon: Map, desc: 'The wastes and city-states, roam at your peril' },
   { id: 'character_driven', label: 'Slave Revolt', icon: Drama, desc: 'Merchant-house politics, revolts, and legends' }
 ];
-
-const DS_WORLDS = [
-  'Tyr (the free city)',
-  'Urik',
-  'Balic',
-  'Gulg',
-  'Nibenay',
-  'The Tablelands',
-  'The Sea of Silt',
-  'A custom Athasian city-state of my own'
-];
-
-const DS_SETUP = {
-  worldLabel: 'CITY-STATE / REGION',
-  worldPlaceholder: 'Name the city-state or region (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'Newly freed slaves escaped from the Tyr arena, fleeing across the Tablelands with a stolen defiler scroll the templars will kill to recover, racing the sun toward the Forest Ridge.'",
-  namePlaceholder: 'e.g. Blood Beneath the Crimson Sun',
-  forgeLabel: 'Brave the Wastes'
-};
-
+const DS_WORLDS = ['Tyr (the free city)', 'Urik', 'Balic', 'Gulg', 'Nibenay', 'The Tablelands', 'The Sea of Silt', 'A custom Athasian city-state of my own'];
+const DS_SETUP = { worldLabel: 'CITY-STATE / REGION', worldPlaceholder: 'Name the city-state or region (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'Newly freed slaves escaped from the Tyr arena, fleeing across the Tablelands with a stolen defiler scroll the templars will kill to recover, racing the sun toward the Forest Ridge.'", namePlaceholder: 'e.g. Blood Beneath the Crimson Sun', forgeLabel: 'Brave the Wastes' };
 const TS_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of tradecraft, action, and intrigue' },
   { id: 'combat_heavy', label: 'Firefights', icon: Crosshair, desc: 'Frequent shootouts, raids, and lethal clashes' },
@@ -184,60 +78,12 @@ const TS_TONES = [
   { id: 'sandbox', label: 'Globe-Trotting', icon: Globe, desc: 'Open Cold War world, go where the mission leads' },
   { id: 'character_driven', label: 'Spycraft', icon: Drama, desc: 'Betrayal, moles, and personal arcs' }
 ];
-
-const TS_WORLDS = [
-  'Cold War Europe',
-  'The Caribbean',
-  'Southeast Asia',
-  'The Middle East',
-  'North America',
-  'A custom theatre of my own'
-];
-
-const TS_SETUP = {
-  worldLabel: 'THEATRE / SETTING',
-  worldPlaceholder: 'Name the city, country, or theatre (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, agency, mission, or details you want the Administrator to weave in. e.g. 'Cold War Berlin, 1965. A CIA station chief hands your team a defector's file and a photograph of a Soviet mole inside Western intelligence. Find the mole before he vanishes — or before your own side burns you.'",
-  namePlaceholder: 'e.g. Operation Ghost Protocol',
-  forgeLabel: 'Accept the Mission'
-};
-
-const GH_WORLDS = [
-  'The Free City of Greyhawk',
-  'The Flanaess',
-  'The Wild Coast',
-  'Furyondy',
-  'The Bandit Kingdoms',
-  'The Domain of Greyhawk',
-  'A custom region of Oerth'
-];
-
-const GH_SETUP = {
-  worldLabel: 'REGION OF OERIK',
-  worldPlaceholder: 'Name the city, region, or domain (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A band of adventurers gathered in the Free City of Greyhawk, hired by a mysterious patron to delve the ruins beneath Castle Greyhawk — where the Archmage's dungeons grow more deadly with every level descended.'",
-  namePlaceholder: 'e.g. Shadows of the Flanaess',
-  forgeLabel: 'Enter the Flanaess'
-};
-
-const FR_WORLDS = [
-  'Waterdeep',
-  'The Dalelands',
-  'The Sword Coast',
-  'Cormyr',
-  "Baldur's Gate",
-  'The North',
-  'A custom region of Faerûn'
-];
-
-const FR_SETUP = {
-  worldLabel: 'REGION OF FAERÛN',
-  worldPlaceholder: 'Name the city, region, or realm (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A party of adventurers arrives in Waterdeep the City of Splendors, drawn by a Harper's plea to investigate a Zhentarim plot threatening the Lords' Alliance — a conspiracy reaching into the highest towers of the city.'",
-  namePlaceholder: 'e.g. Shadows over Waterdeep',
-  forgeLabel: 'Enter the Realms'
-};
-
+const TS_WORLDS = ['Cold War Europe', 'The Caribbean', 'Southeast Asia', 'The Middle East', 'North America', 'A custom theatre of my own'];
+const TS_SETUP = { worldLabel: 'THEATRE / SETTING', worldPlaceholder: 'Name the city, country, or theatre (or pick one above)', visionPlaceholder: "Describe the tone, themes, agency, mission, or details you want the Administrator to weave in. e.g. 'Cold War Berlin, 1965. A CIA station chief hands your team a defector's file and a photograph of a Soviet mole inside Western intelligence. Find the mole before he vanishes — or before your own side burns you.'", namePlaceholder: 'e.g. Operation Ghost Protocol', forgeLabel: 'Accept the Mission' };
+const GH_WORLDS = ['The Free City of Greyhawk', 'The Flanaess', 'The Wild Coast', 'Furyondy', 'The Bandit Kingdoms', 'The Domain of Greyhawk', 'A custom region of Oerth'];
+const GH_SETUP = { worldLabel: 'REGION OF OERIK', worldPlaceholder: 'Name the city, region, or domain (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A band of adventurers gathered in the Free City of Greyhawk, hired by a mysterious patron to delve the ruins beneath Castle Greyhawk — where the Archmage's dungeons grow more deadly with every level descended.'", namePlaceholder: 'e.g. Shadows of the Flanaess', forgeLabel: 'Enter the Flanaess' };
+const FR_WORLDS = ['Waterdeep', 'The Dalelands', 'The Sword Coast', 'Cormyr', "Baldur's Gate", 'The North', 'A custom region of Faerûn'];
+const FR_SETUP = { worldLabel: 'REGION OF FAERÛN', worldPlaceholder: 'Name the city, region, or realm (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A party of adventurers arrives in Waterdeep the City of Splendors, drawn by a Harper's plea to investigate a Zhentarim plot threatening the Lords' Alliance — a conspiracy reaching into the highest towers of the city.'", namePlaceholder: 'e.g. Shadows over Waterdeep', forgeLabel: 'Enter the Realms' };
 const HW_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of exploration, survival, and ancient cultures' },
   { id: 'combat_heavy', label: 'Beast Hunter', icon: Swords, desc: 'Frequent clashes with beasts, raiders, and preserved perils' },
@@ -245,25 +91,8 @@ const HW_TONES = [
   { id: 'sandbox', label: 'The Inner World', icon: Map, desc: 'A vast curved world, free to explore' },
   { id: 'character_driven', label: 'Cultural Saga', icon: Drama, desc: 'Faction politics, ancient lineages, and personal arcs' }
 ];
-
-const HW_WORLDS = [
-  'The Milenian Empire',
-  'The Traldar Kingdoms',
-  'Azcanta',
-  'The Oltec Lands',
-  'Nithia',
-  'The Polar Opening',
-  'A custom region of the Hollow World'
-];
-
-const HW_SETUP = {
-  worldLabel: 'REGION OF THE HOLLOW WORLD',
-  worldPlaceholder: 'Name the culture, region, or land (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A party of surface-world explorers plunges through the polar opening into the Hollow World, finding themselves among the marble colonnades of the Milenian Empire — a civilization preserved by the Immortals, unaware that the surface world moved on millennia ago.'",
-  namePlaceholder: 'e.g. Descent into the Hollow World',
-  forgeLabel: 'Descend Within'
-};
-
+const HW_WORLDS = ['The Milenian Empire', 'The Traldar Kingdoms', 'Azcanta', 'The Oltec Lands', 'Nithia', 'The Polar Opening', 'A custom region of the Hollow World'];
+const HW_SETUP = { worldLabel: 'REGION OF THE HOLLOW WORLD', worldPlaceholder: 'Name the culture, region, or land (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A party of surface-world explorers plunges through the polar opening into the Hollow World, finding themselves among the marble colonnades of the Milenian Empire — a civilization preserved by the Immortals, unaware that the surface world moved on millennia ago.'", namePlaceholder: 'e.g. Descent into the Hollow World', forgeLabel: 'Descend Within' };
 const HY_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of combat, exploration, sorcery, and survival' },
   { id: 'combat_heavy', label: 'Sword & Steel', icon: Swords, desc: 'Frequent melees, raids, and lethal clashes' },
@@ -271,27 +100,8 @@ const HY_TONES = [
   { id: 'sandbox', label: 'Wanderer', icon: Map, desc: 'The Hyborian kingdoms, roam where you will' },
   { id: 'character_driven', label: 'Legend', icon: Drama, desc: 'Kingdoms, thrones, sorcery, and personal arcs' }
 ];
-
-const HY_WORLDS = [
-  'Cimmeria',
-  'Aquilonia',
-  'Nemedia',
-  'The Vilayet Sea',
-  'Turan',
-  'Stygia',
-  'Hyrkania',
-  'Zamora',
-  'A custom Hyborian kingdom'
-];
-
-const HY_SETUP = {
-  worldLabel: 'HYBORIAN KINGDOM / REGION',
-  worldPlaceholder: 'Name the kingdom, region, or city (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A band of mercenaries hired by a Nemedian lord to recover a stolen relic from a Stygian tomb, hunted across the borderlands by the sorcerer-priests of Set who want it back.'",
-  namePlaceholder: 'e.g. Blood of the Hyborian Age',
-  forgeLabel: 'Stride Forth'
-};
-
+const HY_WORLDS = ['Cimmeria', 'Aquilonia', 'Nemedia', 'The Vilayet Sea', 'Turan', 'Stygia', 'Hyrkania', 'Zamora', 'A custom Hyborian kingdom'];
+const HY_SETUP = { worldLabel: 'HYBORIAN KINGDOM / REGION', worldPlaceholder: 'Name the kingdom, region, or city (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A band of mercenaries hired by a Nemedian lord to recover a stolen relic from a Stygian tomb, hunted across the borderlands by the sorcerer-priests of Set who want it back.'", namePlaceholder: 'e.g. Blood of the Hyborian Age', forgeLabel: 'Stride Forth' };
 const BR_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of space combat, intrigue, and exploration' },
   { id: 'combat_heavy', label: 'Dogfights', icon: Swords, desc: 'Frequent ship battles, raids, and blaster fights' },
@@ -299,24 +109,8 @@ const BR_TONES = [
   { id: 'sandbox', label: 'Open System', icon: Globe, desc: 'The solar system, go where your rocket takes you' },
   { id: 'character_driven', label: 'Rebellion', icon: Drama, desc: 'RAM vs the Belt, freedom, and personal arcs' }
 ];
-
-const BR_WORLDS = [
-  'Earth (Neworg)',
-  'Mars (RAM capital)',
-  'The Asteroid Belt',
-  'Venus',
-  'Luna',
-  'A custom station or world'
-];
-
-const BR_SETUP = {
-  worldLabel: 'LOCATION / THEATRE',
-  worldPlaceholder: 'Name the planet, station, or region (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A crew of Belters running a smuggling ship between the asteroids, hired to extract a RAM defector carrying genetic secrets the geniocracy will kill to suppress.'",
-  namePlaceholder: 'e.g. Rebels of the Belt',
-  forgeLabel: 'Blast Off'
-};
-
+const BR_WORLDS = ['Earth (Neworg)', 'Mars (RAM capital)', 'The Asteroid Belt', 'Venus', 'Luna', 'A custom station or world'];
+const BR_SETUP = { worldLabel: 'LOCATION / THEATRE', worldPlaceholder: 'Name the planet, station, or region (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the DM to weave in. e.g. 'A crew of Belters running a smuggling ship between the asteroids, hired to extract a RAM defector carrying genetic secrets the geniocracy will kill to suppress.'", namePlaceholder: 'e.g. Rebels of the Belt', forgeLabel: 'Blast Off' };
 const GB_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of investigation, ghost-wrangling, and comedy' },
   { id: 'combat_heavy', label: 'Slime Time', icon: Swords, desc: 'Frequent ghost-trapping, proton-blasting, and chaos' },
@@ -324,24 +118,8 @@ const GB_TONES = [
   { id: 'sandbox', label: 'City Patrol', icon: Map, desc: 'The haunted city, respond to calls as they come' },
   { id: 'character_driven', label: 'Franchise Drama', icon: Drama, desc: 'Bills, rivals, Walter Peck, and personal arcs' }
 ];
-
-const GB_WORLDS = [
-  'New York City',
-  'The Firehouse (Hook & Ladder 8)',
-  'A haunted hotel',
-  'The NYC Public Library',
-  'Dana Barrett\u2019s apartment',
-  'A custom haunted city'
-];
-
-const GB_SETUP = {
-  worldLabel: 'BASE OF OPERATIONS',
-  worldPlaceholder: 'Name the city, franchise, or site (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A brand-new Ghostbusters franchise in a city where the supernatural is suddenly everywhere. The team just got a call about a Class 5 full-torso repeater haunting an old hotel — and the EPA is sniffing around too.'",
-  namePlaceholder: 'e.g. Ghostbusters: City of Phantoms',
-  forgeLabel: 'Suit Up'
-};
-
+const GB_WORLDS = ['New York City', 'The Firehouse (Hook & Ladder 8)', 'A haunted hotel', 'The NYC Public Library', 'Dana Barrett\u2019s apartment', 'A custom haunted city'];
+const GB_SETUP = { worldLabel: 'BASE OF OPERATIONS', worldPlaceholder: 'Name the city, franchise, or site (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'A brand-new Ghostbusters franchise in a city where the supernatural is suddenly everywhere. The team just got a call about a Class 5 full-torso repeater haunting an old hotel — and the EPA is sniffing around too.'", namePlaceholder: 'e.g. Ghostbusters: City of Phantoms', forgeLabel: 'Suit Up' };
 const GANG_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of crime, investigation, and gunfights' },
   { id: 'combat_heavy', label: 'Gunfights', icon: Crosshair, desc: 'Frequent shootouts, raids, and Tommy gun mayhem' },
@@ -349,24 +127,8 @@ const GANG_TONES = [
   { id: 'sandbox', label: 'Open City', icon: Globe, desc: 'The Prohibition city, go where the money leads' },
   { id: 'character_driven', label: 'Syndicate', icon: Drama, desc: 'Mob politics, turf wars, and personal legends' }
 ];
-
-const GANG_WORLDS = [
-  'Chicago',
-  'New York City',
-  'Atlantic City',
-  'Detroit',
-  'New Orleans',
-  'A custom Prohibition city'
-];
-
-const GANG_SETUP = {
-  worldLabel: 'CITY / TERRITORY',
-  worldPlaceholder: 'Name the city or territory (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'Prohibition Chicago, 1929. The party are a crew of bootleggers and muscle working for a rising outfit, smuggling Canadian whisky across the lake — but the feds are closing in and a rival syndicate wants their territory.'",
-  namePlaceholder: 'e.g. The Chicago Outfit',
-  forgeLabel: 'Hit the Streets'
-};
-
+const GANG_WORLDS = ['Chicago', 'New York City', 'Atlantic City', 'Detroit', 'New Orleans', 'A custom Prohibition city'];
+const GANG_SETUP = { worldLabel: 'CITY / TERRITORY', worldPlaceholder: 'Name the city or territory (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'Prohibition Chicago, 1929. The party are a crew of bootleggers and muscle working for a rising outfit, smuggling Canadian whisky across the lake — but the feds are closing in and a rival syndicate wants their territory.'", namePlaceholder: 'e.g. The Chicago Outfit', forgeLabel: 'Hit the Streets' };
 const LOD_TONES = [
   { id: 'balanced', label: 'Balanced', icon: Scale, desc: 'A mix of heists, combat, scheming, and villainy' },
   { id: 'combat_heavy', label: 'Hero Brawls', icon: Swords, desc: 'Frequent super-powered clashes with heroes' },
@@ -374,21 +136,8 @@ const LOD_TONES = [
   { id: 'sandbox', label: 'Open City', icon: Globe, desc: 'A world to scheme across, go where you please' },
   { id: 'character_driven', label: 'Villain Saga', icon: Drama, desc: 'Rivalries, ego, arcs, and villain bonds' }
 ];
-
-const LOD_WORLDS = [
-  'Metropolis',
-  'Gotham City',
-  'The Hall of Doom',
-  'A custom hero city of my own'
-];
-
-const LOD_SETUP = {
-  worldLabel: 'CITY / BASE OF OPERATIONS',
-  worldPlaceholder: 'Name the city or lair (or pick one above)',
-  visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'The Legion of Doom has just formed — a cabal of supervillains united to pull off the heist of the century: stealing the power core from the heroes headquarters. Rivalries simmer, heroes patrol, and the world doesn't yet know their names.'",
-  namePlaceholder: 'e.g. The Doom Heist',
-  forgeLabel: 'Enter the Hall of Doom'
-};
+const LOD_WORLDS = ['Metropolis', 'Gotham City', 'The Hall of Doom', 'A custom hero city of my own'];
+const LOD_SETUP = { worldLabel: 'CITY / BASE OF OPERATIONS', worldPlaceholder: 'Name the city or lair (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'The Legion of Doom has just formed — a cabal of supervillains united to pull off the heist of the century: stealing the power core from the heroes headquarters. Rivalries simmer, heroes patrol, and the world doesn't yet know their names.'", namePlaceholder: 'e.g. The Doom Heist', forgeLabel: 'Enter the Hall of Doom' };
 
 export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
   const [name, setName] = useState('');
@@ -417,6 +166,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isGang = gameSystem === 'gangbusters';
   const isLOD = gameSystem === 'legionofdoom';
   const isPJ = gameSystem === 'pathfinder';
+  const isPull = gameSystem === 'thepull';
   const [playMode, setPlayMode] = useState('original');
   const showFullSetup = !isPJ || playMode === 'original';
   const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : isGang ? GANG_TONES : isGB ? GB_TONES : isBR ? BR_TONES : isHY ? HY_TONES : isLOD ? LOD_TONES : DND_TONES;
@@ -439,7 +189,8 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
     const world = worldSetting.trim();
     const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : isBR ? `Run to ${world}` : isGB ? `Ghosts of ${world}` : isGang ? `The ${world} Outfit` : isLOD ? `The ${world} Legion` : `Tales of ${world}`) : '';
     const canonName = isPJ && playMode === 'canon' ? 'The Pathfinder Journeys' : '';
-    const finalName = (overrideName || name.trim() || fallbackName || canonName || 'New Campaign').trim();
+    const pullName = isPull ? 'The Pull' : '';
+    const finalName = (overrideName || name.trim() || fallbackName || canonName || pullName || 'New Campaign').trim();
     if (creating) return;
     setCreating(true);
     try {
@@ -461,6 +212,43 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
     } finally {
       setCreating(false);
     }
+  }
+
+  // ─── The Pull: simplified setup (early return) ───
+  if (isPull) {
+    return (
+      <div className="space-y-4">
+        <div className="border border-primary/30 rounded-lg bg-primary/5 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Compass className="w-4 h-4 text-primary" strokeWidth={1.5} />
+            <h3 className="font-heading text-xs tracking-[0.15em] text-primary">THE PULL</h3>
+          </div>
+          <p className="text-xs text-muted-foreground font-body leading-relaxed">
+            You wake face-down in red sand with no memory, a circular scar over your heart, and an etched shard in your pocket. Something called the Pull drags you forward through nightmare Provinces. Survive. Discover. Decide who you are.
+          </p>
+          <p className="text-[10px] text-muted-foreground/60 font-body italic">
+            This is a solo game. You play as Bullet — a predefined character. The AI GM controls the world, NPCs, enemies, and hidden clocks.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">CAMPAIGN NAME (OPTIONAL)</label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="The Pull"
+            className="bg-background/60 font-body"
+          />
+        </div>
+
+        <div className="flex gap-2 pt-1">
+          <Button onClick={() => handleCreate()} disabled={creating} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Begin'}
+          </Button>
+          <Button onClick={onCancel} variant="ghost" className="text-muted-foreground">Cancel</Button>
+        </div>
+      </div>
+    );
   }
 
   return (

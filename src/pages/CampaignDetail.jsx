@@ -31,6 +31,9 @@ import MissionsPanel from '@/components/pj/MissionsPanel';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
 import { buildDecisionImpact } from '@/lib/pjDecisionImpact';
+import PullStatusPanel from '@/components/pull/PullStatusPanel';
+import PullCodex from '@/components/pull/PullCodex';
+import PullDecisionImpact from '@/components/pull/PullDecisionImpact';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,6 +77,8 @@ export default function CampaignDetail() {
   const [decisionImpact, setDecisionImpact] = useState(null);
   const [decisionLogOpen, setDecisionLogOpen] = useState(false);
   const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
+  const [pullCodexOpen, setPullCodexOpen] = useState(false);
+  const [pullImpact, setPullImpact] = useState(null);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -133,6 +138,23 @@ export default function CampaignDetail() {
   }
 
   function processDecisionImpact(dmData, decisionText) {
+    // The Pull: GM returns decision_impact directly
+    if (campaign?.game_system === 'thepull') {
+      const impact = dmData?.decision_impact;
+      if (!impact || !impact.is_meaningful) return;
+      base44.functions.invoke('campaignData', {
+        op: 'saveDecisionLog',
+        campaign_id: campaignId,
+        chapter: campaign?.current_chapter || 1,
+        decision: decisionText || '',
+        impacts: impact.impacts || [],
+        future_consequence: impact.future_consequence || ''
+      }).catch(() => {});
+      if (popupSetting !== 'off') {
+        setPullImpact(impact);
+      }
+      return;
+    }
     const impact = buildDecisionImpact(dmData);
     if (!impact) return;
     base44.functions.invoke('campaignData', {
@@ -196,7 +218,7 @@ export default function CampaignDetail() {
     setProcessing(true);
     setLatestResult(null);
     try {
-      const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
       const res = await base44.functions.invoke(dmFunc, {
         campaign_id: campaignId,
         action: rollResult.summary,
@@ -289,7 +311,7 @@ export default function CampaignDetail() {
       }
 
       if (data.should_invoke_dm) {
-        const dmFunc = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+        const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
         const dmRes = await base44.functions.invoke(dmFunc, {
           campaign_id: campaignId,
           action: data.combined_action,
@@ -439,19 +461,23 @@ export default function CampaignDetail() {
               <Gavel className="w-3.5 h-3.5" strokeWidth={1.5} /> Decisions
             </button>
           )}
-          <button
-            onClick={() => setVideoOpen((o) => !o)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
-            title="Toggle party video call"
-          >
-            <Video className="w-3.5 h-3.5" strokeWidth={1.5} /> Video
-          </button>
-          <button
-            onClick={() => setInviteOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <UserPlus className="w-3.5 h-3.5" strokeWidth={1.5} /> Invite
-          </button>
+          {campaign?.game_system !== 'thepull' && (
+            <button
+              onClick={() => setVideoOpen((o) => !o)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
+              title="Toggle party video call"
+            >
+              <Video className="w-3.5 h-3.5" strokeWidth={1.5} /> Video
+            </button>
+          )}
+          {campaign?.game_system !== 'thepull' && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <UserPlus className="w-3.5 h-3.5" strokeWidth={1.5} /> Invite
+            </button>
+          )}
           {isOwner && (
             <Button variant="ghost" size="sm" onClick={() => setBriefOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
               <ScrollText className="w-3.5 h-3.5 mr-1" /> DM Brief
@@ -530,12 +556,14 @@ export default function CampaignDetail() {
               >
                 <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} /> {discussMode ? 'Discussing' : 'Discuss'}
               </button>
-              <button
-                onClick={() => setDiceOpen((o) => !o)}
-                className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
-              >
-                <Dices className="w-3.5 h-3.5" strokeWidth={1.5} /> Dice
-              </button>
+              {campaign?.game_system !== 'thepull' && (
+                <button
+                  onClick={() => setDiceOpen((o) => !o)}
+                  className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Dices className="w-3.5 h-3.5" strokeWidth={1.5} /> Dice
+                </button>
+              )}
             </div>
             {diceOpen && myCharacter && (
               campaign?.game_system === 'starfrontiers' ? (
@@ -703,7 +731,7 @@ export default function CampaignDetail() {
                 Out-of-character discussion — your message will be seen by the party, but the Dungeon Master will not respond.
               </p>
             )}
-            {!discussMode && (
+            {!discussMode && campaign?.game_system !== 'thepull' && (
               <button
                 onClick={handleAgree}
                 disabled={processing || posting}
@@ -717,8 +745,11 @@ export default function CampaignDetail() {
           </div>
         </div>
 
-        {/* Party sidebar */}
+        {/* Party sidebar (or Pull status for solo) */}
         <aside className="space-y-4">
+          {campaign?.game_system === 'thepull' ? (
+            <PullStatusPanel campaign={campaign} onOpenCodex={() => setPullCodexOpen(true)} />
+          ) : (
           <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-3">
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
@@ -727,6 +758,7 @@ export default function CampaignDetail() {
             </div>
             <PartyOverview characters={characters} campaignId={campaignId} gameSystem={campaign.game_system} />
           </div>
+          )}
 
           {/* World state summary */}
           <div className="border border-border/50 rounded-lg bg-card/40 p-3">
@@ -811,6 +843,20 @@ export default function CampaignDetail() {
             onOpenChange={setMissionsOpen}
             campaign={campaign}
             onSuggestAction={handleSuggestAction}
+          />
+        </>
+      )}
+      {campaign?.game_system === 'thepull' && (
+        <>
+          <PullCodex
+            open={pullCodexOpen}
+            onOpenChange={setPullCodexOpen}
+            campaign={campaign}
+          />
+          <PullDecisionImpact
+            impact={pullImpact}
+            onDismiss={() => setPullImpact(null)}
+            setting={popupSetting}
           />
         </>
       )}

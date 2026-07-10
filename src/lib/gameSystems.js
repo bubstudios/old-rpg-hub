@@ -425,6 +425,20 @@ export const GAME_SYSTEMS = [
     enterLabel: "Gather Your Party"
   },
   {
+    id: "thepull",
+    name: "The Pull",
+    short: "The Pull",
+    tagline: "Solo dark fantasy survival mystery",
+    description:
+      "You are Bullet — a wounded amnesiac with a circular scar over your heart, an etched shard, and a supernatural force dragging you through nightmare Provinces. Survive, scavenge, meet lost souls, make moral choices, and follow — or resist — the Pull. An original solo AI-GM survival horror RPG with hidden clocks, guilt tracking, and a truth that waits at Province 1.",
+    dashboardTitle: "THE PULL",
+    dashboardSubtitle:
+      "A solo dark fantasy survival mystery RPG. Wake as Bullet with no memory, a scar over your heart, and a force in your chest dragging you forward. Survive the Provinces. Discover what the Pull is for. The truth waits at Province 1.",
+    cardImage: null,
+    icon: "compass",
+    enterLabel: "Wake in the Sand"
+  },
+  {
     id: "pathfinder",
     name: "Pathfinder Journeys",
     short: "Pathfinder Journeys",
@@ -461,10 +475,11 @@ export const CATEGORY_MAP = {
   ghostbusters: "Classic Adventure", jamesbond: "Classic Adventure",
   // Sword & Sorcery
   conan: "Sword & Sorcery", redsonja: "Sword & Sorcery",
-  pathfinder: "Science Fiction"
+  pathfinder: "Science Fiction",
+  thepull: "Original Games"
 };
 
-export const CATEGORIES = ["TSR Classics", "Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery"];
+export const CATEGORIES = ["TSR Classics", "Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery", "Original Games"];
 
 export const DEFAULT_GAME = "add1e";
 
