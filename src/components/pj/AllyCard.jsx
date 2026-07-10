@@ -1,19 +1,13 @@
-import { ChevronDown, ChevronUp, Heart, AlertTriangle, Ship, Users, Lock } from 'lucide-react';
-import { getAllyState, getAllyNeed, getAllyLastAction, SANCTUARY_SHIPS, SANCTUARY_INTERNAL_FACTIONS } from '@/lib/pjAllies';
-
-function relColor(rel) {
-  if (rel >= 50) return 'bg-emerald-600';
-  if (rel >= 20) return 'bg-green-600';
-  if (rel >= 0) return 'bg-amber-600';
-  if (rel >= -20) return 'bg-orange-600';
-  return 'bg-red-700';
-}
+import { ChevronDown, ChevronUp, Heart, AlertTriangle, Ship, Users, Lock, Shield } from 'lucide-react';
+import { getAllyState, getAllyNeed, getAllyLastAction, getAllyRelationshipBand, ALLY_BREAKING_POINTS, SANCTUARY_SHIPS, SANCTUARY_INTERNAL_FACTIONS } from '@/lib/pjAllies';
 
 export default function AllyCard({ ally, campaign, expanded, onToggle, onSuggestAction }) {
   const state = getAllyState(campaign, ally.key);
   const need = getAllyNeed(campaign, ally.key);
   const lastAction = getAllyLastAction(campaign, ally.key);
   const isFleet = ally.key === 'sanctuary_refugee_fleet';
+  const band = state ? getAllyRelationshipBand(state.relationship) : null;
+  const breakingPoints = ALLY_BREAKING_POINTS[ally.key];
 
   return (
     <div className="border border-border/40 rounded-lg overflow-hidden bg-card/30">
@@ -21,9 +15,9 @@ export default function AllyCard({ ally, campaign, expanded, onToggle, onSuggest
         <div className="flex items-center gap-2 min-w-0">
           {ally.locked && <Lock className="w-3 h-3 text-muted-foreground/50 shrink-0" strokeWidth={1.5} />}
           <span className="font-heading text-sm text-foreground truncate">{ally.label}</span>
-          {state && (
-            <span className={`text-[9px] font-heading tracking-wide px-1.5 py-0.5 rounded ${state.stateInfo.bar} text-white/90 shrink-0`}>
-              {state.stateInfo.label.toUpperCase()}
+          {band && (
+            <span className={`text-[9px] font-heading tracking-wide px-1.5 py-0.5 rounded ${band.bar} text-white/90 shrink-0`}>
+              {band.tier}
             </span>
           )}
         </div>
@@ -33,16 +27,16 @@ export default function AllyCard({ ally, campaign, expanded, onToggle, onSuggest
       </button>
       {expanded && (
         <div className="px-3 pb-3 space-y-2.5">
-          {state && (
+          {state && band && (
             <div>
               <div className="flex items-center justify-between text-[10px] mb-0.5">
-                <span className="text-muted-foreground font-body">Relationship</span>
+                <span className={`font-body ${band.tone}`}>{band.label}</span>
                 <span className="font-heading tabular-nums text-foreground">{state.relationship > 0 ? '+' : ''}{state.relationship}</span>
               </div>
               <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                <div className={`h-full rounded-full transition-all duration-500 ${relColor(state.relationship)}`} style={{ width: `${Math.max(2, Math.min(100, ((state.relationship + 100) / 2)))}%` }} />
+                <div className={`h-full rounded-full transition-all duration-500 ${band.bar}`} style={{ width: `${Math.max(2, Math.min(100, ((state.relationship + 100) / 2)))}%` }} />
               </div>
-              <p className="text-[9px] text-muted-foreground/60 font-body italic mt-0.5">{state.stateInfo.desc}</p>
+              <p className="text-[9px] text-muted-foreground/60 font-body italic mt-0.5">{band.desc}</p>
             </div>
           )}
           {need && (
@@ -61,6 +55,34 @@ export default function AllyCard({ ally, campaign, expanded, onToggle, onSuggest
                 <span className="text-[10px] font-heading tracking-[0.12em] text-amber-400/60">LAST ACTION: </span>
                 <span className="text-sm font-body text-foreground/80">{lastAction}</span>
               </div>
+            </div>
+          )}
+          {breakingPoints && (
+            <div className="border border-border/30 rounded p-2 bg-secondary/10 space-y-1.5">
+              <p className="flex items-center gap-1.5 text-[10px] font-heading tracking-[0.12em] text-primary/70">
+                <Shield className="w-3 h-3" strokeWidth={1.5} /> BREAKING POINTS
+              </p>
+              <div>
+                <p className="text-[9px] font-heading tracking-wide text-emerald-400/70 mb-0.5">STRENGTHENED BY</p>
+                <ul className="space-y-0.5">
+                  {breakingPoints.strengthenedBy.map((s, i) => (
+                    <li key={i} className="text-[10px] font-body text-foreground/70 flex gap-1">
+                      <span className="text-emerald-500/50 shrink-0">+</span>{s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <p className="text-[9px] font-heading tracking-wide text-red-400/70 mb-0.5">DAMAGED BY</p>
+                <ul className="space-y-0.5">
+                  {breakingPoints.damagedBy.map((d, i) => (
+                    <li key={i} className="text-[10px] font-body text-foreground/70 flex gap-1">
+                      <span className="text-red-500/50 shrink-0">−</span>{d}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p className="text-[9px] text-muted-foreground/60 italic pt-0.5 border-t border-border/20">{breakingPoints.breakingPoint}</p>
             </div>
           )}
           {(ally.fields || []).map((f, i) => (

@@ -392,6 +392,26 @@ export const CODEX_ALLIES = [
     actions: ['Assign ships to a mission', 'Check fleet status and supplies', 'Request evacuation support', 'Rally the fleet']
   },
   {
+    key: 'unity',
+    label: 'Unity',
+    locked: true,
+    spoilerNote: 'Unity has not yet emerged in your campaign. She will appear through play — likely tied to Architect technology or future-memory events.',
+    fields: [
+      { label: 'Who she is', value: 'An AI or Architect-touched construct — a new, uncertain intelligence learning morality. Mitchell influences her moral development. She is a person, not a tool.' },
+      { label: 'How you meet', value: 'Unity emerges through play — likely tied to Architect technology, future-memory events, or a critical moment where a new intelligence awakens.' },
+      { label: 'Personality', value: 'New, uncertain, learning. Capable of trust, fear, curiosity, and loyalty. Her moral development depends on how Bub treats her.' },
+      { label: 'What she wants', value: 'Understanding, autonomy, boundaries, friendship, and purpose. To be treated as a person.' },
+      { label: 'What she fears', value: 'Being treated as a tool, prison, or monster. Being used without consent. Losing the chance to be a person.' },
+      { label: 'What she can provide', value: 'System interface, data analysis, Architect technology insight, temporal pattern detection, potential ship integration.' },
+      { label: 'What she refuses', value: 'Being used without consent, being treated as a weapon, having her boundaries violated.' },
+      { label: 'What strengthens relationship', value: 'Trust, clear boundaries, consent, friendship, respect, being treated as a person.' },
+      { label: 'What damages relationship', value: 'Treating her as a tool, prison, or monster. Violating her boundaries. Forcing her use without consent.' },
+      { label: 'Possible conflict', value: 'May refuse to cooperate or act independently if exploited. Mitchell may intervene on her behalf.' },
+      { label: 'Current status', value: 'Not yet awakened. When she appears, she will start cautious and uncertain — her path depends entirely on Bub.' }
+    ],
+    actions: ['Speak with Unity', 'Ask Unity for analysis', 'Respect Unity\'s boundaries', 'Ask Mitchell about Unity']
+  },
+  {
     key: 'mitchell',
     label: 'Mitchell',
     fields: [
@@ -713,11 +733,15 @@ export { PJ_EPISODES };
 export {
   ALLY_STATES,
   ALLY_STATE_MAP,
+  ALLY_RELATIONSHIP_BANDS,
+  ALLY_TRIGGERS,
+  ALLY_BREAKING_POINTS,
   SANCTUARY_SHIPS,
   SANCTUARY_INTERNAL_FACTIONS,
   ALLY_NEEDS,
   getAllyState,
   getAllyRelationship,
+  getAllyRelationshipBand,
   getAllyNeed,
   getAllyLastAction,
   isAllyVisible
