@@ -1352,6 +1352,28 @@ Extract:
       return Response.json({ success: true });
     }
 
+    // Save a decision log entry (Pathfinder Journeys — Decision Impact system)
+    if (op === 'saveDecisionLog') {
+      const { campaign_id, chapter, decision, impacts, future_consequence } = body;
+      if (!campaign_id || !decision) return Response.json({ error: 'campaign_id and decision required' }, { status: 400 });
+      const entry = await base44.entities.DecisionLog.create({
+        campaign_id,
+        chapter: chapter || 1,
+        decision: String(decision).trim(),
+        impacts: Array.isArray(impacts) ? impacts : [],
+        future_consequence: typeof future_consequence === 'string' ? future_consequence.trim() : ''
+      });
+      return Response.json({ entry });
+    }
+
+    // List decision logs for a campaign
+    if (op === 'listDecisionLogs') {
+      const { campaign_id } = body;
+      if (!campaign_id) return Response.json({ error: 'campaign_id required' }, { status: 400 });
+      const logs = await admin.entities.DecisionLog.filter({ campaign_id }, '-created_date', 100);
+      return Response.json({ logs });
+    }
+
     return Response.json({ error: 'Unknown operation: ' + op }, { status: 400 });
 
   } catch (error) {

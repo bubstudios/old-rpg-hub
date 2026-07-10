@@ -28,13 +28,16 @@ import PJCampaignStatus from '@/components/PJCampaignStatus';
 import StorySoFarModal from '@/components/pj/StorySoFarModal';
 import CodexDialog from '@/components/pj/CodexDialog';
 import MissionsPanel from '@/components/pj/MissionsPanel';
+import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
+import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
+import { buildDecisionImpact } from '@/lib/pjDecisionImpact';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library, Target
+  Check, RefreshCw, Gift, Library, Target, Gavel
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -68,6 +71,9 @@ export default function CampaignDetail() {
   const [codexSection, setCodexSection] = useState(null);
   const [codexEntryKey, setCodexEntryKey] = useState(null);
   const [missionsOpen, setMissionsOpen] = useState(false);
+  const [decisionImpact, setDecisionImpact] = useState(null);
+  const [decisionLogOpen, setDecisionLogOpen] = useState(false);
+  const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -126,6 +132,27 @@ export default function CampaignDetail() {
     toast.success('Command ready — review and send when ready.');
   }
 
+  function processDecisionImpact(dmData, decisionText) {
+    const impact = buildDecisionImpact(dmData);
+    if (!impact) return;
+    base44.functions.invoke('campaignData', {
+      op: 'saveDecisionLog',
+      campaign_id: campaignId,
+      chapter: campaign?.current_chapter || 1,
+      decision: decisionText || '',
+      impacts: impact.impacts || [],
+      future_consequence: impact.future_consequence || ''
+    }).catch(() => {});
+    if (popupSetting !== 'off') {
+      setDecisionImpact(impact);
+    }
+  }
+
+  function handlePopupSettingChange(value) {
+    setPopupSetting(value);
+    localStorage.setItem('pj_decision_popup_setting', value);
+  }
+
   async function loadData() {
     try {
       setLoading(true);
@@ -176,6 +203,7 @@ export default function CampaignDetail() {
         acting_character_id: myCharacter.id,
         is_roll_result: true
       });
+      processDecisionImpact(res.data, rollResult?.summary);
       setLatestResult(res.data);
       setProcessing(false);
       await loadData();
@@ -270,6 +298,7 @@ export default function CampaignDetail() {
         });
         await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
         setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+        processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);
         await loadData();
@@ -400,6 +429,14 @@ export default function CampaignDetail() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Target className="w-3.5 h-3.5" strokeWidth={1.5} /> Missions
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
+              onClick={() => setDecisionLogOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Gavel className="w-3.5 h-3.5" strokeWidth={1.5} /> Decisions
             </button>
           )}
           <button
@@ -774,6 +811,23 @@ export default function CampaignDetail() {
             onOpenChange={setMissionsOpen}
             campaign={campaign}
             onSuggestAction={handleSuggestAction}
+          />
+        </>
+      )}
+      {campaign?.game_system === 'pathfinder' && (
+        <>
+          <DecisionImpactPopup
+            impact={decisionImpact}
+            onDismiss={() => setDecisionImpact(null)}
+            onOpenLog={() => { setDecisionImpact(null); setDecisionLogOpen(true); }}
+            setting={popupSetting}
+          />
+          <DecisionLogPanel
+            open={decisionLogOpen}
+            onOpenChange={setDecisionLogOpen}
+            campaignId={campaignId}
+            setting={popupSetting}
+            onSettingChange={handlePopupSettingChange}
           />
         </>
       )}

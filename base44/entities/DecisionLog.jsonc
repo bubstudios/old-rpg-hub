@@ -1,0 +1,53 @@
+{
+  "name": "DecisionLog",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "chapter": {
+      "type": "number",
+      "default": 1
+    },
+    "decision": {
+      "type": "string",
+      "description": "The player's command/decision text that triggered this impact"
+    },
+    "impacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "change": {
+            "type": "number"
+          },
+          "change_label": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "tone": {
+            "type": "string"
+          },
+          "character_note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "future_consequence": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "decision"
+  ]
+}
