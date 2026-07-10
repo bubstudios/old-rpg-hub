@@ -4,6 +4,7 @@
 
 import { PJ_REGIONS, PJ_EPISODES } from '@/lib/pjRules';
 import { CODEX_FACTIONS } from '@/lib/pjFactions';
+import { ALLY_STATES, ALLY_STATE_MAP, SANCTUARY_SHIPS, SANCTUARY_INTERNAL_FACTIONS, ALLY_NEEDS, getAllyState, getAllyRelationship, getAllyNeed, getAllyLastAction, isAllyVisible } from '@/lib/pjAllies';
 
 // Normalize a string to a stable key for matching live game data to codex entries.
 export function codexKey(s) {
@@ -282,61 +283,113 @@ export const CODEX_ALLIES = [
     fields: [
       { label: 'Who she is', value: 'Daughter of Admiral Chen, resistance agent, and survivor of Confluence-linked betrayal.' },
       { label: 'How you met', value: 'Sarah contacted the Pathfinder after warning that the relay network was compromised. She led the crew to Sanctuary.' },
-      { label: 'Why she matters', value: 'Sarah knows Earth Command politics, resistance networks, and the emotional cost of Admiral Chen\u2019s choices.' },
-      { label: 'Current status', value: 'Ally, intelligence source, emotionally invested in exposing the truth about her mother.' }
-    ]
+      { label: 'Personality', value: 'Sharp, wounded, brave, direct, suspicious of authority. Her anger is often covering grief.' },
+      { label: 'What she wants', value: 'Truth about her mother. Proof of Confluence infiltration. Protection for human colonies. A chance to undo the damage done in the Chen name.' },
+      { label: 'What she fears', value: 'That her mother really chose betrayal. That she hated the wrong person. That Bub will use her only as a political weapon. That Earth will never believe the truth.' },
+      { label: 'What she can provide', value: 'Intelligence contacts. Earth Command insight. Resistance network access. Knowledge of compromised relay routes. Personal insight into Admiral Chen. Political read on human colonies.' },
+      { label: 'What she refuses to do', value: 'Blindly forgive her mother. Let Bub bury evidence forever. Abandon prisoners if there is a real chance to save them.' },
+      { label: 'What strengthens relationship', value: 'Letting Sarah participate in Chen-related decisions. Being honest with her. Rescuing prisoners. Treating her as more than "Chen\'s daughter."' },
+      { label: 'What damages relationship', value: 'Hiding Chen evidence from her. Using her as bait. Publicly humiliating her mother without proof. Leaving captives behind for convenience.' },
+      { label: 'Possible conflict', value: 'Sarah may push for risky missions if Admiral Chen, Earth Command, or Confluence black sites are involved.' },
+      { label: 'Mission hooks', value: 'Investigate Chen\'s old records. Contact hidden resistance cells. Analyze Earth Command propaganda. Trace compromised relay networks. Rescue prisoners tied to Chen\'s past.' },
+      { label: 'Current status', value: 'Trusted ally, intelligence source, emotionally invested in exposing the truth about her mother.' }
+    ],
+    actions: ['Ask Sarah for a political read', 'Ask Sarah about her mother', 'Send Sarah to contact resistance cells', 'Show evidence to Sarah']
   },
   {
     key: 'james_stellar',
     label: 'James Stellar',
     fields: [
-      { label: 'Who he is', value: 'Captain Bub Stellar\u2019s grandfather and survivor of the lost UES Prometheus.' },
+      { label: 'Who he is', value: 'Captain Bub Stellar\'s grandfather and survivor of the lost UES Prometheus.' },
       { label: 'How you met', value: 'James returned after seventy years of forced service under The Confluence.' },
-      { label: 'Why he matters', value: 'He knows Confluence law, tactics, enforcement ships, and the cost of surrender.' },
-      { label: 'Current status', value: 'Trusted ally, haunted survivor, tactical advisor, family.' }
-    ]
+      { label: 'Personality', value: 'Haunted, dry, protective, brave, sometimes fatalistic. He wants redemption but does not always believe he deserves it.' },
+      { label: 'Augmentations', value: 'Mechanical arm with extreme grip strength. Augmented eye with enhanced targeting, scanning, and energy-pattern reading. Reinforced body able to survive impacts that would badly injure normal humans. Faster reaction time. Some ability to interface with Confluence systems. Knowledge of Confluence ship design, security protocols, and enforcement doctrine. Possible built-in emergency survival systems.' },
+      { label: 'Augmentation use cases', value: 'Opening sealed Confluence doors. Recognizing ship layouts. Reading alien tactical patterns. Surviving vacuum or radiation longer than normal humans. Physically overpowering enemies. Identifying Confluence technology. Warning Bub when a Confluence tactic is familiar. Acting as a bridge between human and Confluence systems.' },
+      { label: 'Augmentation limits', value: 'His body may require maintenance. Confluence tech may try to recognize or control his augmentations. His enhancements are traumatic, not superhero powers. Overuse can cause pain, system glitches, or emotional flashbacks. Some allies may fear that he is compromised.' },
+      { label: 'Relationship risk', value: 'If Bub treats James like a weapon instead of family, morale drops and James may withdraw emotionally.' },
+      { label: 'What he wants', value: 'Redemption, purpose, to protect Bub, and forgiveness for surviving when others didn\'t.' },
+      { label: 'What he fears', value: 'Being used as a weapon. His augmentations being exploited. Losing Bub. That his survival was meaningless.' },
+      { label: 'What he can provide', value: 'Confluence tactics, legal systems, ship design knowledge, enforcement doctrine, augmentation interface, physical combat augmentation, underground contacts.' },
+      { label: 'What he refuses to do', value: 'Being treated as a tool. Unnecessary cruelty. Repeating Confluence patterns.' },
+      { label: 'What strengthens relationship', value: 'Being treated as family. Being asked not ordered. Honesty about his augmentations. Protecting him from exploitation.' },
+      { label: 'What damages relationship', value: 'Treating him as a weapon. Ignoring his trauma. Forcing him to use augmentations recklessly. Dismissing his guilt.' },
+      { label: 'Current status', value: 'Trusted ally, haunted survivor, tactical advisor, family. His Confluence augmentations make him physically and tactically unique.' }
+    ],
+    actions: ['Ask James about Confluence tactics', 'Ask James to interface with Confluence tech', 'Ask James to identify Confluence ship design', 'Check on James\'s augmentations']
   },
   {
     key: 'sanctuary_refugee_fleet',
     label: 'Sanctuary Refugee Fleet',
     aliases: ['Sanctuary refugee fleet'],
     fields: [
-      { label: 'Who they are', value: 'A hidden coalition of alien refugees and survivors from species harmed by The Confluence.' },
+      { label: 'Who they are', value: 'A hidden coalition of alien refugees and survivors from species harmed by The Confluence. Not a single faction — many ships, captains, species, families, soldiers, engineers, children, elders, and political factions.' },
       { label: 'How you met', value: 'Sarah Chen led the Pathfinder to Sanctuary, a secret refuge hidden outside normal Confluence routes.' },
-      { label: 'Why they matter', value: 'They provide ships, knowledge, alien technology, and proof that many species have resisted.' },
-      { label: 'Current status', value: 'Cautious allies. They want hope, but fear open war.' }
-    ]
+      { label: 'Core personality', value: 'Hopeful but terrified. They want Bub to be right, but they have survived by hiding. Every time Bub asks them to fight, he is asking traumatized survivors to risk extinction again.' },
+      { label: 'What they want', value: 'Safety. Secrecy. Food, fuel, medicine, parts. Proof that resistance is not suicide. A voice in decisions that risk them. Protection from Confluence discovery.' },
+      { label: 'What they fear', value: 'Bub exposing them. Confluence retaliation. Being used as expendable ships. New Titan becoming another failed stand. Internal panic and refugee splits.' },
+      { label: 'What they can provide', value: '37 allied ships. Evacuation capacity. Alien engineering. Archive knowledge. Medical specialists. Scouts. Translators. Cultural witnesses. Small strike craft. Unusual technologies. Survivor testimony.' },
+      { label: 'What they refuse to do', value: 'Throw all refugee ships into hopeless battle without debate. Reveal Sanctuary coordinates publicly. Obey Bub as a dictator. Sacrifice civilians unless absolutely necessary.' },
+      { label: 'What strengthens relationship', value: 'Protecting refugee ships. Asking consent before risky operations. Sharing victories. Rescuing nonhumans as well as humans. Keeping Sanctuary secrets. Giving them a reason to hope.' },
+      { label: 'What damages relationship', value: 'Using them as shields. Losing refugee ships recklessly. Ignoring Verath or Vex. Revealing their location. Prioritizing human lives every time over alien lives.' },
+      { label: 'Fleet composition', value: '3 heavier defensive ships. 7 medium escorts. 5 fast strike/scout ships. 8 transports. 4 medical/support ships. 6 repair/supply vessels. 4 fragile civilian ships.' },
+      { label: 'Fleet problems', value: 'Different technologies. Incompatible parts. Different languages. Trauma. Political disagreement. Fuel shortages. Food shortages. Fear of Confluence discovery.' },
+      { label: 'Current status', value: 'Cautious allies. They want hope, but fear open war. If Bub uses the fleet well, it becomes the seed of the Resistance Navy. If used badly, ships leave, refuse orders, or die.' }
+    ],
+    actions: ['Request a council vote', 'Ask Vex for a strike mission', 'Ask Verath for archive access', 'Check on fleet morale and supplies']
   },
   {
     key: 'councilor_verath',
     label: 'Councilor Verath',
     fields: [
-      { label: 'Who he is', value: 'A leader within Sanctuary\u2019s refugee council.' },
-      { label: 'How you met', value: 'At Sanctuary, during the Pathfinder\u2019s plea for aid against The Confluence.' },
-      { label: 'Why he matters', value: 'Verath represents cautious diplomacy. He wants survival, not reckless war.' },
+      { label: 'Who he is', value: 'A leader within Sanctuary\'s refugee council.' },
+      { label: 'How you met', value: 'At Sanctuary, during the Pathfinder\'s plea for aid against The Confluence.' },
+      { label: 'Personality', value: 'Measured, diplomatic, weary, intelligent. Verath is not cowardly. He is responsible for thousands of refugees and carries the memory of species that died after choosing open resistance.' },
+      { label: 'What he wants', value: 'Sanctuary survival. Refugee protection. Evidence before action. Bub to prove hope is not recklessness.' },
+      { label: 'What he fears', value: 'Bub becoming a charismatic disaster. Refugees dying for a human war. The Confluence finding Sanctuary. Vex pushing too hard for military action.' },
+      { label: 'What he can provide', value: 'Council access. Archive permission. Political legitimacy. Refugee ships, if convinced. Diplomatic support with alien species.' },
+      { label: 'What he refuses to do', value: 'Hand Bub full control of Sanctuary forces. Risk civilians without debate. Reveal Sanctuary to human colonies without safeguards.' },
+      { label: 'What strengthens relationship', value: 'Patient diplomacy. Protecting refugees. Consulting the Council. Using evidence carefully. Saving alien lives.' },
+      { label: 'What damages relationship', value: 'Rushing to war. Treating Sanctuary as Bub\'s fleet. Publicly shaming him for caution. Losing refugee ships through recklessness.' },
+      { label: 'Possible conflict', value: 'Verath may oppose Bub even while respecting him. He should sometimes say no.' },
+      { label: 'Mission hooks', value: 'Council vote. Refugee dispute. Archive access request. Sanctuary secrecy crisis. Diplomatic mission to alien survivors.' },
       { label: 'Current status', value: 'Political ally, but not blindly loyal. His trust must be maintained.' }
-    ]
+    ],
+    actions: ['Request a council meeting', 'Ask Verath for diplomatic support', 'Consult Verath on Sanctuary secrecy']
   },
   {
     key: 'commander_vex',
     label: 'Commander Vex',
     fields: [
-      { label: 'Who he is', value: 'Military commander of Sanctuary\u2019s defense forces.' },
-      { label: 'How you met', value: 'At Sanctuary, while reviewing the refugee fleet\u2019s military capabilities.' },
-      { label: 'Why he matters', value: 'Vex understands asymmetric warfare and the cost of fighting The Confluence directly.' },
+      { label: 'Who he is', value: 'Military commander of Sanctuary\'s defense forces.' },
+      { label: 'How you met', value: 'At Sanctuary, while reviewing the refugee fleet\'s military capabilities.' },
+      { label: 'Personality', value: 'Hard, blunt, disciplined, tired of hiding but afraid of waste. Vex respects strength and competence, not speeches.' },
+      { label: 'What he wants', value: 'A real strategy. Proof Bub can win battles. Protection for Sanctuary. A chance to hurt The Confluence without suicide.' },
+      { label: 'What he fears', value: 'Political hesitation getting people killed. Bub making emotional tactical choices. Refugee ships being wasted. The Confluence learning Sanctuary\'s defense patterns.' },
+      { label: 'What he can provide', value: 'Tactical planning. Warships. Pilots. Strike teams. Defensive formations. Knowledge of Confluence fleet behavior.' },
+      { label: 'What he refuses to do', value: 'Commit all forces without a fallback. Take orders from Bub without explanation. Sacrifice Sanctuary for human politics.' },
+      { label: 'What strengthens relationship', value: 'Tactical honesty. Winning hard fights. Accepting his warnings. Protecting his ships. Giving him clear objectives.' },
+      { label: 'What damages relationship', value: 'Reckless heroics. Lying about risks. Letting civilians dictate military timing during battle. Wasting ships for symbolism.' },
+      { label: 'Possible conflict', value: 'Vex may support a brutal but efficient military solution that Bub finds morally unacceptable.' },
+      { label: 'Mission hooks', value: 'Fleet exercise. Confluence patrol ambush. Defense plan for New Titan. Rescue operation with limited ships. Argument over whether to abandon a doomed colony.' },
       { label: 'Current status', value: 'Military ally. Practical, skeptical, but willing to fight if the cause is real.' }
-    ]
+    ],
+    actions: ['Ask Vex for tactical assessment', 'Request a strike mission', 'Ask Vex about Confluence fleet behavior', 'Propose a defense plan']
   },
   {
     key: '37_allied_ships',
     label: '37 Allied Ships',
     aliases: ['37 allied ships'],
     fields: [
-      { label: 'Who they are', value: 'The refugee ships that returned with the Pathfinder after the Architect temporal event.' },
+      { label: 'Who they are', value: 'The refugee ships that returned with the Pathfinder after the Architect temporal event. Not one hit-point pool — each ship has a name, role, captain, strengths, weaknesses, and morale.' },
       { label: 'How you met', value: 'They chose to follow Captain Stellar back into the war rather than remain safe.' },
-      { label: 'Why they matter', value: 'They are the first true resistance fleet.' },
+      { label: 'Fleet composition', value: '3 heavier defensive ships. 7 medium escorts. 5 fast strike/scout ships. 8 transports. 4 medical/support ships. 6 repair/supply vessels. 4 fragile civilian ships.' },
+      { label: 'Fleet problems', value: 'Different technologies. Incompatible parts. Different languages. Trauma. Political disagreement. Fuel shortages. Food shortages. Fear of Confluence discovery.' },
+      { label: 'What they can provide', value: 'Evacuation. Scouting. Fire support. Alien specialists. Mobile safe haven. Refugee testimony. Limited repairs. Diplomatic reach.' },
+      { label: 'What they need', value: 'Fuel. Parts. Medicine. Safe routes. Leadership. Victories. Reassurance. Reason to stay.' },
+      { label: 'Gameplay rule', value: 'If Bub uses the fleet well, it becomes the seed of the Resistance Navy. If Bub uses it badly, ships leave, refuse orders, or die.' },
       { label: 'Current status', value: 'Fragile but committed. Losing them would be a major blow to Sanctuary Trust and Resistance Spark.' }
-    ]
+    ],
+    actions: ['Assign ships to a mission', 'Check fleet status and supplies', 'Request evacuation support', 'Rally the fleet']
   },
   {
     key: 'mitchell',
@@ -344,9 +397,17 @@ export const CODEX_ALLIES = [
     fields: [
       { label: 'Who he is', value: 'A genetically enhanced bald eagle with unusual intelligence and the ability to sense deception, danger, emotional truth, and some temporal disturbances.' },
       { label: 'How you met', value: 'Mitchell travels with Professor Carmelon and became deeply bonded to Captain Stellar and the Pathfinder crew.' },
-      { label: 'Why he matters', value: 'Mitchell can warn of lies, coercion, shapeshifters, danger, and future-memory disturbances. He is not perfect, but his instincts are often critical.' },
-      { label: 'Current status', value: 'Crew companion, truth-sensor, symbol of humanity\u2019s strange future.' }
-    ]
+      { label: 'Personality', value: 'Proud, intense, intelligent, protective, judgmental, occasionally affectionate. Mitchell is not a pet. He is a crew member with his own will.' },
+      { label: 'What he wants', value: 'Protect Bub, James, Carmelon, and the crew. Expose deception. Prevent catastrophic futures. Understand his own purpose.' },
+      { label: 'What he fears', value: 'Losing James. Being treated as a tool. Future events he cannot fully communicate. Making another terrible choice.' },
+      { label: 'What he can provide', value: 'Detect deception. Sense coercion. Sense danger. Detect some shapeshifter wrongness. React to temporal instability. Influence Unity\'s moral development. Warn the player through behavior.' },
+      { label: 'What he refuses to do', value: 'Obey blindly. Ignore major deception. Stay behind if he believes he is needed. Explain everything clearly — he is still nonhuman and communicates imperfectly.' },
+      { label: 'Gameplay rule', value: 'Mitchell should not be an instant "lie detector solves everything" button. His warnings should be strong but sometimes ambiguous. Mitchell does not say "Dr. Voss is a shapeshifter." He refuses to enter medical bay, ruffles feathers, and stares at Voss too long.' },
+      { label: 'What strengthens relationship', value: 'Trusting his warnings. Treating him as a crew member. Letting Carmelon interpret him. Protecting him from exploitation.' },
+      { label: 'What damages relationship', value: 'Treating him like equipment. Ignoring repeated warnings. Letting Unity or others study him without consent. Forcing him away from James/Carmelon during critical moments.' },
+      { label: 'Current status', value: 'Crew companion, truth-sensor, symbol of humanity\'s strange future. Loyal, but independent.' }
+    ],
+    actions: ['Watch Mitchell for reactions', 'Ask Carmelon to interpret Mitchell', 'Let Mitchell scout ahead', 'Trust Mitchell\'s instincts']
   }
 ];
 
@@ -648,6 +709,19 @@ export {
 } from '@/lib/pjFactions';
 
 export { PJ_EPISODES };
+
+export {
+  ALLY_STATES,
+  ALLY_STATE_MAP,
+  SANCTUARY_SHIPS,
+  SANCTUARY_INTERNAL_FACTIONS,
+  ALLY_NEEDS,
+  getAllyState,
+  getAllyRelationship,
+  getAllyNeed,
+  getAllyLastAction,
+  isAllyVisible
+} from '@/lib/pjAllies';
 
 // Look up a crew codex entry by NPC name (fuzzy match) — used by NpcDossier.
 export function findCrewBio(name) {

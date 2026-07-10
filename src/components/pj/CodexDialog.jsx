@@ -6,13 +6,15 @@ import {
 } from 'lucide-react';
 import {
   CODEX_SECTIONS, STORY_SO_FAR_TEXT, SANDBOX_INTRO_TEXT, CURRENT_MISSION,
-  getSectionEntries, PJ_EPISODES, CODEX_LOCATIONS, isLocationVisible
+  getSectionEntries, PJ_EPISODES, CODEX_LOCATIONS, isLocationVisible,
+  CODEX_ALLIES, isAllyVisible
 } from '@/lib/pjCodex';
 import LocationCard from '@/components/pj/LocationCard';
 import FactionCard from '@/components/pj/FactionCard';
 import ClockCard from '@/components/pj/ClockCard';
 import EvidenceCard from '@/components/pj/EvidenceCard';
 import EvidencePackageDialog from '@/components/pj/EvidencePackageDialog';
+import AllyCard from '@/components/pj/AllyCard';
 import { CODEX_FACTIONS, isFactionVisible } from '@/lib/pjFactions';
 import { getAllClocks, getClockValue, isCrisisClockVisible } from '@/lib/pjClocks';
 import { PJ_EVIDENCE, isEvidenceVisible, isEvidenceDiscovered } from '@/lib/pjEvidence';
@@ -207,6 +209,22 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
                 ))}
                 <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
                   Sandbox Clocks are story pressure meters. The AI GM manages them — you only need to understand what's getting better, what's getting worse, why it changed, and what you can do about it. Crisis clocks appear only when triggered by events in your campaign.
+                </p>
+              </div>
+            ) : section === 'allies' ? (
+              <div className="space-y-2">
+                {CODEX_ALLIES.filter((a) => isAllyVisible(campaign, a)).map((ally) => (
+                  <AllyCard
+                    key={ally.key}
+                    ally={ally}
+                    campaign={campaign}
+                    expanded={expanded.has(ally.key)}
+                    onToggle={() => toggle(ally.key)}
+                    onSuggestAction={onSuggestAction}
+                  />
+                ))}
+                <p className="text-[10px] text-muted-foreground/60 italic pt-1.5 leading-relaxed">
+                  Allies are living relationships, not permanent inventory. Each ally has personality, needs, limits, and breaking points. They can disagree, refuse, demand explanation, or leave. Treat them well and they become the seed of the Resistance Navy. Treat them badly and they withdraw, fracture, or become enemies.
                 </p>
               </div>
             ) : entries && (
