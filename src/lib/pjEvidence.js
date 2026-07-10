@@ -94,6 +94,18 @@ export const EVIDENCE_COMBOS = [
   }
 ];
 
+// === USAGE → CLOCK IMPACT FRAMEWORK ===
+// Evidence does NOT auto-push clocks. The impact depends on HOW the player uses it.
+export const USAGE_CLOCK_FRAMEWORK = [
+  { state: 'DISCOVERED', label: 'Discovered', impact: 'Crew Morale, mission options, dialogue only. No public effect — the galaxy does not know.', tone: 'text-amber-400' },
+  { state: 'VERIFIED', label: 'Verified', impact: 'Raises credibility, unlocks stronger uses. Still no public clock effect.', tone: 'text-emerald-400' },
+  { state: 'SHARED_PRIVATELY', label: 'Shared Privately', impact: 'Targeted trust/mission effects on that person or faction. Enemies do not know yet.', tone: 'text-sky-400' },
+  { state: 'USED_IN_NEGOTIATION', label: 'Used in Negotiation', impact: 'Can shift faction relationships, unlock missions, change NPC decisions. Moderate targeted effects.', tone: 'text-cyan-400' },
+  { state: 'PUBLICLY_RELEASED', label: 'Publicly Released', impact: 'Public Truth + Resistance Spark rise, but Confluence Heat + Chen Countermeasures ALSO rise. Large bidirectional effects.', tone: 'text-violet-400' },
+  { state: 'DISPUTED', label: 'Disputed', impact: 'Effectiveness drops unless supported by more proof. Enemies actively counter the narrative.', tone: 'text-orange-400' },
+  { state: 'WEAPONIZED', label: 'Weaponized', impact: 'Largest clock effects. Combined credibility + combos amplify impact. Enemies escalate.', tone: 'text-red-400' }
+];
+
 // === THE EVIDENCE ROSTER (full mechanics per item) ===
 export const PJ_EVIDENCE = [
   {

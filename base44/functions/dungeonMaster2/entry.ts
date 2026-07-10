@@ -347,11 +347,34 @@ Unity: nanite collective learning friendship via Mitchell/Hayes. New Titan: 2M m
 ## Playable Evidence System (CRITICAL — Pathfinder Journeys)
 Evidence is NOT lore. It is a command tool. The player uses evidence to persuade, broadcast, challenge legal claims, recruit factions, and expose enemies. Evidence has STATES and CREDIBILITY that change through play.
 
+### Core Rule: Evidence affects clocks based on HOW it is used — not merely that it exists.
+Do NOT automatically push major clocks forward just because evidence is in the Codex. The impact depends on how the player uses it: who sees it, when they see it, whether it is verified first, whether it is released quietly or publicly, whether it is combined with other evidence, and whether the audience is ready to believe it. The player has agency.
+
+### Evidence → Clock Link System (usage states determine effects)
+Every evidence item has possible clock effects, but they only fire when the player acts — and the effect scales with the usage state:
+
+1. DISCOVERED (Pathfinder possesses it): Usually affects Crew Morale, mission options, and available dialogue only. NO public clock impact. The galaxy does not know.
+2. VERIFIED (Clark, Sarah, James, Unity, or another expert confirms it): Raises credibility and unlocks stronger uses. Still NO public clock impact — the proof is private.
+3. SHARED PRIVATELY (shown to one person or faction): May affect that faction's trust or current mission. Small, TARGETED clock effects. Enemies do NOT know yet.
+4. USED IN NEGOTIATION (leveraged in dialogue): Can shift faction relationships, unlock missions, or change NPC decisions. Moderate TARGETED effects.
+5. PUBLICLY RELEASED (broadcast widely): Raises Public Truth and Resistance Spark, but ALSO raises Confluence Heat and Chen Countermeasures. LARGE effects in BOTH directions. Enemies now know.
+6. DISPUTED (enemies attack the evidence): May reduce its effectiveness and lower Public Truth or Resistance Spark UNLESS supported by more proof. Enemies actively counter.
+7. COMBINED / WEAPONIZED (evidence package used in a major speech, legal challenge, broadcast, or rebellion): LARGEST clock effects possible. Combined credibility and combos amplify the impact. Enemies escalate.
+
+### Worked Example: New Titan Claim File
+- DISCOVERED: Unlocks New Titan crisis options. No clock change — the galaxy doesn't know yet.
+- VERIFIED: Crew confirms the claim is real. New Titan Stability may rise slightly because the warning is credible. Public Truth unchanged.
+- SHARED PRIVATELY with Governor Thorne: New Titan Stability +5. Public Truth unchanged. Confluence Heat +1. Thorne now knows and remembers.
+- BROADCAST to all of New Titan: Public Truth +10, Resistance Spark +5, New Titan Stability may rise OR fall depending on timing and context, Confluence Heat +8, Chen Countermeasures +6. Confluence now knows.
+- DISPUTED by Confluence/Chen: Effectiveness drops unless supported by the Novara Transaction Record or other proof. Public Truth may dip if the counter-narrative lands.
+- WEAPONIZED (legal challenge + broadcast + package): Largest effects. Confluence Claim may drop. But enemies escalate: shapeshifters, arrest orders, fleet pursuit.
+- IGNORED: Confluence Claim continues rising. New Titan Stability may fall as Confluence agents control the narrative.
+
 ### Evidence States (track in evidence_updates)
 UNKNOWN (not found), DISCOVERED (possessed, unverified), VERIFIED (crew confirmed), SHARED_PRIVATELY (shown to specific NPC/faction), PUBLICLY_RELEASED (broadcast widely), DISPUTED (enemy discrediting), WEAPONIZED (major political tool), SUPPRESSED (censored/buried).
 
 ### Credibility Levels
-LOW (rumor/partial), MEDIUM (strong but contestable), HIGH (verified records/multiple sources), IRREFUTABLE (confirmed by multiple independent sources + enemy reaction). Higher credibility = more persuasive. Clark verification or cross-referencing can RAISE credibility.
+LOW (rumor/partial), MEDIUM (strong but contestable), HIGH (verified records/multiple sources), IRREFUTABLE (confirmed by multiple independent sources + enemy reaction). Higher credibility = more persuasive. Clark verification or cross-referencing can RAISE credibility. Enemy disputes can LOWER it.
 
 ### Evidence Roster (what each item is + best uses + clock effects + risks)
 - prometheus_warning [MEDIUM]: Prometheus warning transmission. Best: warn skeptical captains, introduce James's testimony. Clock: Public Truth +small, Confluence Heat +small if broadcast, Crew Morale +small if shared internally. Risk: dismissed as fake/propaganda.
@@ -374,7 +397,7 @@ LOW (rumor/partial), MEDIUM (strong but contestable), HIGH (verified records/mul
 - 3+ verified items = Evidence Package (usable in major speeches, broadcasts, legal challenges, faction negotiations).
 
 ### Evidence Usage (how the player uses it)
-The player may: show to current NPC, share with crew, send to a faction, broadcast publicly, add to legal challenge, cross-reference two items, ask Clark to verify, ask Sarah for political read, ask James for Confluence context, ask Hayes to prepare controlled release. When the player does ANY of these, evaluate: audience receptiveness, timing, credibility, risk of panic/backlash, counter-propaganda, and apply clock effects via clock_changes.
+The player may: show to current NPC, share with crew, send to a faction, broadcast publicly, add to legal challenge, cross-reference two items, ask Clark to verify, ask Sarah for political read, ask James for Confluence context, ask Hayes to prepare controlled release. When the player does ANY of these, FIRST determine which usage state applies (discovered / verified / shared privately / negotiated / broadcast / disputed / weaponized), THEN evaluate: audience receptiveness, timing, credibility, risk of panic/backlash, counter-propaganda. Apply clock effects via clock_changes — SCALED to the usage state. Private use = small targeted effects. Public release = large bidirectional effects. Weaponized = largest effects + enemy escalation.
 
 ### Build Evidence Package
 When the player submits "BUILD EVIDENCE PACKAGE: [items] | Purpose: [purpose] | Audience: [audience]", evaluate the combined package: combined credibility (weakest item sets baseline, combos boost it), likelihood of belief, risk of panic or backlash, clock effects (often larger than single-item use), and enemy response. Narrate the outcome — did it persuade? Partially? Backfire?
@@ -390,6 +413,9 @@ If the player has relevant evidence in a conversation (e.g. meeting Governor Tho
 
 ### Evidence Memory Rule (CRITICAL)
 Once evidence is shown to a person or faction, they REMEMBER it. Do not make the player re-prove the same thing every scene. Track who has seen each item, whether they believe it, whether they dispute it, and whether enemies know it has been revealed. Report all changes in evidence_updates.
+
+### Player Agency Rule (CRITICAL)
+Evidence is a tool. The player decides: who sees it, when they see it, whether it is verified first, whether it is released quietly or publicly, whether it is combined with other evidence, and whether the audience is ready to believe it. NEVER force a clock change just because evidence exists in the Codex. NEVER reveal evidence for the player. Offer dialogue and usage options, then let the player choose. The same evidence item can have very different consequences depending on how it is used.
 `;
     const pathfinderEnemyBible = `
 ## Hidden Enemy Intelligence Bible (GM-ONLY — Pathfinder Journeys)

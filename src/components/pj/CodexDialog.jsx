@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   BookOpen, Target, Users, Heart, AlertTriangle, FileText, Activity,
-  Flag, MapPin, Clock, HelpCircle, Lock, ChevronDown, ChevronUp, Compass, Package
+  Flag, MapPin, Clock, HelpCircle, Lock, ChevronDown, ChevronUp, Compass, Package, Info
 } from 'lucide-react';
 import {
   CODEX_SECTIONS, STORY_SO_FAR_TEXT, SANDBOX_INTRO_TEXT, CURRENT_MISSION,
@@ -17,7 +17,7 @@ import EvidencePackageDialog from '@/components/pj/EvidencePackageDialog';
 import AllyCard from '@/components/pj/AllyCard';
 import { CODEX_FACTIONS, isFactionVisible } from '@/lib/pjFactions';
 import { getAllClocks, getClockValue, isCrisisClockVisible } from '@/lib/pjClocks';
-import { PJ_EVIDENCE, isEvidenceVisible, isEvidenceDiscovered } from '@/lib/pjEvidence';
+import { PJ_EVIDENCE, isEvidenceVisible, isEvidenceDiscovered, USAGE_CLOCK_FRAMEWORK } from '@/lib/pjEvidence';
 
 const SECTION_ICONS = {
   story: BookOpen, mission: Target, crew: Users, allies: Heart,
@@ -147,6 +147,7 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
                 >
                   <Package className="w-3.5 h-3.5" strokeWidth={1.5} /> BUILD EVIDENCE PACKAGE
                 </button>
+                <UsageImpactGuide />
                 {PJ_EVIDENCE.filter((e) => isEvidenceVisible(campaign, e)).map((ev) => (
                   <EvidenceCard
                     key={ev.key}
@@ -250,6 +251,36 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
         />
       </DialogContent>
     </Dialog>
+  );
+}
+
+function UsageImpactGuide() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border border-border/40 rounded-lg bg-card/30 overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center justify-between w-full p-2.5 hover:bg-secondary/30 transition-colors"
+      >
+        <span className="flex items-center gap-1.5 text-[11px] font-heading tracking-wide text-primary/80">
+          <Info className="w-3 h-3" strokeWidth={1.5} /> HOW USAGE AFFECTS CLOCKS
+        </span>
+        {open ? <ChevronUp className="w-3 h-3 text-muted-foreground" strokeWidth={1.5} /> : <ChevronDown className="w-3 h-3 text-muted-foreground" strokeWidth={1.5} />}
+      </button>
+      {open && (
+        <div className="px-3 pb-3 space-y-1.5">
+          <p className="text-[10px] font-body italic text-muted-foreground/70 leading-relaxed pb-1">
+            Evidence does not auto-push clocks. The impact depends on how you use it — who sees it, when, and whether it's verified or combined.
+          </p>
+          {USAGE_CLOCK_FRAMEWORK.map((u) => (
+            <div key={u.state} className="flex gap-2">
+              <span className={`text-[10px] font-heading tracking-wide shrink-0 w-28 pt-0.5 ${u.tone}`}>{u.label}</span>
+              <span className="text-[10px] font-body text-foreground/70 leading-relaxed">{u.impact}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
