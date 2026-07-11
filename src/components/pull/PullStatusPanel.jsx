@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Heart, Activity, Zap, AlertTriangle, Brain, Eye, Package } from 'lucide-react';
 import { PULL_SCALE, getPullLevel, SCAR_STATES, CONDITIONS, CONDITION_CATEGORIES, HIDDEN_CLOCKS, PROVINCE_SEQUENCE, getProvinceInfo } from '@/lib/pullRules';
+import { isStageUnlocked } from '@/lib/pullSheetData';
 
 export default function PullStatusPanel({ campaign, onOpenCodex }) {
   const [showClocks, setShowClocks] = useState(false);
@@ -45,8 +46,8 @@ export default function PullStatusPanel({ campaign, onOpenCodex }) {
           <span className={`font-heading ${scar.color}`}>{scar.label}</span>
         </div>
         <div className="flex items-center justify-between text-[11px]">
-          <span className="font-heading tracking-wide text-muted-foreground">SHARD RESONANCE</span>
-          <span className="font-heading text-amber-400">{flags.shard_resonance ?? 0}</span>
+          <span className="font-heading tracking-wide text-muted-foreground">SHARD</span>
+          <span className="font-heading text-amber-400">{isStageUnlocked('province_998', flags) ? `${flags.shard_resonance ?? 0}/100` : 'Warm'}</span>
         </div>
         {flags.shard_focus_unlocked && (
           <div className="text-[10px] text-amber-400/80 font-heading tracking-wide flex items-center gap-1 pt-1 border-t border-border/30">

@@ -43,18 +43,14 @@ export default function BodyTab({ character, flags }) {
           {BODY_ZONES.map(zone => {
             const state = zones[zone.key];
             const isDefault = state === zone.default;
-            const isFeet = zone.key === 'feet';
             return (
-              <div key={zone.key} className={`flex items-center justify-between text-xs p-2 rounded ${isFeet ? 'border border-amber-800/30 bg-amber-950/10' : ''}`}>
+              <div key={zone.key} className="flex items-center justify-between text-xs p-2 rounded">
                 <span className="text-muted-foreground font-body">{zone.label}</span>
                 <span className={`font-heading capitalize ${isDefault ? 'text-muted-foreground/70' : 'text-amber-400'}`}>{state}</span>
               </div>
             );
           })}
         </div>
-        <p className="text-[10px] text-muted-foreground/50 font-body italic mt-2">
-          Bullet walks the entire nightmare barefoot. His feet are part of the story.
-        </p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { MapPin, Compass, Heart, Package, BookOpen, Sparkles, Shield } from 'lucide-react';
-import { deriveCurrentState } from '@/lib/pullSheetData';
+import { deriveCurrentState, isStageUnlocked } from '@/lib/pullSheetData';
 import { getProvinceInfo } from '@/lib/pullRules';
 
 export default function OverviewTab({ character, flags, provinceInfo, isMichael }) {
@@ -60,7 +60,7 @@ export default function OverviewTab({ character, flags, provinceInfo, isMichael 
       <div className="grid grid-cols-3 gap-2">
         <QuickStat label="Pull" value={isMichael ? 'Gone' : flags.pull_intensity != null ? `${flags.pull_intensity}/6` : '1/6'} />
         <QuickStat label="Scar" value={isMichael ? 'Quiet' : (flags.scar_state || 'pulse')} />
-        <QuickStat label="Shard" value={`${flags.shard_resonance ?? 0}/100`} />
+        <QuickStat label="Shard" value={isStageUnlocked('province_998', flags) ? `${flags.shard_resonance ?? 0}/100` : 'Warm'} />
       </div>
     </div>
   );
