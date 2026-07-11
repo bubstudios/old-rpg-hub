@@ -64,7 +64,8 @@ const RESPONSE_SCHEMA = {
     pipe_state: { type: "string", description: "Updated pipe state: unfound, battered_metal_pipe, or radiant_sword" },
     shard_focus_unlocked: { type: "boolean" },
     spark_shard_acquired: { type: "boolean" },
-    choices: { type: "array", items: { type: "string" }, description: "3-4 suggested player actions for the next turn" }
+    choices: { type: "array", items: { type: "string" }, description: "3-4 suggested player actions for the next turn" },
+    current_objective: { type: "object", properties: { title: { type: "string", description: "Short objective title (2-5 words)" }, description: { type: "string", description: "1-3 line objective reflecting Bullet's active mission right now" } }, description: "Bullet's current active objective. Update whenever the situation changes — reaching camp, being given a mission, completing a mission, forced departure, entering a new province." }
   },
   required: ["narration"]
 };
@@ -118,6 +119,7 @@ Inventory: ${equipmentStr}
 Pipe State: ${ctx.pipeState}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
+Current Objective: ${ctx.currentObjective || '(not set yet)'}
 
 HIDDEN CLOCKS (track silently, do not reveal numbers to player):
 ${clocksStr}
@@ -138,6 +140,16 @@ UNLOCKED CODEX: ${codexStr}
 
 RECENT STORY:
 ${ctx.recentStory || '(The tale has just begun.)'}
+
+CURRENT OBJECTIVE (CRITICAL): Always track Bullet's active mission in current_objective. It must reflect what Bullet should be doing RIGHT NOW, not the original Chapter 1 objective. Update it whenever the situation changes:
+- Opening (red sand, no camp): title "Survive", description "Survive. Find water. Understand where the Pull is leading."
+- After seeing the camp: title "Reach the Camp", description "Reach the camp. Find out whether the people there are dangerous."
+- After entering camp: title "Learn About the Camp", description "Speak with the camp survivors. Learn where you are."
+- After being given a mission: title "Find the Missing Scout" (use actual mission), description "Leave Red Sand Camp and search the dunes." (use actual mission details)
+- After mission success: title "Return to Camp", description "Return to Red Sand Camp. Tell Shard what you found."
+- After the Pull forces departure: title "Follow the Pull", description "Follow the Pull beyond Red Sand Camp."
+- In later provinces: reflect the current province's survival pressure and moral choice.
+Never leave the objective stale. If the player's situation has changed, update current_objective.
 
 PLAYER ACTION:
 ${ctx.action}
@@ -212,6 +224,7 @@ Deno.serve(async (req) => {
       pipeState: flags.pipe_state || 'unfound',
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
+      currentObjective: flags.current_objective?.description || '',
       recentStory,
       action
     });
@@ -290,6 +303,11 @@ Deno.serve(async (req) => {
 
     // Spark shard acquired
     if (result.spark_shard_acquired) updatedFlags.spark_shard = true;
+
+    // Current objective
+    if (result.current_objective && result.current_objective.description) {
+      updatedFlags.current_objective = result.current_objective;
+    }
 
     // Pipe state update
     if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
@@ -405,7 +423,8 @@ Deno.serve(async (req) => {
       pipe_state: updatedFlags.pipe_state,
       shard_focus_unlocked: !!result.shard_focus_unlocked,
       spark_shard_acquired: !!result.spark_shard_acquired,
-      choices: result.choices || []
+      choices: result.choices || [],
+      current_objective: updatedFlags.current_objective || null
     });
 
   } catch (error) {

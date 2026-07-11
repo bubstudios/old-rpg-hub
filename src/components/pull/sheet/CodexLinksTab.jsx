@@ -1,6 +1,6 @@
 import { Link2, BookOpen } from 'lucide-react';
 import { CODEX_CATEGORIES } from '@/lib/pullRules';
-import { PLAYER_CODEX, getPlayerCodexContent, isPlayerCodexEntryVisible } from '@/lib/pullSheetData';
+import { PLAYER_CODEX, getPlayerCodexContent, isPlayerCodexEntryVisible, getCurrentObjective } from '@/lib/pullSheetData';
 
 export default function CodexLinksTab({ flags }) {
   const visible = Object.entries(PLAYER_CODEX).filter(([_, entry]) => isPlayerCodexEntryVisible(entry, flags));
@@ -28,7 +28,7 @@ export default function CodexLinksTab({ flags }) {
                 <p className="text-xs font-heading tracking-[0.15em] text-primary/60 uppercase mb-2">{cat.label}</p>
                 <div className="space-y-2">
                   {entries.map(entry => {
-                    const content = getPlayerCodexContent(entry, flags);
+                    const content = entry.category === 'objective' ? getCurrentObjective(flags) : getPlayerCodexContent(entry, flags);
                     if (!content) return null;
                     return (
                       <div key={entry.title} className="border border-border/30 rounded-lg p-3 bg-secondary/5">

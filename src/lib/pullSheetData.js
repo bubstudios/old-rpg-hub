@@ -245,10 +245,10 @@ export const INVENTORY_DETAILS = {
 
 // ─── Guilt Entries (only visible when NPC has been met) ───
 export const GUILT_ENTRIES = [
-  { name: 'Patch', bond: 'Unresolved', province: 618, npcKey: 'patch', note: 'A healer who gave Bullet a cloak. Left behind.' },
-  { name: 'Spark', bond: 'Debt carried', province: 618, npcKey: 'spark', note: 'A young inventor whose unetched shard Bullet carries.' },
-  { name: 'Shard', bond: 'Abandonment', province: 618, npcKey: 'shard', note: 'The camp leader. Left behind when the Pull dragged Bullet away.' },
-  { name: 'Cowboy', bond: 'Witness Guilt', province: 618, npcKey: 'cowboy', note: 'Death memory from the camp.' },
+  { name: 'Patch', bond: 'Unresolved', province: 618, npcKey: 'patch', note: 'A healer who gave Bullet a cloak. Left behind.', trigger: (f, ctx) => ctx.leftCamp || !!f.patch_cloak },
+  { name: 'Spark', bond: 'Debt carried', province: 618, npcKey: 'spark', note: 'A young inventor whose unetched shard Bullet carries.', trigger: (f) => !!f.spark_shard },
+  { name: 'Shard', bond: 'Abandonment', province: 618, npcKey: 'shard', note: 'The camp leader. Left behind when the Pull dragged Bullet away.', trigger: (f, ctx) => ctx.leftCamp },
+  { name: 'Cowboy', bond: 'Witness Guilt', province: 618, npcKey: 'cowboy', note: 'Death memory from the camp.', trigger: (f) => !!f.cowboy_death },
   { name: 'Glow', bond: 'Rescue', province: 269, npcKey: 'glow', note: 'Stayed behind to save dreamers in the Dream Jungle.' },
   { name: 'Thorn', bond: 'Regret', province: 512, npcKey: 'thorn', note: 'False hope in the Sky-Mist Ascents.' },
   { name: 'Frosthawk', bond: 'Trust', province: 713, npcKey: 'frosthawk', note: 'Trust and failure in the Frozen Tundra.' },
@@ -265,12 +265,18 @@ export function isGuiltVisible(entry, flags) {
   const history = flags.province_history || [];
   const currentProvince = flags.current_province || 618;
   const isMichael = flags.phase === 'Final Revelation' || flags.phase === 'Cleanup' || currentProvince === 1 || currentProvince === -1;
+  const leftCamp = history.length > 0 || currentProvince !== 618;
+  const ctx = { leftCamp, isMichael };
 
   if (isMichael) return true;
 
-  // For NPC-based entries, only show if the NPC has been met (exists in npc_relationships)
+  // For NPC-based entries: must have met the NPC AND the emotional trigger must have fired.
+  // Meeting someone adds them to People Met — it does NOT create a guilt entry.
+  // Guilt is created by loss, failure, abandonment, violence, receiving a debt object, or being helped in a major way.
   if (entry.npcKey) {
-    return !!npcRels[entry.npcKey];
+    if (!npcRels[entry.npcKey]) return false;
+    if (entry.trigger && !entry.trigger(flags, ctx)) return false;
+    return true;
   }
 
   // For event-based entries (Amphitheater, Way-Station, Meadow), check province visited
@@ -555,4 +561,12 @@ export function derivePullBehavior(intensity) {
 export function deriveResistanceCost(intensity) {
   const costs = ['none', 'minor pain', 'minor pain', 'severe pain', 'severe pain', 'blackout risk', 'blackout risk'];
   return costs[Math.max(0, Math.min(6, Math.round(intensity || 0)))] || 'minor pain';
+}
+
+// ─── Current Objective (state-driven, updated by GM) ───
+export function getCurrentObjective(flags) {
+  const co = flags.current_objective;
+  if (co && co.description) return co.description;
+  // Fall back to stage-based objective if GM hasn't set one yet
+  return getPlayerCodexContent(PLAYER_CODEX.objective, flags);
 }

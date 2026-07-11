@@ -1,5 +1,5 @@
 import { MapPin, Compass, Heart, Package, BookOpen, Sparkles, Shield } from 'lucide-react';
-import { deriveCurrentState, isStageUnlocked } from '@/lib/pullSheetData';
+import { deriveCurrentState, isStageUnlocked, getCurrentObjective } from '@/lib/pullSheetData';
 import { getProvinceInfo } from '@/lib/pullRules';
 
 export default function OverviewTab({ character, flags, provinceInfo, isMichael }) {
@@ -24,7 +24,7 @@ export default function OverviewTab({ character, flags, provinceInfo, isMichael 
         <div className="grid grid-cols-2 gap-3 text-xs">
           <InfoRow label="Known Identity" value={isMichael ? 'Restored' : 'Unknown'} />
           <InfoRow label="Current Province" value={provinceInfo.name} />
-          <InfoRow label="Current Objective" value={isMichael ? 'Clean up the Provinces' : 'Survive. Find water. Understand the Pull.'} />
+          <InfoRow label="Current Objective" value={isMichael ? 'Clean up the Provinces' : getCurrentObjective(flags)} />
           <InfoRow label="Current State" value={currentState} />
           <InfoRow label="Primary Weapon" value={primaryWeapon ? primaryWeapon.name : 'None yet'} />
           <InfoRow label="Special Items" value={specialItems.length ? specialItems.join(', ') : 'Etched Shard'} />

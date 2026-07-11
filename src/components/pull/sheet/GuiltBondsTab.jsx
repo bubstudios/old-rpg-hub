@@ -38,10 +38,10 @@ export default function GuiltBondsTab({ flags, isMichael }) {
         </div>
       </div>
 
-      {/* Visible guilt entries */}
-      {visible.length > 0 && (
-        <div className="border border-border/50 rounded-lg bg-card/40 p-4">
-          <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground mb-3">BONDS & GUILT</h3>
+      {/* Bonds & Guilt */}
+      <div className="border border-border/50 rounded-lg bg-card/40 p-4">
+        <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground mb-3">BONDS & GUILT</h3>
+        {visible.length > 0 ? (
           <div className="space-y-2">
             {visible.map(entry => (
               <div key={entry.name} className="border border-border/30 rounded-lg p-2.5 bg-secondary/10">
@@ -53,23 +53,23 @@ export default function GuiltBondsTab({ flags, isMichael }) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-muted-foreground font-body text-center py-4">No lasting bonds or guilt yet.</p>
+        )}
+      </div>
 
-      {/* NPC relationships */}
+      {/* People Met */}
       {Object.keys(npcRels).length > 0 && (
         <div className="border border-border/50 rounded-lg bg-card/40 p-4">
           <div className="flex items-center gap-2 mb-3">
             <Users className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-            <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">RELATIONSHIPS</h3>
+            <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">PEOPLE MET</h3>
           </div>
           <div className="space-y-1.5">
             {Object.entries(npcRels).map(([key, rel]) => (
-              <div key={key} className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground font-body capitalize">{key.replace(/_/g, ' ')}</span>
-                <span className={`font-heading ${rel.state === 'TRUSTED' || rel.state === 'LOYAL' ? 'text-emerald-400' : rel.state === 'HOSTILE' ? 'text-red-400' : 'text-amber-400'}`}>
-                  {rel.state || 'NEUTRAL'}
-                </span>
+              <div key={key} className="flex items-center justify-between text-sm">
+                <span className="text-foreground font-body">{rel.name || key.replace(/_/g, ' ')}</span>
+                <span className="font-heading text-xs text-muted-foreground capitalize">{rel.disposition || 'neutral'}</span>
               </div>
             ))}
           </div>
