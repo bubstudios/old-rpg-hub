@@ -78,7 +78,7 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
       <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-5 mb-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-heading tracking-[0.2em] text-primary/60">{isMichael ? 'TRUE IDENTITY' : 'NAME'}</p>
+            <p className="text-xs font-heading tracking-[0.2em] text-primary/60">{isMichael ? 'TRUE IDENTITY' : 'NAME'}</p>
             <h1 className="font-heading font-700 text-2xl text-foreground tracking-wide">{isMichael ? 'Michael' : 'Bullet'}</h1>
             {isMichael && <p className="text-xs text-muted-foreground font-body mt-0.5">Also known as: Bullet</p>}
             <p className="text-xs text-muted-foreground font-body mt-1">
@@ -86,9 +86,9 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-heading tracking-wide text-muted-foreground">PROVINCE</p>
+            <p className="text-xs font-heading tracking-wide text-muted-foreground">PROVINCE</p>
             <p className="font-heading text-sm text-primary/90">{provinceInfo.name}</p>
-            <p className="text-[10px] text-muted-foreground font-body">Chapter {campaign.current_chapter || 1} · {flags.phase || 'Lost Survivor'}</p>
+            <p className="text-xs text-muted-foreground font-body">Chapter {campaign.current_chapter || 1} · {flags.phase || 'Lost Survivor'}</p>
           </div>
         </div>
       </div>
@@ -154,7 +154,7 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
           </p>
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto scrollbar-thin">
             {visibleGuilt.length === 0 ? (
-              <p className="text-xs text-muted-foreground font-body italic text-center py-4 leading-relaxed">
+              <p className="text-xs text-muted-foreground font-body text-center py-4 leading-relaxed">
                 You do not remember anyone yet. Names become anchors after you meet people, lose people, help people, or leave them behind.
               </p>
             ) : (
@@ -166,7 +166,7 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
                 >
                   <div>
                     <p className="text-sm font-heading text-foreground">{entry.name}</p>
-                    <p className="text-[10px] text-muted-foreground font-body">{entry.bond}</p>
+                    <p className="text-xs text-muted-foreground font-body">{entry.bond}</p>
                   </div>
                   <Brain className="w-3.5 h-3.5 text-primary/40" strokeWidth={1.5} />
                 </button>

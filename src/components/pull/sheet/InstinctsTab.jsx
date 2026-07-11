@@ -35,9 +35,9 @@ export default function InstinctsTab({ flags, isMichael }) {
                     />
                   ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground/70 font-body leading-relaxed">{instinct.desc}</p>
+                <p className="text-xs text-muted-foreground/70 font-body leading-relaxed">{instinct.desc}</p>
                 {instinct.risk && (
-                  <p className="text-[9px] text-red-400/50 font-body italic mt-0.5">Risk: {instinct.risk}</p>
+                  <p className="text-[11px] text-red-300 font-body mt-0.5">Risk: {instinct.risk}</p>
                 )}
               </div>
             );

@@ -20,7 +20,7 @@ export default function ShardPowersTab({ flags }) {
                 <Check className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.5} />
                 <p className="font-heading text-sm text-foreground">{power.label}</p>
               </div>
-              <p className="text-[10px] font-body leading-relaxed text-muted-foreground">{power.desc}</p>
+              <p className="text-xs font-body leading-relaxed text-muted-foreground">{power.desc}</p>
             </div>
           ))}
         </div>
@@ -28,7 +28,7 @@ export default function ShardPowersTab({ flags }) {
 
       {seekerEncountered && (
         <div className="border border-red-800/30 rounded-lg bg-red-950/10 p-3">
-          <p className="text-[10px] text-red-400/70 font-body italic leading-relaxed">
+          <p className="text-xs text-red-300 font-body leading-relaxed">
             Every major shard use increases Shard Resonance Trail. The Seeker may track this.
           </p>
         </div>

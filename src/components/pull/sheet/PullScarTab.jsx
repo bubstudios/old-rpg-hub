@@ -47,7 +47,7 @@ export default function PullScarTab({ flags, isMichael }) {
           ))}
         </div>
         <p className="font-heading text-sm text-primary/90 mb-3">{pullLevel.label}</p>
-        <p className="text-xs text-muted-foreground font-body italic leading-relaxed mb-3">{pullLevel.desc}</p>
+        <p className="text-xs text-muted-foreground font-body leading-relaxed mb-3">{pullLevel.desc}</p>
         <div className="space-y-1.5 text-xs">
           <DetailRow label="Direction" value={isStageUnlocked('province_0', flags) ? 'Toward Province 1' : 'Forward'} />
           <DetailRow label="Behavior" value={behavior} />
@@ -62,7 +62,7 @@ export default function PullScarTab({ flags, isMichael }) {
           <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">THE SCAR</h3>
           <span className={`ml-auto font-heading text-sm ${scar.color}`}>{scar.label}</span>
         </div>
-        <p className="text-xs text-muted-foreground font-body italic leading-relaxed mb-3">{scar.desc}</p>
+        <p className="text-xs text-muted-foreground font-body leading-relaxed mb-3">{scar.desc}</p>
         <div className="space-y-1">
           {scarEffects.map(effect => (
             <div key={effect} className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-body">
@@ -71,7 +71,7 @@ export default function PullScarTab({ flags, isMichael }) {
             </div>
           ))}
           {scarEffects.length === 0 && (
-            <p className="text-[10px] text-muted-foreground/40 italic font-body">No effects observed yet.</p>
+            <p className="text-xs text-muted-foreground/40 font-body">No effects observed yet.</p>
           )}
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function PullScarTab({ flags, isMichael }) {
             <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: `${flags.shard_resonance ?? 0}%` }} />
           </div>
           {flags.shard_focus_unlocked && (
-            <p className="text-[10px] text-amber-400/80 font-heading tracking-wide mt-2 flex items-center gap-1">
+            <p className="text-xs text-amber-400/80 font-heading tracking-wide mt-2 flex items-center gap-1">
               <Zap className="w-3 h-3" /> SHARD FOCUS UNLOCKED
             </p>
           )}
@@ -109,7 +109,7 @@ export default function PullScarTab({ flags, isMichael }) {
               Seems connected to the scar
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground/50 font-body italic mt-2">Purpose unknown.</p>
+          <p className="text-xs text-muted-foreground/50 font-body mt-2">Purpose unknown.</p>
         </div>
       )}
     </div>

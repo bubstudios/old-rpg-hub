@@ -53,7 +53,7 @@ export default function OverviewTab({ character, flags, provinceInfo, isMichael 
           <BookOpen className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
           <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">KNOWN TRUTH</h3>
         </div>
-        <p className="text-sm font-body italic text-muted-foreground leading-relaxed">{truth}</p>
+        <p className="text-sm font-body text-muted-foreground leading-relaxed">{truth}</p>
       </div>
 
       {/* Quick status strip */}
@@ -69,7 +69,7 @@ export default function OverviewTab({ character, flags, provinceInfo, isMichael 
 function InfoRow({ label, value }) {
   return (
     <div>
-      <p className="text-[10px] font-heading tracking-wide text-muted-foreground/60 uppercase">{label}</p>
+      <p className="text-xs font-heading tracking-wide text-muted-foreground/60 uppercase">{label}</p>
       <p className="font-body text-foreground/90 text-sm mt-0.5">{value}</p>
     </div>
   );
@@ -78,7 +78,7 @@ function InfoRow({ label, value }) {
 function QuickStat({ label, value }) {
   return (
     <div className="border border-border/50 rounded-lg bg-card/30 p-2.5 text-center">
-      <p className="text-[9px] font-heading tracking-wide text-muted-foreground/60">{label.toUpperCase()}</p>
+      <p className="text-[11px] font-heading tracking-wide text-muted-foreground/60">{label.toUpperCase()}</p>
       <p className="font-heading text-sm text-primary/90 mt-0.5 capitalize">{value}</p>
     </div>
   );

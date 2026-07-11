@@ -47,9 +47,9 @@ export default function GuiltBondsTab({ flags, isMichael }) {
               <div key={entry.name} className="border border-border/30 rounded-lg p-2.5 bg-secondary/10">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
                   <p className="font-heading text-sm text-foreground">{entry.name}</p>
-                  <span className={`text-[9px] font-heading tracking-wide ${BOND_COLORS[entry.bond] || 'text-muted-foreground'}`}>{entry.bond}</span>
+                  <span className={`text-[11px] font-heading tracking-wide ${BOND_COLORS[entry.bond] || 'text-muted-foreground'}`}>{entry.bond}</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground/70 font-body italic">{entry.note}</p>
+                <p className="text-xs text-muted-foreground/70 font-body">{entry.note}</p>
               </div>
             ))}
           </div>

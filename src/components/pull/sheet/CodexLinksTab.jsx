@@ -25,7 +25,7 @@ export default function CodexLinksTab({ flags }) {
             if (!entries || entries.length === 0) return null;
             return (
               <div key={cat.id}>
-                <p className="text-[10px] font-heading tracking-[0.15em] text-primary/60 uppercase mb-2">{cat.label}</p>
+                <p className="text-xs font-heading tracking-[0.15em] text-primary/60 uppercase mb-2">{cat.label}</p>
                 <div className="space-y-2">
                   {entries.map(entry => {
                     const content = getPlayerCodexContent(entry, flags);
@@ -46,7 +46,7 @@ export default function CodexLinksTab({ flags }) {
           })}
         </div>
         {visible.length === 0 && (
-          <p className="text-xs text-muted-foreground/50 italic font-body text-center py-4">
+          <p className="text-xs text-muted-foreground/50 font-body text-center py-4">
             No codex entries unlocked yet. The journey has just begun.
           </p>
         )}

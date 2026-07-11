@@ -75,7 +75,7 @@ function VitalCard({ icon: Icon, label, value, color }) {
   return (
     <div className="border border-border/50 rounded-lg bg-card/30 p-2.5 text-center">
       <Icon className={`w-3.5 h-3.5 mx-auto mb-1 ${color}`} strokeWidth={1.5} />
-      <p className="text-[9px] font-heading tracking-wide text-muted-foreground/60">{label.toUpperCase()}</p>
+      <p className="text-[11px] font-heading tracking-wide text-muted-foreground/60">{label.toUpperCase()}</p>
       <p className={`font-heading text-xs mt-0.5 ${color}`}>{value}</p>
     </div>
   );
