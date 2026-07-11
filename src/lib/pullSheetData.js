@@ -27,6 +27,8 @@ export function isStageUnlocked(condition, flags) {
       return !!flags.shard_focus_unlocked || isMichael;
     case 'spark_shard':
       return !!flags.spark_shard || isMichael;
+    case 'met_camp':
+      return Object.keys(flags.npc_relationships || {}).length > 0 || history.length > 0 || currentProvince !== 618 || isMichael;
     case 'pipe_found':
       return (flags.pipe_state && flags.pipe_state !== 'unfound') || isMichael;
     case 'first_healing':
@@ -197,7 +199,8 @@ export function calcInstinctValue(key, flags, isMichael) {
 
 // ─── Shard Powers (player-facing — locked powers show as "??? Undiscovered") ───
 export const SHARD_POWERS = [
-  { key: 'warmth', label: 'Warmth', desc: 'The shard is warm and pulses near the scar.', condition: 'always' },
+  { key: 'warmth', label: 'Warmth', desc: 'The shard is warm to the touch.', condition: 'always' },
+  { key: 'pulse', label: 'Pulse', desc: 'The shard pulses faintly near the scar.', condition: 'always' },
   { key: 'venom', label: 'Venom Resistance', desc: 'The shard resisted rust venom.', condition: 'province_108' },
   { key: 'resonance', label: 'Resonance', desc: 'The shard can resonate with crystal structures.', condition: 'province_998' },
   { key: 'focus', label: 'Focus Etched Shard', desc: 'The shard can reveal hidden truth when focused.', condition: 'shard_focus_unlocked' },
@@ -329,13 +332,13 @@ export const PLAYER_CODEX = {
   story: {
     title: 'The Tale So Far',
     category: 'story',
-    stages: [{ content: 'You woke face-down in red sand with no memory, a circular scar over your heart, and a strange shard in your pocket. Something inside your chest is pulling you forward.', condition: 'always' }]
+    stages: [{ content: 'Bullet woke face-down in red sand with no memory.\n\nHe found a circular scar over his heart and a strange warm shard in his pocket.\n\nSomething inside his chest pulls him forward.', condition: 'always' }]
   },
   objective: {
     title: 'Current Objective',
     category: 'objective',
     stages: [
-      { content: 'Survive. Find water. Understand the Pull.', condition: 'always' },
+      { content: 'Survive.\n\nFind water.\n\nUnderstand where the Pull is leading.', condition: 'always' },
       { content: 'Follow the Pull. Survive the Provinces. Discover the truth about the scar, the shard, and what waits at the end.', condition: 'first_healing' }
     ]
   },
@@ -343,7 +346,7 @@ export const PLAYER_CODEX = {
     title: 'Bullet',
     category: 'bullet',
     stages: [
-      { content: 'Bullet is the name given to a man who woke in red sand with no memory, no past, and a circular scar over his heart. He does not know who he was. He only knows something inside his chest is pulling him forward.', condition: 'always' },
+      { content: 'Bullet is not his real name.\n\nHe does not remember his past.\n\nFor now, he is simply an injured man in a hostile Province with a scar over his heart and no idea why he is here.', condition: 'always' },
       { content: 'Bullet is Michael. A divine being sent by Father to end the Provinces\' torment. To cross the veil, Michael shot himself in the heart at Father\'s command — the scar that named him Bullet. He forgot everything: his name, his purpose, his divinity. The etched shard (Father\'s own light) guided him through amnesia. The Pull was Father\'s will, driving him forward. He survived every province not because he knew he was divine, but because he chose righteousness even without memory. Both identities are true: Michael (divine mission) and Bullet (the scarred wanderer). After Cleanup, Michael ascends home to Father.', condition: 'revealed_michael' }
     ]
   },
@@ -351,7 +354,7 @@ export const PLAYER_CODEX = {
     title: 'The Pull',
     category: 'pull',
     stages: [
-      { content: 'A force in Bullet\'s chest that drags him forward. It is not a thought. Not a voice. A direction. Resisting it causes pain. Purpose: Unknown.', condition: 'always' },
+      { content: 'A force in Bullet\'s chest that points forward.\n\nIt is not a voice.\n\nIt is not a thought.\n\nIt is a direction.\n\nPurpose unknown.', condition: 'always' },
       { content: 'The Pull intensifies when resisted — from a gentle tug to an ache, a burn, a commanding force that can trigger blackouts. At low intensity, Bullet can delay and explore. At high intensity, the scar burns, visions appear, and forced movement becomes a risk. The Pull never explains itself.', condition: 'first_healing' },
       { content: 'The Pull was Father\'s will — a shadow of His mission pressure filtered through amnesia. It drove Michael forward through every Province. After the final battle, the Pull vanishes.', condition: 'revealed_father' }
     ]
@@ -360,7 +363,7 @@ export const PLAYER_CODEX = {
     title: 'The Scar',
     category: 'scar',
     stages: [
-      { content: 'A circular scar over Bullet\'s heart. It looks old, clean, and unnatural. It pulses sometimes, especially near the strange shard or when the Pull grows stronger. Origin: Unknown.', condition: 'always' },
+      { content: 'A circular scar over Bullet\'s heart.\n\nIt looks old, clean, and unnatural.\n\nIt sometimes pulses with heat.\n\nIt reacts to the strange shard.\n\nOrigin unknown.', condition: 'always' },
       { content: 'The scar may be connected to the phrase "to end its torment."', condition: 'heard_to_end_its_torment' },
       { content: 'The scar may be more than an injury. It may be an anchor — it warns of danger, reacts to Province boundaries, syncs with the shard, resists some illusions, and anchors Bullet during despair.', condition: 'shard_focus_unlocked' },
       { content: 'The scar is Michael\'s entry wound into the realm. To cross the veil, Michael shot himself in the heart at Father\'s command. Not true suicide born of despair, but sacrifice born of mission.', condition: 'revealed_michael' }
@@ -370,7 +373,7 @@ export const PLAYER_CODEX = {
     title: 'The Etched Shard',
     category: 'shard',
     stages: [
-      { content: 'A strange shard of metal or glass, warm to the touch. It is marked with a circle split by a jagged uneven line. It pulses faintly near Bullet\'s scar. Known uses: Unknown.', condition: 'always' },
+      { content: 'A small shard of metal or glass, warm to the touch.\n\nIt is marked with a circle split by a jagged uneven line.\n\nIt pulses faintly near Bullet\'s scar.\n\nPurpose unknown.', condition: 'always' },
       { content: 'The shard may be helping Bullet survive wounds that should have killed him.', condition: 'first_healing' },
       { content: 'The shard resisted rust venom.', condition: 'province_108' },
       { content: 'The shard can resonate with crystal structures.', condition: 'province_998' },
@@ -398,8 +401,12 @@ export const PLAYER_CODEX = {
   },
   province_618: {
     title: 'Province 618: Red Sand Camp',
+    earlyTitle: 'Current Province',
     category: 'provinces',
-    stages: [{ content: 'Red dunes under a harsh sun. A camp of survivors. Water is scarce. This is where Bullet woke, was named, and first felt the Pull.', condition: 'always' }]
+    stages: [
+      { content: 'Red Sand — A hostile desert of red dunes, heat, thirst, and unknown danger. Bullet does not yet know its official name.', condition: 'always' },
+      { content: 'Province 618: Red Sand Camp — Red dunes under a harsh sun. A camp of survivors. Water is scarce. This is where Bullet woke, was named, and first felt the Pull.', condition: 'met_camp' }
+    ]
   },
   province_472: {
     title: 'Province 472: Liquid Block / Dome',
@@ -527,6 +534,16 @@ export function getPlayerCodexContent(entry, flags) {
 export function isPlayerCodexEntryVisible(entry, flags) {
   if (!entry.stages) return false;
   return entry.stages.some(stage => isStageUnlocked(stage.condition, flags));
+}
+
+export function getPlayerCodexTitle(entry, flags) {
+  if (!entry.earlyTitle) return entry.title;
+  if (entry.stages.length > 1) {
+    for (let i = 1; i < entry.stages.length; i++) {
+      if (isStageUnlocked(entry.stages[i].condition, flags)) return entry.title;
+    }
+  }
+  return entry.earlyTitle;
 }
 
 // ─── Pull Behavior & Resistance Cost ───

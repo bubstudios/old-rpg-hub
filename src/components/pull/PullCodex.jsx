@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BookOpen, ChevronDown, ChevronUp, Lock } from 'lucide-react';
-import { CODEX_CATEGORIES, CODEX_ENTRIES, PROVINCES } from '@/lib/pullRules';
+import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { CODEX_CATEGORIES } from '@/lib/pullRules';
+import { PLAYER_CODEX, getPlayerCodexContent, isPlayerCodexEntryVisible, getPlayerCodexTitle } from '@/lib/pullSheetData';
 
 export default function PullCodex({ open, onOpenChange, campaign, onSuggestAction }) {
   const [section, setSection] = useState('story');
@@ -9,7 +10,6 @@ export default function PullCodex({ open, onOpenChange, campaign, onSuggestActio
 
   useEffect(() => {
     if (open) {
-      setSection('story');
       setExpanded(new Set(['story']));
     }
   }, [open]);
@@ -26,34 +26,25 @@ export default function PullCodex({ open, onOpenChange, campaign, onSuggestActio
   if (!campaign) return null;
 
   const flags = campaign.world_state?.quest_flags || {};
-  const codexUnlocks = flags.codex_unlocks || [];
-  const currentProvince = flags.current_province || 618;
-  const provinceHistory = flags.province_history || [];
-  const chapter = campaign.current_chapter || 1;
 
-  function isEntryVisible(entry) {
-    if (entry.alwaysVisible) return true;
-    if (entry.requiresProvince !== undefined) {
-      if (currentProvince === entry.requiresProvince) return true;
-      if (provinceHistory.includes(entry.requiresProvince)) return true;
-      // Special case: province 14 covers both 14 and 140
-      if (entry.requiresProvince === 14 && (currentProvince === 14 || currentProvince === 140 || provinceHistory.includes(14) || provinceHistory.includes(140))) return true;
-    }
-    if (entry.requiresUnlock) {
-      if (codexUnlocks.includes(entry.requiresUnlock)) return true;
-    }
-    return false;
-  }
+  // Build label map from CODEX_CATEGORIES
+  const catLabels = {};
+  CODEX_CATEGORIES.forEach(c => { catLabels[c.id] = c.label; });
 
-  function isEntryLocked(entry) {
-    if (entry.alwaysVisible) return false;
-    return !isEntryVisible(entry);
-  }
-
-  // Get entries for current section
-  const sectionEntries = Object.entries(CODEX_ENTRIES)
-    .filter(([key, entry]) => entry.category === section)
+  // Get all visible entries — undiscovered entries are excluded entirely (no locked placeholders)
+  const visibleEntries = Object.entries(PLAYER_CODEX)
+    .filter(([_, entry]) => isPlayerCodexEntryVisible(entry, flags))
     .map(([key, entry]) => ({ key, ...entry }));
+
+  // Derive visible categories — only categories that have at least one visible entry appear
+  const visibleCategoryIds = [...new Set(visibleEntries.map(e => e.category))];
+  const visibleCategories = visibleCategoryIds.map(id => ({ id, label: catLabels[id] || id }));
+
+  // Ensure the active section is valid
+  const activeSection = visibleCategories.some(c => c.id === section) ? section : (visibleCategories[0]?.id || 'story');
+
+  // Get entries for the active section
+  const sectionEntries = visibleEntries.filter(e => e.category === activeSection);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -66,11 +57,11 @@ export default function PullCodex({ open, onOpenChange, campaign, onSuggestActio
         </DialogHeader>
 
         <div className="flex flex-col sm:flex-row h-[68vh]">
-          {/* Category sidebar */}
+          {/* Category sidebar — only categories with discovered content */}
           <div className="sm:w-48 sm:shrink-0 border-b sm:border-b-0 sm:border-r border-border/40 overflow-y-auto">
             <div className="flex sm:flex-col gap-1 p-2 overflow-x-auto sm:overflow-x-visible">
-              {CODEX_CATEGORIES.map(cat => {
-                const active = section === cat.id;
+              {visibleCategories.map(cat => {
+                const active = activeSection === cat.id;
                 return (
                   <button
                     key={cat.id}
@@ -88,36 +79,34 @@ export default function PullCodex({ open, onOpenChange, campaign, onSuggestActio
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content — no locked entries, no lock icons */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-5">
             {sectionEntries.length === 0 ? (
               <p className="text-sm text-muted-foreground font-body italic text-center py-8">
-                No entries discovered yet. Explore the Provinces to uncover knowledge.
+                Nothing discovered yet.
               </p>
             ) : (
               <div className="space-y-2">
                 {sectionEntries.map(entry => {
-                  const visible = isEntryVisible(entry);
-                  const locked = isEntryLocked(entry);
+                  const content = getPlayerCodexContent(entry, flags);
+                  const title = getPlayerCodexTitle(entry, flags);
                   const isExpanded = expanded.has(entry.key);
                   return (
-                    <div key={entry.key} className={`border rounded-lg overflow-hidden bg-card/30 ${locked ? 'border-border/20 opacity-50' : 'border-border/40'}`}>
+                    <div key={entry.key} className="border border-border/40 rounded-lg overflow-hidden bg-card/30">
                       <button
-                        onClick={() => !locked && toggle(entry.key)}
-                        disabled={locked}
-                        className="flex items-center justify-between w-full p-3 hover:bg-secondary/30 transition-colors disabled:cursor-not-allowed"
+                        onClick={() => toggle(entry.key)}
+                        className="flex items-center justify-between w-full p-3 hover:bg-secondary/30 transition-colors"
                       >
-                        <span className="font-heading text-sm text-foreground pr-2">{entry.title}</span>
+                        <span className="font-heading text-sm text-foreground pr-2">{title}</span>
                         <div className="flex items-center gap-2 shrink-0">
-                          {locked && <Lock className="w-3 h-3 text-muted-foreground/50" strokeWidth={1.5} />}
-                          {!locked && (isExpanded
+                          {isExpanded
                             ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
-                            : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />)}
+                            : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />}
                         </div>
                       </button>
-                      {isExpanded && !locked && (
+                      {isExpanded && (
                         <div className="px-3 pb-3">
-                          <p className="text-sm font-body text-foreground/80 leading-relaxed whitespace-pre-line">{entry.content}</p>
+                          <p className="text-sm font-body text-foreground/80 leading-relaxed whitespace-pre-line">{content}</p>
                           {onSuggestAction && entry.suggestAction && (
                             <button
                               onClick={() => { onSuggestAction(entry.suggestAction); }}

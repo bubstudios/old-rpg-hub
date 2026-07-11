@@ -14,7 +14,6 @@ const BOND_COLORS = {
 
 export default function GuiltBondsTab({ flags, isMichael }) {
   const visible = GUILT_ENTRIES.filter(e => isGuiltVisible(e, flags));
-  const hidden = GUILT_ENTRIES.filter(e => !isGuiltVisible(e, flags));
   const npcRels = flags.npc_relationships || {};
   const clocks = flags.campaign_clocks || {};
   const guiltLevel = Math.min(5, Math.round((clocks.guilt_burden || 0) / 20));
@@ -54,15 +53,6 @@ export default function GuiltBondsTab({ flags, isMichael }) {
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Hidden guilt entries (not yet encountered) */}
-      {hidden.length > 0 && !isMichael && (
-        <div className="border border-border/30 rounded-lg bg-card/20 p-3">
-          <p className="text-[10px] text-muted-foreground/40 font-body italic text-center">
-            {hidden.length} bond{hidden.length > 1 ? 's' : ''} not yet encountered in the journey...
-          </p>
         </div>
       )}
 
