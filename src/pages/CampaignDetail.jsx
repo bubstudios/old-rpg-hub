@@ -35,6 +35,7 @@ import PullStatusPanel from '@/components/pull/PullStatusPanel';
 import PullCodex from '@/components/pull/PullCodex';
 import PullDecisionImpact from '@/components/pull/PullDecisionImpact';
 import PullUnlockNotifications from '@/components/pull/PullUnlockNotifications';
+import PullWorldState from '@/components/pull/PullWorldState';
 import { buildUnlockNotifications } from '@/lib/pullUnlockNotifications';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -794,23 +795,27 @@ export default function CampaignDetail() {
           </div>
           )}
 
-          {/* World state summary */}
-          <div className="border border-border/50 rounded-lg bg-card/40 p-3">
-            <div className="flex items-center gap-2 mb-2.5">
-              <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-              <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">WORLD STATE</h3>
-            </div>
-            <div className="space-y-2 text-[11px] font-body">
-              <LocationDossier campaignId={campaignId} legacyLocations={campaign.world_state?.locations_explored || []} />
-              <NpcDossier campaignId={campaignId} />
-              <div className="flex items-center justify-between pt-1 border-t border-border/30">
-                <span className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">REPUTATION</span>
-                <span className={`font-heading font-600 ${campaign.world_state?.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {campaign.world_state?.reputation || 0 >= 0 ? '+' : ''}{campaign.world_state?.reputation || 0}
-                </span>
+          {/* World state — Pull reads live from campaign flags; other systems use entity dossiers */}
+          {campaign?.game_system === 'thepull' ? (
+            <PullWorldState campaign={campaign} />
+          ) : (
+            <div className="border border-border/50 rounded-lg bg-card/40 p-3">
+              <div className="flex items-center gap-2 mb-2.5">
+                <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
+                <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">WORLD STATE</h3>
+              </div>
+              <div className="space-y-2 text-[11px] font-body">
+                <LocationDossier campaignId={campaignId} legacyLocations={campaign.world_state?.locations_explored || []} />
+                <NpcDossier campaignId={campaignId} />
+                <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                  <span className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">REPUTATION</span>
+                  <span className={`font-heading font-600 ${campaign.world_state?.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {campaign.world_state?.reputation || 0 >= 0 ? '+' : ''}{campaign.world_state?.reputation || 0}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {campaign?.game_system === 'pathfinder' && (
             <PJCampaignStatus campaign={campaign} onOpenCodex={openCodex} />
