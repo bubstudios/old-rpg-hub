@@ -151,9 +151,9 @@ export function deriveCurrentState(hpCurrent, hpMax, conditions, clocks) {
 
 // ─── Instincts ───
 export const INSTINCT_LABELS = {
-  combat: ['Dormant', 'Faint', 'Present', 'Strong', 'Extreme', 'Sovereign'],
-  endurance: ['Broken', 'Faltering', 'Steady', 'Strong', 'Extreme', 'Indomitable'],
-  awareness: ['Blind', 'Drowsy', 'Alert', 'Sharp', 'Piercing', 'Omniscient'],
+  combat: ['Dormant', 'Faint', 'Present', 'Strong', 'Extreme', 'Instinctive'],
+  endurance: ['Broken', 'Faltering', 'Steady', 'Strong', 'Extreme', 'Relentless'],
+  awareness: ['Blind', 'Drowsy', 'Alert', 'Watchful', 'Piercing', 'Omniscient'],
   mercy: ['Merciless', 'Cold', 'Conflicted', 'Compassionate', 'Merciful', 'Saint'],
   connection: ['Isolated', 'Fractured', 'Reaching', 'Bonded', 'Anchored', 'Unified'],
   memory: ['Empty', 'Echoes', 'Fragments', 'Surfacing', 'Partial', 'Restored'],
@@ -213,7 +213,7 @@ export const INVENTORY_DETAILS = {
     early: {
       type: 'Unknown Shard', condition: 'Warm to the touch',
       uses: ['Passive warmth'],
-      meaning: 'A shard of metal or glass. Warm. Etched with a circle bisected by a jagged line. You do not know what it is — only that it feels important.'
+      meaning: 'A shard of metal or glass. Warm to the touch. You do not know what it is — only that it feels important.'
     },
     late: {
       type: 'Divine Beacon', condition: 'Warm to the touch',
@@ -239,7 +239,7 @@ export const INVENTORY_DETAILS = {
   'Torn Clothing': {
     type: 'Clothing', condition: 'barely functional',
     uses: ['Minimal coverage'],
-    meaning: 'Barely covering. Barefoot.'
+    meaning: 'Barely covering. Worn thin.'
   }
 };
 
@@ -289,8 +289,8 @@ export const MEMORY_LABELS = {
 
 // ─── Observed Facts (always visible — physical observations, not memories) ───
 export const OBSERVED_FACTS = [
-  'Circular scar over heart',
-  'Strange etched shard — circle bisected by jagged line'
+  'Circular scar on chest',
+  'Warm shard of unknown material'
 ];
 
 // ─── Memory Fragments (only visible when unlocked via story progression) ───
