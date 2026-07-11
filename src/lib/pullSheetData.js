@@ -54,7 +54,7 @@ export function isStageUnlocked(condition, flags) {
 
 // ─── Body Zones ───
 export const BODY_ZONES = [
-  { key: 'head', label: 'Head', default: 'clear', states: ['clear', 'dizzy', 'bleeding', 'vision distorted'] },
+  { key: 'head', label: 'Head', default: 'clear', states: ['clear', 'bruised', 'dizzy', 'bleeding', 'vision distorted'] },
   { key: 'chest', label: 'Chest', default: 'scar active', states: ['scar active', 'bruised ribs', 'broken ribs', 'burned', 'constricted'] },
   { key: 'left_arm', label: 'Left Arm', default: 'functional', states: ['functional', 'injured', 'venom-scarred', 'fractured', 'numb'] },
   { key: 'right_arm', label: 'Right Arm', default: 'functional', states: ['functional', 'injured', 'burned', 'strained'] },
@@ -69,7 +69,11 @@ export const CONDITION_ZONE_MAP = {
   leg_wound: { zone: 'leg', state: 'gashed' },
   frostbite: { zone: 'feet', state: 'frostbitten' },
   burns: { zone: 'chest', state: 'burned' },
-  rust_venom: { zone: 'left_arm', state: 'venom-scarred' }
+  rust_venom: { zone: 'left_arm', state: 'venom-scarred' },
+  jaw_bruise: { zone: 'head', state: 'bruised' },
+  head_wound: { zone: 'head', state: 'bleeding' },
+  concussion: { zone: 'head', state: 'dizzy' },
+  arm_wound: { zone: 'left_arm', state: 'injured' }
 };
 
 export function deriveBodyZones(conditions) {
