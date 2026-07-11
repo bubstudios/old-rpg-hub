@@ -12,39 +12,14 @@ const TYPE_CONFIG = {
   memory: { icon: Sparkles, color: 'text-indigo-400', bg: 'border-indigo-800/40 bg-indigo-950/20' }
 };
 
-const DISPLAY_MS = 7000;
-
 export default function PullUnlockNotifications({ notifications, onDismiss }) {
   const [index, setIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
 
-  // Reset queue when new notifications arrive
+  // Reset to first notification when a new batch arrives
   useEffect(() => {
     if (!notifications || notifications.length === 0) return;
     setIndex(0);
-    setVisible(true);
   }, [notifications]);
-
-  // Auto-advance after 7 seconds
-  useEffect(() => {
-    if (!visible || !notifications?.length) return;
-    const timer = setTimeout(() => setVisible(false), DISPLAY_MS);
-    return () => clearTimeout(timer);
-  }, [visible, index, notifications]);
-
-  // When hidden, advance to next or dismiss
-  useEffect(() => {
-    if (visible || !notifications?.length) return;
-    const timer = setTimeout(() => {
-      if (index < notifications.length - 1) {
-        setIndex(i => i + 1);
-        setVisible(true);
-      } else {
-        onDismiss();
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [visible, index, notifications]);
 
   if (!notifications || notifications.length === 0) return null;
 
@@ -55,35 +30,42 @@ export default function PullUnlockNotifications({ notifications, onDismiss }) {
   const Icon = config.icon;
   const hasMore = index < notifications.length - 1;
 
+  function handleAdvance() {
+    if (index < notifications.length - 1) {
+      setIndex(i => i + 1);
+    } else {
+      onDismiss();
+    }
+  }
+
   return (
-    <div className="fixed top-4 right-4 z-50 w-72 max-w-[calc(100vw-2rem)]">
+    <div className="fixed top-4 right-4 z-50 w-80 max-w-[calc(100vw-2rem)]">
       <div
-        className={`border ${config.bg} rounded-lg backdrop-blur-sm p-3 transition-all duration-300 ${
-          visible ? 'opacity-100 translate-x-0 animate-ink' : 'opacity-0 translate-x-4'
-        }`}
+        className={`border ${config.bg} rounded-lg backdrop-blur-sm p-4 animate-ink`}
       >
-        <div className="flex items-start gap-2">
-          <Icon className={`w-3.5 h-3.5 ${config.color} shrink-0 mt-0.5`} strokeWidth={1.5} />
+        <div className="flex items-start gap-2.5">
+          <Icon className={`w-5 h-5 ${config.color} shrink-0 mt-0.5`} strokeWidth={1.5} />
           <div className="min-w-0 flex-1">
-            <p className={`text-[9px] font-heading tracking-[0.15em] ${config.color}`}>{n.title}</p>
-            <p className="text-xs font-heading text-foreground mt-0.5 capitalize">{n.message}</p>
+            <p className={`text-xs font-heading tracking-[0.15em] ${config.color}`}>{n.title}</p>
+            <p className="text-sm font-heading text-foreground mt-1 capitalize break-words">{n.message}</p>
             {n.detail && (
-              <p className="text-[10px] text-muted-foreground font-body italic mt-0.5 leading-snug">{n.detail}</p>
+              <p className="text-sm text-muted-foreground font-body mt-1 leading-relaxed">{n.detail}</p>
             )}
           </div>
           <button
-            onClick={() => setVisible(false)}
-            className="text-muted-foreground/40 hover:text-foreground transition-colors shrink-0"
+            onClick={handleAdvance}
+            className="text-muted-foreground/60 hover:text-foreground transition-colors shrink-0 p-1"
+            aria-label={hasMore ? 'Next notification' : 'Close'}
           >
-            {hasMore ? <ChevronRight className="w-3.5 h-3.5" /> : <X className="w-3 h-3" />}
+            {hasMore ? <ChevronRight className="w-4 h-4" /> : <X className="w-4 h-4" />}
           </button>
         </div>
         {notifications.length > 1 && (
-          <div className="flex gap-0.5 mt-2">
+          <div className="flex gap-1 mt-3">
             {notifications.map((_, i) => (
               <div
                 key={i}
-                className={`flex-1 h-0.5 rounded-full ${
+                className={`flex-1 h-1 rounded-full ${
                   i === index ? 'bg-primary' : i < index ? 'bg-primary/40' : 'bg-border/40'
                 }`}
               />
