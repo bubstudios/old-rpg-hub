@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { CODEX_CATEGORIES } from '@/lib/pullRules';
-import { PLAYER_CODEX, getPlayerCodexContent, isPlayerCodexEntryVisible, getPlayerCodexTitle } from '@/lib/pullSheetData';
+import { PLAYER_CODEX, getPlayerCodexContent, isPlayerCodexEntryVisible, getPlayerCodexTitle, getCurrentObjective } from '@/lib/pullSheetData';
 
 export default function PullCodex({ open, onOpenChange, campaign, onSuggestAction }) {
   const [section, setSection] = useState('story');
@@ -88,7 +88,7 @@ export default function PullCodex({ open, onOpenChange, campaign, onSuggestActio
             ) : (
               <div className="space-y-2">
                 {sectionEntries.map(entry => {
-                  const content = getPlayerCodexContent(entry, flags);
+                  const content = entry.category === 'objective' ? getCurrentObjective(flags) : getPlayerCodexContent(entry, flags);
                   const title = getPlayerCodexTitle(entry, flags);
                   const isExpanded = expanded.has(entry.key);
                   return (
