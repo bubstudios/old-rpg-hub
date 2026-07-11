@@ -26,6 +26,17 @@ const PROVINCE_CHAPTERS = { 618: 1, 472: 2, 837: 3, 269: 4, 391: 6, 512: 8, 713:
 
 const PULL_LABELS = ['Quiet', 'Tug', 'Ache', 'Burn', 'Commanding', 'Blackout Risk', 'Override'];
 
+// Server-side validation: a clock can only be discovered once its narrative
+// condition is met. This prevents the LLM from revealing hidden clocks early.
+const CLOCK_DISCOVERY_RULES = {
+  camp_trust: (f) => Object.keys(f.npc_relationships || {}).length > 0,
+  purifier_stability: (f) => {
+    const r = f.npc_relationships || {};
+    return !!(r.shard || r.spark || r.patch);
+  },
+  raider_threat: (f) => (f.discovered_clocks || []).includes('camp_trust')
+};
+
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
@@ -90,7 +101,7 @@ RULES:
 - Blackout combat should create fear and consequence, not reward.
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - Innocent suffering should have emotional weight, not be used casually.
-- LOCAL CLOCK DISCOVERY: Bullet only sees clocks he has discovered. At game start, only: thirst, heat_exposure, fatigue. Discover 'camp_trust' when Bullet reaches the camp and interacts with people. Discover 'purifier_stability' only when the camp tells Bullet the purifier is failing. Discover 'raider_threat' only when raiders are foreshadowed (Spark warns, tracks seen, scout reports, attack begins). When Bullet discovers a new clock, add its key to discovered_clocks in your response. Track hidden clocks in local_clocks but never reveal them until discovered.
+- LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
 - NPC DISCOVERY: When Bullet meets an NPC for the first time, include them in npc_updates with is_new: true, name, description, and disposition. Key NPCs: Shard (leader), Patch (healer), Spark (inventor), Maul (rival), Cowboy, Rivet. Discovery triggers: Shard when she names Bullet; Patch when she treats him; Spark near camp tech; Maul when he confronts Bullet; Cowboy on purifier mission; Rivet during raid setup.
 - Player choices should matter whenever possible.
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
@@ -169,6 +180,11 @@ Deno.serve(async (req) => {
     });
     const codexUnlocks = flags.codex_unlocks || [];
     const currentProvince = flags.current_province || 618;
+
+    // Reset prematurely discovered clocks for campaigns still at the opening
+    if ((campaign.current_chapter || 1) === 1 && Object.keys(flags.npc_relationships || {}).length === 0) {
+      flags.discovered_clocks = ['thirst', 'heat_exposure', 'fatigue'];
+    }
 
     // Build recent story
     const recentStory = entries.reverse().map(e => {
@@ -278,11 +294,6 @@ Deno.serve(async (req) => {
     // Pipe state update
     if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
 
-    // Apply discovered clocks
-    if (result.discovered_clocks && result.discovered_clocks.length) {
-      updatedFlags.discovered_clocks = [...new Set([...(flags.discovered_clocks || []), ...result.discovered_clocks])];
-    }
-
     // Apply NPC updates — update relationships and create NPC entity records for new encounters
     const npcRels = { ...(flags.npc_relationships || {}) };
     for (const nu of (result.npc_updates || [])) {
@@ -308,6 +319,18 @@ Deno.serve(async (req) => {
       }
     }
     updatedFlags.npc_relationships = npcRels;
+
+    // Apply discovered clocks — validated against discovery rules (must run AFTER NPC updates)
+    if (result.discovered_clocks && result.discovered_clocks.length) {
+      const validated = result.discovered_clocks.filter(clock => {
+        const rule = CLOCK_DISCOVERY_RULES[clock];
+        if (!rule) return true;
+        return rule(updatedFlags);
+      });
+      if (validated.length) {
+        updatedFlags.discovered_clocks = [...new Set([...(flags.discovered_clocks || []), ...validated])];
+      }
+    }
 
     // Province transition
     let chapterUpdate = {};
