@@ -34,7 +34,7 @@ export default function InventoryTab({ character, flags, isMichael }) {
                     <p className="font-heading text-sm text-foreground">{item.qty > 1 ? `${item.qty}× ` : ''}{item.name}</p>
                     {detail && <span className="text-[11px] font-heading tracking-wide text-primary/60 uppercase">{detail.type}</span>}
                   </div>
-                  {item.notes && !detail && <p className="text-xs text-muted-foreground/60 font-body">{item.notes}</p>}
+                  {item.notes && !detail && <p className="text-sm text-foreground/70 font-body">{item.notes}</p>}
                   {detail && (
                     <div className="mt-1.5 space-y-1.5">
                       <p className="text-xs text-muted-foreground font-body">
@@ -47,7 +47,7 @@ export default function InventoryTab({ character, flags, isMichael }) {
                           </span>
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground/70 font-body pt-1 border-t border-border/20">{detail.meaning}</p>
+                      <p className="text-sm text-foreground/80 font-body pt-1 border-t border-border/20">{detail.meaning}</p>
                     </div>
                   )}
                 </div>

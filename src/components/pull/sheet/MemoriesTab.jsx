@@ -48,7 +48,7 @@ export default function MemoriesTab({ flags, isMichael }) {
               return (
                 <div key={i} className={`rounded-lg p-2.5 border ${label.badge}`}>
                   <p className={`text-[9px] font-heading tracking-wide ${label.color} mb-1`}>{label.label}</p>
-                  <p className="text-xs text-muted-foreground font-body leading-relaxed">{frag.text}</p>
+                  <p className="text-sm text-foreground/80 font-body leading-relaxed">{frag.text}</p>
                 </div>
               );
             })}
@@ -68,7 +68,7 @@ export default function MemoriesTab({ flags, isMichael }) {
               return (
                 <div key={i} className={`rounded-lg p-2.5 border ${label.badge}`}>
                   <p className={`text-[9px] font-heading tracking-wide ${label.color} mb-1`}>{label.label}</p>
-                  <p className="text-xs text-muted-foreground font-body leading-relaxed">{content}</p>
+                  <p className="text-sm text-foreground/80 font-body leading-relaxed">{content}</p>
                 </div>
               );
             })}
@@ -80,7 +80,7 @@ export default function MemoriesTab({ flags, isMichael }) {
       <div className="border border-red-800/30 rounded-lg bg-red-950/10 p-3">
         <div className="flex items-start gap-2">
           <AlertTriangle className="w-3.5 h-3.5 text-red-300 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
-          <p className="text-xs text-red-300 font-body leading-relaxed">
+          <p className="text-sm text-red-200 font-body leading-relaxed">
             Do not assume every vision is true. Memories may be verified, unverified, false guilt echoes, Province-planted visions, myth fragments, or shard memories.
           </p>
         </div>
