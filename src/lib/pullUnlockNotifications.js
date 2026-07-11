@@ -52,14 +52,21 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
   const oldShardFocus = !!oldFlags?.shard_focus_unlocked;
 
   // 1. Province transition (priority 1 — major reveal)
+  // Only fire when the province ACTUALLY changed — the GM sometimes narrates
+  // sub-area transitions within the same province (e.g. "Red Sand" → "Red Sand Camp"),
+  // and those should not trigger a discovery notification.
   if (dmData.province_transition && dmData.province_transition.to_province != null) {
-    const provInfo = getProvinceInfo(dmData.province_transition.to_province);
-    notifications.push({
-      type: 'province',
-      title: 'NEW PROVINCE DISCOVERED',
-      message: provInfo.name,
-      priority: 1
-    });
+    const toProv = dmData.province_transition.to_province;
+    const oldProv = oldFlags?.current_province;
+    if (toProv !== oldProv) {
+      const provInfo = getProvinceInfo(toProv);
+      notifications.push({
+        type: 'province',
+        title: 'NEW PROVINCE DISCOVERED',
+        message: provInfo.name,
+        priority: 1
+      });
+    }
   }
 
   // 2. New ability/action unlock (priority 2)
