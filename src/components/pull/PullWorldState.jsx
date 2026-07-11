@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { MapPin, Users, Target, AlertTriangle, Compass } from 'lucide-react';
 import { getProvinceInfo } from '@/lib/pullRules';
 import { getCurrentObjective } from '@/lib/pullSheetData';
+import PullWorldStateDossier from '@/components/pull/PullWorldStateDossier';
 
 function provinceDisplayName(provinceNum, flags) {
   const info = getProvinceInfo(provinceNum);
@@ -22,6 +24,7 @@ function deriveReputation(npcsMet) {
 }
 
 export default function PullWorldState({ campaign }) {
+  const [selection, setSelection] = useState(null);
   if (!campaign) return null;
   const flags = campaign.world_state?.quest_flags || {};
 
@@ -63,9 +66,13 @@ export default function PullWorldState({ campaign }) {
           <p className="text-muted-foreground/60 text-[10px] font-heading tracking-wide mb-1">EXPLORED</p>
           <div className="space-y-0.5">
             {exploredProvinces.map((p, i) => (
-              <p key={`${p}-${i}`} className="text-foreground/80 flex items-center gap-1">
+              <button
+                key={`${p}-${i}`}
+                onClick={() => setSelection({ type: 'location', name: provinceDisplayName(p, flags), province: p })}
+                className="text-foreground/80 flex items-center gap-1 hover:text-primary transition-colors text-left"
+              >
                 <MapPin className="w-2.5 h-2.5 text-primary/50" /> {provinceDisplayName(p, flags)}
-              </p>
+              </button>
             ))}
           </div>
         </div>
@@ -79,10 +86,14 @@ export default function PullWorldState({ campaign }) {
           {npcsMet.length > 0 && (
             <div className="mt-1 space-y-0.5">
               {npcsMet.map(([key, n]) => (
-                <p key={key} className="text-foreground/70 flex items-center gap-1">
+                <button
+                  key={key}
+                  onClick={() => setSelection({ type: 'npc', name: n.name, fallback: { name: n.name, disposition: n.disposition, notes: n.notes } })}
+                  className="text-foreground/70 flex items-center gap-1 hover:text-primary transition-colors text-left"
+                >
                   <Users className="w-2.5 h-2.5 text-muted-foreground/50" /> {n.name}
                   <span className={`text-[9px] ml-1 ${n.disposition === 'friendly' ? 'text-emerald-400/70' : n.disposition === 'hostile' ? 'text-red-400/70' : 'text-muted-foreground/50'}`}>· {n.disposition || 'neutral'}</span>
-                </p>
+                </button>
               ))}
             </div>
           )}
@@ -120,17 +131,29 @@ export default function PullWorldState({ campaign }) {
           <p className="text-muted-foreground/60 text-[10px] font-heading tracking-wide mb-1">KNOWN THREATS</p>
           {knownThreats.length > 0 ? (
             <div className="space-y-0.5">
-              {knownThreats.map((t, i) => (
-                <p key={i} className="text-red-300/80 flex items-center gap-1">
-                  <AlertTriangle className="w-2.5 h-2.5 text-red-400/50" /> {t}
-                </p>
-              ))}
+              {knownThreats.map((t, i) => {
+                const match = npcsMet.find(([_, n]) => n.name === t);
+                return match ? (
+                  <button
+                    key={i}
+                    onClick={() => setSelection({ type: 'npc', name: match[1].name, fallback: { name: match[1].name, disposition: match[1].disposition, notes: match[1].notes } })}
+                    className="text-red-300/80 flex items-center gap-1 hover:text-red-300 transition-colors text-left"
+                  >
+                    <AlertTriangle className="w-2.5 h-2.5 text-red-400/50" /> {t}
+                  </button>
+                ) : (
+                  <p key={i} className="text-red-300/80 flex items-center gap-1">
+                    <AlertTriangle className="w-2.5 h-2.5 text-red-400/50" /> {t}
+                  </p>
+                );
+              })}
             </div>
           ) : (
             <p className="text-muted-foreground/40 italic">None discovered</p>
           )}
         </div>
       </div>
+      <PullWorldStateDossier campaignId={campaign.id} selection={selection} onClose={() => setSelection(null)} />
     </div>
   );
 }
