@@ -353,8 +353,13 @@ Deno.serve(async (req) => {
     // Province transition
     let chapterUpdate = {};
     if (result.province_transition && typeof result.province_transition.to_province === 'number') {
-      updatedFlags.current_province = result.province_transition.to_province;
-      updatedFlags.province_history = [...(flags.province_history || []), currentProvince];
+      const toProv = result.province_transition.to_province;
+      updatedFlags.current_province = toProv;
+      // Only record a province change in history if Bullet actually moved to a different province
+      // (the GM sometimes narrates sub-area transitions within the same province, e.g. "Red Sand" → "Red Sand Camp")
+      if (toProv !== currentProvince) {
+        updatedFlags.province_history = [...(flags.province_history || []), currentProvince];
+      }
       const nextCh = PROVINCE_CHAPTERS[result.province_transition.to_province];
       if (nextCh && nextCh > (campaign.current_chapter || 1)) {
         chapterUpdate.current_chapter = nextCh;

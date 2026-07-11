@@ -265,7 +265,7 @@ export function isGuiltVisible(entry, flags) {
   const history = flags.province_history || [];
   const currentProvince = flags.current_province || 618;
   const isMichael = flags.phase === 'Final Revelation' || flags.phase === 'Cleanup' || currentProvince === 1 || currentProvince === -1;
-  const leftCamp = history.length > 0 || currentProvince !== 618;
+  const leftCamp = history.some(p => p !== 618) || currentProvince !== 618;
   const ctx = { leftCamp, isMichael };
 
   if (isMichael) return true;
