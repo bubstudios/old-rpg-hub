@@ -12,6 +12,9 @@ export default function PullStatusPanel({ campaign, onOpenCodex }) {
   const flags = campaign.world_state?.quest_flags || {};
   const clocks = flags.campaign_clocks || {};
   const localClocks = flags.local_clocks || {};
+  const discoveredClocks = flags.discovered_clocks || ['thirst', 'heat_exposure', 'fatigue'];
+  const allLocalClocks = { thirst: 20, heat_exposure: 15, fatigue: 10, ...localClocks };
+  const visibleLocalClocks = Object.entries(allLocalClocks).filter(([key]) => discoveredClocks.includes(key));
   const conditions = flags.conditions || [];
   const pullLevel = getPullLevel(flags.pull_intensity ?? 1);
   const scar = SCAR_STATES[flags.scar_state || 'pulse'] || SCAR_STATES.pulse;
@@ -105,15 +108,15 @@ export default function PullStatusPanel({ campaign, onOpenCodex }) {
         </div>
       </div>
 
-      {/* Local clocks */}
-      {Object.keys(localClocks).length > 0 && (
+      {/* Local clocks — only show discovered ones */}
+      {visibleLocalClocks.length > 0 && (
         <div className="border border-border/50 rounded-lg bg-card/40 p-3">
           <div className="flex items-center gap-2 mb-2">
             <Activity className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">LOCAL CLOCKS</h3>
           </div>
           <div className="space-y-1.5">
-            {Object.entries(localClocks).map(([key, val]) => (
+            {visibleLocalClocks.map(([key, val]) => (
               <div key={key} className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground font-body capitalize">{key.replace(/_/g, ' ')}</span>
                 <span className="font-heading tabular-nums text-foreground/80">{val}</span>

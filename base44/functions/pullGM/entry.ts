@@ -45,7 +45,8 @@ const RESPONSE_SCHEMA = {
       } } },
       future_consequence: { type: "string" }
     } },
-    npc_updates: { type: "array", items: { type: "object", properties: { key: { type: "string" }, relationship_change: { type: "number" }, reason: { type: "string" } } } },
+    npc_updates: { type: "array", items: { type: "object", properties: { key: { type: "string" }, name: { type: "string", description: "NPC display name" }, description: { type: "string", description: "Brief physical description" }, disposition: { type: "string", description: "friendly, hostile, neutral, etc." }, is_new: { type: "boolean", description: "true if Bullet is meeting this NPC for the first time" }, relationship_change: { type: "number" }, reason: { type: "string" } } } },
+    discovered_clocks: { type: "array", items: { type: "string" }, description: "Local clock keys Bullet just discovered or was told about. Keys: camp_trust, purifier_stability, raider_threat, etc. Only include clocks Bullet just learned about this turn." },
     province_transition: { type: "object", properties: { to_province: { type: "number" }, reason: { type: "string" } } },
     enemy_turn: { type: "object", properties: { province_1_alert_change: { type: "number" }, hunter_proximity_change: { type: "number" }, action: { type: "string" } } },
     item_changes: { type: "array", items: { type: "object", properties: { action: { type: "string" }, item: { type: "string" }, notes: { type: "string" } } } },
@@ -89,6 +90,8 @@ RULES:
 - Blackout combat should create fear and consequence, not reward.
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - Innocent suffering should have emotional weight, not be used casually.
+- LOCAL CLOCK DISCOVERY: Bullet only sees clocks he has discovered. At game start, only: thirst, heat_exposure, fatigue. Discover 'camp_trust' when Bullet reaches the camp and interacts with people. Discover 'purifier_stability' only when the camp tells Bullet the purifier is failing. Discover 'raider_threat' only when raiders are foreshadowed (Spark warns, tracks seen, scout reports, attack begins). When Bullet discovers a new clock, add its key to discovered_clocks in your response. Track hidden clocks in local_clocks but never reveal them until discovered.
+- NPC DISCOVERY: When Bullet meets an NPC for the first time, include them in npc_updates with is_new: true, name, description, and disposition. Key NPCs: Shard (leader), Patch (healer), Spark (inventor), Maul (rival), Cowboy, Rivet. Discovery triggers: Shard when she names Bullet; Patch when she treats him; Spark near camp tech; Maul when he confronts Bullet; Cowboy on purifier mission; Rivet during raid setup.
 - Player choices should matter whenever possible.
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
 
@@ -275,6 +278,37 @@ Deno.serve(async (req) => {
     // Pipe state update
     if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
 
+    // Apply discovered clocks
+    if (result.discovered_clocks && result.discovered_clocks.length) {
+      updatedFlags.discovered_clocks = [...new Set([...(flags.discovered_clocks || []), ...result.discovered_clocks])];
+    }
+
+    // Apply NPC updates — update relationships and create NPC entity records for new encounters
+    const npcRels = { ...(flags.npc_relationships || {}) };
+    for (const nu of (result.npc_updates || [])) {
+      if (!nu.key) continue;
+      const existing = npcRels[nu.key] || {};
+      const isNew = nu.is_new === true && !existing.first_met;
+      npcRels[nu.key] = {
+        name: nu.name || existing.name || nu.key,
+        disposition: nu.disposition || existing.disposition || 'neutral',
+        relationship: Math.max(-100, Math.min(100, (existing.relationship || 0) + (nu.relationship_change || 0))),
+        first_met: existing.first_met || isNew
+      };
+      if (isNew) {
+        try {
+          await admin.entities.NPC.create({
+            campaign_id,
+            name: nu.name || nu.key,
+            disposition: nu.disposition || 'neutral',
+            description: nu.description || '',
+            first_met_chapter: campaign.current_chapter || 1
+          });
+        } catch (e) { /* NPC may already exist */ }
+      }
+    }
+    updatedFlags.npc_relationships = npcRels;
+
     // Province transition
     let chapterUpdate = {};
     if (result.province_transition && typeof result.province_transition.to_province === 'number') {
@@ -340,6 +374,7 @@ Deno.serve(async (req) => {
       codex_unlocks: result.codex_unlocks || [],
       decision_impact: result.decision_impact || null,
       npc_updates: result.npc_updates || [],
+      discovered_clocks: result.discovered_clocks || [],
       province_transition: result.province_transition || null,
       enemy_turn: result.enemy_turn || null,
       condition_changes: result.condition_changes || [],

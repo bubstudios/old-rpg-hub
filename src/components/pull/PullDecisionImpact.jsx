@@ -15,7 +15,7 @@ export default function PullDecisionImpact({ impact, onDismiss, setting }) {
       const timer = setTimeout(() => {
         setVisible(false);
         setTimeout(onDismiss, 300);
-      }, 6000);
+      }, 12000);
       return () => clearTimeout(timer);
     }
   }, [impact, setting]);

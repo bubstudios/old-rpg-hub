@@ -117,19 +117,38 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     }
   }
 
-  // 5. NPC / bond changes (priority 4)
+  // 5. NPC / bond changes (priority 3 for new NPCs, 4 for relationship changes)
   for (const nu of (dmData.npc_updates || [])) {
+    if (nu.is_new) {
+      notifications.push({
+        type: 'bond',
+        title: 'NPC DISCOVERED',
+        message: nu.name || prettyKey(nu.key),
+        detail: 'Added to People',
+        priority: 3
+      });
+    }
     const change = typeof nu.relationship_change === 'number' ? nu.relationship_change : 0;
     if (change !== 0) {
       notifications.push({
         type: 'bond',
         title: change > 0 ? 'BOND STRENGTHENED' : 'BOND STRAINED',
-        message: prettyKey(nu.key),
+        message: nu.name || prettyKey(nu.key),
         detail: nu.reason || '',
         priority: 4,
         change
       });
     }
+  }
+
+  // 5b. Clock discovery (priority 3)
+  for (const clockKey of (dmData.discovered_clocks || [])) {
+    notifications.push({
+      type: 'codex',
+      title: 'CLOCK UNLOCKED',
+      message: prettyKey(clockKey),
+      priority: 3
+    });
   }
 
   // 6. Condition changes (priority 6)

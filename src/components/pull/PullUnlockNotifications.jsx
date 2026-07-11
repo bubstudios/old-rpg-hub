@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, BookOpen, Package, Users, MapPin, Eye, AlertCircle, Zap, X } from 'lucide-react';
+import { Sparkles, BookOpen, Package, Users, MapPin, Eye, AlertCircle, Zap, X, ChevronRight } from 'lucide-react';
 
 const TYPE_CONFIG = {
   province: { icon: MapPin, color: 'text-emerald-400', bg: 'border-emerald-800/40 bg-emerald-950/20' },
@@ -12,66 +12,85 @@ const TYPE_CONFIG = {
   memory: { icon: Sparkles, color: 'text-indigo-400', bg: 'border-indigo-800/40 bg-indigo-950/20' }
 };
 
-export default function PullUnlockNotifications({ notifications, onDismiss }) {
-  const [dismissed, setDismissed] = useState(new Set());
+const DISPLAY_MS = 7000;
 
+export default function PullUnlockNotifications({ notifications, onDismiss }) {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  // Reset queue when new notifications arrive
   useEffect(() => {
     if (!notifications || notifications.length === 0) return;
-
-    setDismissed(new Set());
-
-    // Stagger dismiss: each notification dismisses 5s after it appears
-    const timers = notifications.map((_, i) =>
-      setTimeout(() => {
-        setDismissed(prev => new Set(prev).add(i));
-      }, 5000 + i * 800)
-    );
-
-    // Final cleanup after all have faded
-    const finalTimer = setTimeout(() => {
-      onDismiss();
-    }, 5000 + notifications.length * 800 + 400);
-
-    return () => { timers.forEach(clearTimeout); clearTimeout(finalTimer); };
+    setIndex(0);
+    setVisible(true);
   }, [notifications]);
+
+  // Auto-advance after 7 seconds
+  useEffect(() => {
+    if (!visible || !notifications?.length) return;
+    const timer = setTimeout(() => setVisible(false), DISPLAY_MS);
+    return () => clearTimeout(timer);
+  }, [visible, index, notifications]);
+
+  // When hidden, advance to next or dismiss
+  useEffect(() => {
+    if (visible || !notifications?.length) return;
+    const timer = setTimeout(() => {
+      if (index < notifications.length - 1) {
+        setIndex(i => i + 1);
+        setVisible(true);
+      } else {
+        onDismiss();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [visible, index, notifications]);
 
   if (!notifications || notifications.length === 0) return null;
 
-  // Show max 4 at a time
-  const visible = notifications.slice(0, 4);
+  const n = notifications[index];
+  if (!n) return null;
+
+  const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.codex;
+  const Icon = config.icon;
+  const hasMore = index < notifications.length - 1;
 
   return (
-    <div className="fixed top-4 right-4 z-50 w-72 max-w-[calc(100vw-2rem)] space-y-2">
-      {visible.map((n, i) => {
-        const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.codex;
-        const Icon = config.icon;
-        const isDismissed = dismissed.has(i);
-        return (
-          <div
-            key={i}
-            className={`border ${config.bg} rounded-lg backdrop-blur-sm p-3 transition-all duration-300 ${
-              isDismissed ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0 animate-ink'
-            }`}
-          >
-            <div className="flex items-start gap-2">
-              <Icon className={`w-3.5 h-3.5 ${config.color} shrink-0 mt-0.5`} strokeWidth={1.5} />
-              <div className="min-w-0 flex-1">
-                <p className={`text-[9px] font-heading tracking-[0.15em] ${config.color}`}>{n.title}</p>
-                <p className="text-xs font-heading text-foreground mt-0.5 capitalize">{n.message}</p>
-                {n.detail && (
-                  <p className="text-[10px] text-muted-foreground font-body italic mt-0.5 leading-snug">{n.detail}</p>
-                )}
-              </div>
-              <button
-                onClick={() => setDismissed(prev => new Set(prev).add(i))}
-                className="text-muted-foreground/40 hover:text-foreground transition-colors shrink-0"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
+    <div className="fixed top-4 right-4 z-50 w-72 max-w-[calc(100vw-2rem)]">
+      <div
+        className={`border ${config.bg} rounded-lg backdrop-blur-sm p-3 transition-all duration-300 ${
+          visible ? 'opacity-100 translate-x-0 animate-ink' : 'opacity-0 translate-x-4'
+        }`}
+      >
+        <div className="flex items-start gap-2">
+          <Icon className={`w-3.5 h-3.5 ${config.color} shrink-0 mt-0.5`} strokeWidth={1.5} />
+          <div className="min-w-0 flex-1">
+            <p className={`text-[9px] font-heading tracking-[0.15em] ${config.color}`}>{n.title}</p>
+            <p className="text-xs font-heading text-foreground mt-0.5 capitalize">{n.message}</p>
+            {n.detail && (
+              <p className="text-[10px] text-muted-foreground font-body italic mt-0.5 leading-snug">{n.detail}</p>
+            )}
           </div>
-        );
-      })}
+          <button
+            onClick={() => setVisible(false)}
+            className="text-muted-foreground/40 hover:text-foreground transition-colors shrink-0"
+          >
+            {hasMore ? <ChevronRight className="w-3.5 h-3.5" /> : <X className="w-3 h-3" />}
+          </button>
+        </div>
+        {notifications.length > 1 && (
+          <div className="flex gap-0.5 mt-2">
+            {notifications.map((_, i) => (
+              <div
+                key={i}
+                className={`flex-1 h-0.5 rounded-full ${
+                  i === index ? 'bg-primary' : i < index ? 'bg-primary/40' : 'bg-border/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

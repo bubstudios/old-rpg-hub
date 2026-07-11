@@ -482,7 +482,8 @@ export const PULL_INITIAL_STATE = {
     bullet_mystery: 0, fear_of_self: 0, soul_fracture: 0,
     witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100
   },
-  local_clocks: { thirst: 20, camp_trust: 30, purifier_stability: 60, raider_threat: 20 },
+  local_clocks: { thirst: 20, heat_exposure: 15, fatigue: 10, camp_trust: 30, purifier_stability: 60, raider_threat: 20 },
+  discovered_clocks: ['thirst', 'heat_exposure', 'fatigue'],
   pull_intensity: 1,
   scar_state: 'pulse',
   shard_resonance: 5,
