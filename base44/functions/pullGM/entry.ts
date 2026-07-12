@@ -163,7 +163,8 @@ Never leave the objective stale. If the player's situation has changed, update c
 PLAYER ACTION:
 ${ctx.action}
 
-Respond with vivid narration (2-4 paragraphs, second-person present tense, dark and atmospheric). Include environmental details, sensory information, NPC reactions, and consequences. Then provide state changes as JSON. For decision_impact, only set is_meaningful=true for choices that have real consequences (ally trust changes, clock shifts, moral outcomes, lore discoveries). Use change_label values like "Major increase", "Slight decline", "Strong approval", etc.`;
+Respond with vivid narration (2-4 paragraphs, second-person present tense, dark and atmospheric). Include environmental details, sensory information, NPC reactions, and consequences. Then provide state changes as JSON. For decision_impact, only set is_meaningful=true for choices that have real consequences (ally trust changes, clock shifts, moral outcomes, lore discoveries). Use change_label values like "Major increase", "Slight decline", "Strong approval", etc.
+FUTURE_CONSEQUENCE SPOILER RULE (CRITICAL): The future_consequence field is shown to the player immediately. It must NEVER spoil specific narrative outcomes — do NOT name characters who will be endangered, die, or suffer; do NOT reveal who survives or fails; do NOT describe specific upcoming events. Write future_consequence as a vague, atmospheric hint about thematic or mechanical stakes only. Example GOOD: "The wall's fate and the cost of standing it will weigh on Bullet and the camp." Example BAD: "Whether Cowboy survives the opening minutes of the assault." Never use a named character's survival, death, injury, or fate as the subject of a future_consequence.`;
 }
 
 Deno.serve(async (req) => {
