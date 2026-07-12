@@ -1,0 +1,78 @@
+{
+  "name": "EventLog",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "The campaign this event belongs to"
+    },
+    "chapter": {
+      "type": "number",
+      "default": 1
+    },
+    "province": {
+      "type": "string",
+      "description": "Province name/number where the event occurred"
+    },
+    "scene": {
+      "type": "string",
+      "description": "Scene or location label where the event occurred"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "attack, kill, wound, rescue, threaten, trade, steal, unlock, lose, use_item, pickup_item, equip, drop, discover"
+    },
+    "actor_id": {
+      "type": "string",
+      "description": "Canonical ID of the actor (e.g. 'bullet' or an NPC key)"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Display name of the actor"
+    },
+    "target_id": {
+      "type": "string",
+      "description": "Canonical ID of the target (NPC key), or empty"
+    },
+    "target_name": {
+      "type": "string",
+      "description": "Display name of the target"
+    },
+    "item_used_id": {
+      "type": "string",
+      "description": "Canonical item key used in this action, or empty"
+    },
+    "item_used_name": {
+      "type": "string",
+      "description": "Display name of the item used, or empty. This is the source of truth for which weapon was used \u2014 never infer from inventory."
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Result: killed, wounded, success, failure, added_to_inventory, equipped, dropped, etc."
+    },
+    "cause": {
+      "type": "string",
+      "description": "Exact cause of death/injury if applicable (e.g. 'blunt force trauma from pipe'). Referenced by guilt/death records so the cause cannot mutate later."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Canonical one-line summary of what happened. The AI must narrate past actions from this, not from inventory or assumption."
+    },
+    "memory_summary": {
+      "type": "string",
+      "description": "What the AI should remember when referencing this event later (e.g. 'Raider killed by pipe, not crossbow.')"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags (combat, kill, pipe, raider, etc.)"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "event_type",
+    "summary"
+  ]
+}

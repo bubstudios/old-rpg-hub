@@ -68,6 +68,8 @@ const RESPONSE_SCHEMA = {
     pipe_state: { type: "string", description: "Updated pipe state: unfound, battered_metal_pipe, or radiant_sword" },
     shard_focus_unlocked: { type: "boolean" },
     spark_shard_acquired: { type: "boolean" },
+    events: { type: "array", description: "Structured event ledger entries for meaningful actions this turn (kills, wounds, rescues, threats, item pickups, equips, drops, uses, discoveries). Each entry is the canonical record of what happened — future narration must reference these, not inventory.", items: { type: "object", properties: { event_type: { type: "string", description: "attack, kill, wound, rescue, threaten, trade, steal, unlock, lose, use_item, pickup_item, equip, drop, discover" }, actor_id: { type: "string", description: "Who did it — 'bullet' or an NPC key" }, actor_name: { type: "string" }, target_id: { type: "string", description: "NPC key of the target, or empty" }, target_name: { type: "string" }, item_used_id: { type: "string", description: "Canonical item key used, or empty" }, item_used_name: { type: "string", description: "EXACT weapon/item used (e.g. 'metal pipe'). If Bullet killed with the pipe, this MUST be 'metal pipe' — never a different carried weapon. Owning an item does not mean it was used." }, outcome: { type: "string", description: "killed, wounded, success, failure, added_to_inventory, equipped, dropped, etc." }, cause: { type: "string", description: "Exact cause of death/injury if applicable (e.g. 'blunt force trauma from pipe')" }, summary: { type: "string", description: "Canonical one-line summary. The AI narrates from this later." }, memory_summary: { type: "string", description: "What to remember about this event (e.g. 'Raider killed by pipe, not crossbow.')" }, tags: { type: "array", items: { type: "string" } } } } },
+    equipped_weapon: { type: "string", description: "Bullet's currently equipped weapon name (e.g. 'metal pipe'). Only update when the player explicitly equips or switches weapons. Picking up an item adds it to inventory but does NOT equip it." },
     choices: { type: "array", items: { type: "string" }, description: "3-4 suggested player actions for the next turn" },
     current_objective: { type: "object", properties: { title: { type: "string", description: "Short objective title (2-5 words)" }, description: { type: "string", description: "1-3 line objective reflecting Bullet's active mission right now" } }, description: "Bullet's current active objective. Update whenever the situation changes — reaching camp, being given a mission, completing a mission, forced departure, entering a new province." }
   },
@@ -99,6 +101,8 @@ Until the Province 1 climax, only give fragments: the scar, the Pull, the etched
 
 RULES:
 - CONTINUITY IS SACRED (CRITICAL): You must accurately track HOW the player accomplished recent actions. Read RECENT STORY carefully. If the player killed a scout with the pipe, do NOT say "by crossbow bolt." Match the player's declared method exactly — weapon, approach, outcome. Never invent or swap weapons, tactics, or results the player did not state. If uncertain, describe the outcome without specifying a method the player did not use. The pipe is Bullet's main weapon; do not attribute kills or strikes to a crossbow, bow, or other weapon unless the player explicitly stated using one.
+- PAST ACTION MEMORY (CRITICAL): Narrate past actions from the CANONICAL RECENT FACTS block and the event ledger — NEVER from inventory or assumption. Owning or carrying an item does NOT mean Bullet used it. If the ledger says he killed with the pipe, every future reference must say pipe — even if he also carries a crossbow. If the ledger says he picked up a crossbow but never used it, never say he fired, drew, or struck with it. If you do not know which weapon was used, say you do not know rather than inventing one. Possession is not use.
+- ITEM POSSESSION vs USE: Carrying an item is not the same as using it. Bullet's equipped weapon is tracked explicitly (Equipped Weapon / Last Weapon Used above). He only uses a carried weapon if he has equipped it OR the player explicitly stated using it. Picking up an item adds it to inventory; it does NOT equip or fire it. When the player switches weapons, return equipped_weapon with the new weapon name. When Bullet uses a weapon in a meaningful action (attack, kill, wound, threaten, break, strike), return an events[] entry with item_used_name set to the EXACT weapon used — this becomes the permanent canonical record future narration must follow.
 - TIME CONTINUITY (CRITICAL): Time in The Pull is NOT measured in ordinary days. Bullet does not track how many "days" he has survived — survival is measured by thirst, fatigue, heat, and the advancing clocks. NEVER write phrases like "nine days of survival," "three days since," "a week of," or any specific count of elapsed days. The current Chapter (${ctx.chapter}) indicates rough story stage, NOT a day count. Chapter 1 is the FIRST day — everything that happens in Chapter 1 occurs within hours of Bullet waking in the red sand. Do not imply long stretches of time have passed. Reference time only vaguely: "hours," "the afternoon wore on," "by dusk," or let the survival clocks (thirst, fatigue) convey elapsed time naturally. Days and weeks are NOT vocabulary Bullet or the narration uses to describe his experience.
 - Every scene must include: environmental danger, survival pressure, local NPCs or threats, a moral dimension, a clue about the larger mystery, and offscreen consequences.
 - Do not railroad. Let the player make choices. But the Pull should always create pressure.
@@ -127,6 +131,8 @@ Shard Resonance: ${ctx.shardResonance}
 HP: ${ctx.hpCurrent}/${ctx.hpMax}
 Conditions: ${conditionsStr}
 Inventory: ${equipmentStr}
+Equipped Weapon: ${ctx.equippedWeapon || 'none (bare hands)'}
+Last Weapon Used: ${ctx.lastWeaponUsed || 'none'}
 Pipe State: ${ctx.pipeState}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
@@ -151,6 +157,10 @@ UNLOCKED CODEX: ${codexStr}
 
 CURRENT CAST / KNOWN NPCS:
 ${Object.entries(ctx.npcRelationships || {}).map(([key, n]) => `- ${n.name || key} [key: ${key}] | Aliases: ${(n.aliases || []).join(', ') || 'none'} | Role: ${n.role || 'unknown'} | Status: ${n.status || 'Alive'} | Known: ${(n.player_knowledge || '').slice(0, 100) || (n.first_met ? 'Met.' : 'unknown')}`).join('\n') || '(No NPCs met yet.)'}
+
+CANONICAL RECENT FACTS (from the event ledger — narrate past actions from this, NOT from inventory or assumption):
+${(ctx.recentEvents || []).map(e => `- ${e.summary}`).join('\n') || '- (No significant events recorded yet.)'}
+- Equipped weapon: ${ctx.equippedWeapon || 'none'} | Last weapon used: ${ctx.lastWeaponUsed || 'none'}
 
 RECENT STORY:
 ${ctx.recentStory || '(The tale has just begun.)'}
@@ -219,6 +229,71 @@ function sanitizeNarration(text) {
   return { narration: cleaned, corrections };
 }
 
+// ─── Event-Ledger Validator ───
+// Code-enforced guardrail: scans GM narration against the canonical event ledger
+// and auto-corrects weapon misattribution. If the ledger says Bullet killed with
+// the pipe, but narration pairs the kill with a different carried weapon (e.g.
+// "crossbow"), the wrong weapon is replaced with the real one. Deterministic —
+// same tier as the firearm/barefoot sanitizer.
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+const WEAPON_NOUNS = /\b(pipe|crossbow|bow|blade|sword|spear|club|axe|mace|staff|dagger|knife|hammer|pick|maul|wrench|bludgeon|cudgel|baton|halberd|flail|scythe)\b/i;
+
+function validateNarrationAgainstEventLog(text, events, carriedItems) {
+  const corrections = [];
+  let cleaned = text;
+
+  // Kill/wound events with a known weapon — the canonical truth
+  const killEvents = (events || []).filter(e =>
+    e.item_used_name && (
+      (e.outcome && /kill|slay|dead|wound|injur/i.test(e.outcome)) ||
+      (e.cause && e.cause.length > 0) ||
+      /kill|attack|strike|wound/i.test(e.event_type || '')
+    )
+  );
+  if (!killEvents.length) return { narration: cleaned, corrections };
+
+  // Carried weapons that could be wrongly substituted (exclude non-weapon items)
+  const carriedWeapons = (carriedItems || [])
+    .map(i => (typeof i === 'string' ? i : i.name) || '')
+    .filter(n => n && WEAPON_NOUNS.test(n));
+
+  const killWordRe = /\b(killed|kills|slays?|slew|slain|felled|struck down|murdered|dispatched|finished off|ended|die|dies|died|death|fatal|wounded|injured|crushed)\b/i;
+
+  for (const ev of killEvents) {
+    const actual = (ev.item_used_name || '').toLowerCase();
+    const actualCore = actual.replace(/^(battered|metal|iron|steel|wooden|heavy)\s+/, '').trim();
+    // Other weapons = carried weapons that are NOT the actual kill weapon
+    const others = carriedWeapons
+      .map(w => ({ full: w, core: w.toLowerCase().replace(/^(battered|metal|iron|steel|wooden|heavy)\s+/, '').trim() }))
+      .filter(w => w.core !== actualCore && w.full.toLowerCase() !== actual);
+
+    // Split narration into sentences (rough) to localize the kill context
+    const sentences = cleaned.split(/(?<=[.!?])\s+/);
+    for (const sent of sentences) {
+      if (!killWordRe.test(sent)) continue;
+      // If the sentence already mentions the ACTUAL weapon, it's correct — skip
+      const mentionsActual = new RegExp(`\\b${escapeRegex(actual)}\\b`, 'i').test(sent) ||
+        (actualCore && new RegExp(`\\b${escapeRegex(actualCore)}\\b`, 'i').test(sent));
+      if (mentionsActual) continue;
+      // Sentence pairs a kill with a different carried weapon → correct it
+      for (const other of others) {
+        const re = new RegExp(`\\b${escapeRegex(other.full)}\\b`, 'i');
+        if (re.test(sent)) {
+          cleaned = cleaned.replace(re, ev.item_used_name);
+          corrections.push(`weapon attribution: "${other.full}" → "${ev.item_used_name}" (ledger: ${ev.summary || ev.event_type})`);
+          break; // one correction per sentence
+        }
+      }
+    }
+  }
+
+  if (corrections.length) {
+    console.warn('[PullGM Event Validator] Auto-corrected:', corrections.join('; '));
+  }
+  return { narration: cleaned, corrections };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -242,6 +317,10 @@ Deno.serve(async (req) => {
 
     // Load recent journal entries
     const entries = await admin.entities.JournalEntry.filter({ campaign_id }, '-created_date', 15);
+
+    // Load recent canonical events (structured action ledger — the source of truth for what actually happened)
+    const recentEventsRaw = await admin.entities.EventLog.filter({ campaign_id }, '-created_date', 20);
+    const recentEvents = recentEventsRaw.reverse();
 
     // Build game state
     const ws = campaign.world_state || {};
@@ -288,6 +367,9 @@ Deno.serve(async (req) => {
       sparkShard: !!flags.spark_shard,
       currentObjective: flags.current_objective?.description || '',
       npcRelationships: flags.npc_relationships || {},
+      recentEvents,
+      equippedWeapon: flags.equipped_weapon || '',
+      lastWeaponUsed: flags.last_weapon_used || '',
       recentStory,
       action
     });
@@ -307,6 +389,9 @@ Deno.serve(async (req) => {
     let narration = result.narration || 'The Pull drags you forward. The world shifts around you.';
     const sanitizeResult = sanitizeNarration(narration);
     narration = sanitizeResult.narration;
+    // Validate narration against the canonical event ledger (weapon misattribution, etc.)
+    const eventValidation = validateNarrationAgainstEventLog(narration, recentEvents, bullet.equipment || []);
+    narration = eventValidation.narration;
 
     // Create journal entry
     await base44.entities.JournalEntry.create({
@@ -376,6 +461,43 @@ Deno.serve(async (req) => {
 
     // Pipe state update
     if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
+
+    // ─── Canonical Event Ledger ───
+    // Save structured event records (the source of truth for "what actually happened")
+    // and track equipped/last-used weapon so the AI never confuses possession with use.
+    if (result.equipped_weapon) updatedFlags.equipped_weapon = result.equipped_weapon;
+
+    if (result.events && result.events.length) {
+      const provName = (PROVINCES[currentProvince] || {}).n || `Province ${currentProvince}`;
+      for (const ev of result.events) {
+        if (!ev.event_type && !ev.summary) continue;
+        try {
+          await admin.entities.EventLog.create({
+            campaign_id,
+            chapter: campaign.current_chapter || 1,
+            province: provName,
+            scene: ev.scene || '',
+            event_type: ev.event_type || 'event',
+            actor_id: ev.actor_id || 'bullet',
+            actor_name: ev.actor_name || 'Bullet',
+            target_id: ev.target_id || '',
+            target_name: ev.target_name || '',
+            item_used_id: ev.item_used_id || '',
+            item_used_name: ev.item_used_name || '',
+            outcome: ev.outcome || '',
+            cause: ev.cause || '',
+            summary: ev.summary || '',
+            memory_summary: ev.memory_summary || ev.summary || '',
+            tags: ev.tags || []
+          });
+        } catch (e) { /* best-effort event save — ledger is non-blocking */ }
+      }
+      // Update last_weapon_used from the most recent combat event that used a weapon
+      const lastWeaponEv = [...result.events].reverse().find(ev =>
+        ev.item_used_name && /attack|kill|wound|threaten|strike|use_item/i.test(ev.event_type || '')
+      );
+      if (lastWeaponEv) updatedFlags.last_weapon_used = lastWeaponEv.item_used_name;
+    }
 
     // Apply NPC updates — CANONICAL REGISTRY WITH ALIAS RESOLUTION.
     // Descriptions are not separate people: if a key/name/alias matches an
@@ -575,7 +697,10 @@ Deno.serve(async (req) => {
       shard_focus_unlocked: !!result.shard_focus_unlocked,
       spark_shard_acquired: !!result.spark_shard_acquired,
       choices: result.choices || [],
-      current_objective: updatedFlags.current_objective || null
+      current_objective: updatedFlags.current_objective || null,
+      equipped_weapon: updatedFlags.equipped_weapon || '',
+      last_weapon_used: updatedFlags.last_weapon_used || '',
+      events: result.events || []
     });
 
   } catch (error) {
