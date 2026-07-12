@@ -101,7 +101,7 @@ Produce a JSON object with these fields — write in vivid, in-world prose as th
 - rewards_summary: a summary of XP earned and any rewards, favors, or boons gained (XP total this session: ${xpThisSession})
 - treasure_summary: a list of treasure/${currencyLabel}/gear gained this session (or "None" if nothing)
 - npc_changes: notable NPC developments — new NPCs met, relationships shifted, deaths, revelations (or "None")
-- unresolved_clues: open threads, mysteries, and plot hooks still unresolved
+- unresolved_clues: open threads, mysteries, and plot hooks still unresolved. CRITICAL: Do NOT list NPCs that have already been named and identified as unresolved mysteries. If a character was first described by appearance and later named (e.g., "the bald woman" is Shard, "the broad guard" is Maul), they are NOT unresolved — they are known NPCs. Only list genuinely open threads: unanswered questions, unexplored locations, foreshadowed threats, and plot hooks the party has not yet resolved.
 - current_location: where the party is right now at session's end (one sentence)
 - next_session_hook: a one-to-two sentence cliffhanger or hook to draw the party back next session`;
 
