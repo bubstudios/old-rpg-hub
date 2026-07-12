@@ -66,12 +66,20 @@ export default function GuiltBondsTab({ flags, isMichael }) {
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">PEOPLE MET</h3>
           </div>
           <div className="space-y-1.5">
-            {Object.entries(npcRels).map(([key, rel]) => (
-              <div key={key} className="flex items-center justify-between text-sm">
-                <span className="text-foreground font-body">{rel.name || key.replace(/_/g, ' ')}</span>
-                <span className="font-heading text-xs text-muted-foreground capitalize">{rel.disposition || 'neutral'}</span>
-              </div>
-            ))}
+            {Object.entries(npcRels).map(([key, rel]) => {
+              const otherAliases = (rel.aliases || []).filter(a => a && a !== rel.name);
+              return (
+                <div key={key} className="flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-foreground font-body">{rel.name || key.replace(/_/g, ' ')}</span>
+                    <span className="font-heading text-xs text-muted-foreground capitalize">{rel.disposition || 'neutral'}</span>
+                  </div>
+                  {otherAliases.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground/50 font-body italic">aka {otherAliases.slice(0, 3).join(', ')}</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

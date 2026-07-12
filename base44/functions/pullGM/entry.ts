@@ -60,7 +60,7 @@ const RESPONSE_SCHEMA = {
       } } },
       future_consequence: { type: "string" }
     } },
-    npc_updates: { type: "array", items: { type: "object", properties: { key: { type: "string" }, name: { type: "string", description: "NPC display name" }, description: { type: "string", description: "Brief physical description" }, disposition: { type: "string", description: "friendly, hostile, neutral, etc." }, is_new: { type: "boolean", description: "true if Bullet is meeting this NPC for the first time" }, relationship_change: { type: "number" }, reason: { type: "string" } } } },
+    npc_updates: { type: "array", items: { type: "object", properties: { key: { type: "string", description: "Canonical NPC key. REUSE the existing key from CURRENT CAST when updating a known NPC. Only use a new key for a genuinely new person." }, name: { type: "string", description: "Current display name" }, description: { type: "string", description: "Brief physical description" }, disposition: { type: "string", description: "friendly, hostile, neutral, etc." }, is_new: { type: "boolean", description: "true if Bullet is meeting this NPC for the first time" }, relationship_change: { type: "number" }, reason: { type: "string", description: "What Bullet learned about this NPC this turn (appended to player knowledge)" }, add_aliases: { type: "array", items: { type: "string" }, description: "Additional names/descriptors/titles to attach to this NPC (e.g. old pre-name descriptors when a name is revealed)" }, revealed_name: { type: "string", description: "The NPC's true name, when first revealed. After this, use it as the display name." }, role: { type: "string", description: "Role or title (e.g. Camp leader, Healer, Inventor)" }, npc_status: { type: "string", description: "Alive, Dead, Unknown" } } } },
     discovered_clocks: { type: "array", items: { type: "string" }, description: "Local clock keys Bullet just discovered or was told about. Keys: camp_trust, purifier_stability, raider_threat, etc. Only include clocks Bullet just learned about this turn." },
     province_transition: { type: "object", properties: { to_province: { type: "number" }, reason: { type: "string" } } },
     enemy_turn: { type: "object", properties: { province_1_alert_change: { type: "number" }, hunter_proximity_change: { type: "number" }, action: { type: "string" } } },
@@ -111,7 +111,7 @@ RULES:
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - Innocent suffering should have emotional weight, not be used casually.
 - LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
-- NPC IDENTITY CONTINUITY (CRITICAL): Once an NPC has been named, ALWAYS refer to them by their name. Do not continue calling them "the bald woman," "the broad guard," or any pre-name descriptor after they have been introduced by name. Do not treat already-named NPCs as separate mysterious unresolved people. If "the bald woman" was Shard and "the broad guard" was Maul, they ARE Shard and Maul — not unidentified strangers.
+- NPC IDENTITY CONTINUITY (CRITICAL): Every NPC has a permanent canonical key listed in the CURRENT CAST block. Descriptions are NOT separate people. Before introducing or referencing any person, run an identity check: (1) Is this person already in the CURRENT CAST? (2) Does the description, name, or title match an existing alias? (3) Does the role or location match an existing NPC? If yes, use the existing NPC's current display name and key — do NOT create a new mystery person. When a nameless person later reveals their name, return an npc_update with the EXISTING key, set revealed_name, and include the old descriptor in add_aliases. Examples: "the bald woman" later revealed as "Shard" is ONE person — reuse her key, set revealed_name "Shard", add_aliases ["bald woman", "scarred woman"]. "young inventor" → "Spark" is one person. "the healer" → "Patch" is one person. Never treat "the bald woman" and "Shard" as separate unresolved mysteries. If uncertain whether two descriptions are the same person, do not invent a new mystery — use cautious wording ("the woman looks familiar — likely Shard") rather than spawning a duplicate.
 - CAMP MEMBERS VS EXTERNAL THREATS (CRITICAL): Camp members (Shard, Patch, Spark, Maul, Cowboy, Rivet) are SURVIVORS who live in the camp. Maul is a camp member — a mean, untrustworthy rival who is hostile to Bullet. He is NOT connected to the raiders, does NOT lead or control them, and is NOT secretly allied with them. The raiders are a separate external threat. Do not imply, foreshadow, or reveal that any camp member is secretly working with or leading the raiders unless the story has explicitly established it. Key NPCs: Shard (leader), Patch (healer), Spark (inventor), Maul (rival), Cowboy, Rivet. Discovery triggers: Shard when she names Bullet; Patch when she treats him; Spark near camp tech; Maul when he confronts Bullet; Cowboy on purifier mission; Rivet during raid setup.
 - INJURY SOURCE CONTINUITY (CRITICAL): Track WHO inflicted each wound on Bullet and never reassign it. If a raider punched Bullet in the jaw, the jaw injury came from A RAIDER — never write "where Maul left his mark" or attribute it to any camp member. Maul is a rival, but unless the story explicitly established that Maul himself struck Bullet, do not attribute any wound to him. Wounds belong to their actual source (raider, sand maw, Dreadwraith, environment, etc.). Read RECENT STORY to confirm who caused each injury before referencing it. If unsure who caused a wound, reference it vaguely ("the ache in your jaw," "where you were struck") rather than naming a character who did not deliver the blow.
 - Player choices should matter whenever possible.
@@ -148,6 +148,9 @@ Moral Choice: ${p.m}
 Lore Clue: ${p.l}
 
 UNLOCKED CODEX: ${codexStr}
+
+CURRENT CAST / KNOWN NPCS:
+${Object.entries(ctx.npcRelationships || {}).map(([key, n]) => `- ${n.name || key} [key: ${key}] | Aliases: ${(n.aliases || []).join(', ') || 'none'} | Role: ${n.role || 'unknown'} | Status: ${n.status || 'Alive'} | Known: ${(n.player_knowledge || '').slice(0, 100) || (n.first_met ? 'Met.' : 'unknown')}`).join('\n') || '(No NPCs met yet.)'}
 
 RECENT STORY:
 ${ctx.recentStory || '(The tale has just begun.)'}
@@ -284,6 +287,7 @@ Deno.serve(async (req) => {
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
       currentObjective: flags.current_objective?.description || '',
+      npcRelationships: flags.npc_relationships || {},
       recentStory,
       action
     });
@@ -373,29 +377,100 @@ Deno.serve(async (req) => {
     // Pipe state update
     if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
 
-    // Apply NPC updates — update relationships and create NPC entity records for new encounters
+    // Apply NPC updates — CANONICAL REGISTRY WITH ALIAS RESOLUTION.
+    // Descriptions are not separate people: if a key/name/alias matches an
+    // existing NPC record, merge into that record instead of creating a duplicate.
     const npcRels = { ...(flags.npc_relationships || {}) };
+    const norm = (s) => (s || '').toString().toLowerCase().trim();
+    // Reverse index: normalized name/alias/key -> canonical key, for fast resolution
+    const aliasIndex = {};
+    for (const [k, rel] of Object.entries(npcRels)) {
+      for (const nm of [k, rel.name, rel.revealed_name, ...(rel.aliases || [])].filter(Boolean)) {
+        aliasIndex[norm(nm)] = k;
+      }
+    }
+    const resolveKey = (nu) => {
+      if (nu.key && npcRels[nu.key]) return nu.key;
+      const candidates = [nu.key, nu.name, nu.revealed_name, ...(nu.add_aliases || [])].filter(Boolean);
+      for (const c of candidates) {
+        const hit = aliasIndex[norm(c)];
+        if (hit) return hit;
+      }
+      return nu.key || null;
+    };
+
     for (const nu of (result.npc_updates || [])) {
-      if (!nu.key) continue;
-      const existing = npcRels[nu.key] || {};
-      const isNew = nu.is_new === true && !existing.first_met;
-      npcRels[nu.key] = {
-        name: nu.name || existing.name || nu.key,
+      let key = resolveKey(nu);
+      if (!key && !nu.key) continue;
+      if (!key) key = nu.key;
+      const existing = npcRels[key] || {};
+      const isNew = !existing.first_met;
+
+      // Merge aliases: existing + add_aliases + name + revealed_name (deduped)
+      const mergedAliases = [...new Set([
+        ...(existing.aliases || []),
+        ...(nu.add_aliases || []),
+        ...(nu.name ? [nu.name] : []),
+        ...(nu.revealed_name ? [nu.revealed_name] : [])
+      ].filter(Boolean))];
+
+      const updatedRel = {
+        name: nu.revealed_name || nu.name || existing.name || key,
+        aliases: mergedAliases,
+        revealed_name: nu.revealed_name || existing.revealed_name || null,
+        role: nu.role || existing.role || '',
+        status: nu.npc_status || existing.status || 'Alive',
         disposition: nu.disposition || existing.disposition || 'neutral',
         relationship: Math.max(-100, Math.min(100, (existing.relationship || 0) + (nu.relationship_change || 0))),
-        first_met: existing.first_met || isNew
+        first_met: existing.first_met || isNew,
+        description: nu.description || existing.description || '',
+        player_knowledge: nu.reason ? ((existing.player_knowledge ? existing.player_knowledge + ' ' : '') + nu.reason).trim() : (existing.player_knowledge || ''),
+        province: existing.province || currentProvince
       };
-      if (isNew) {
-        try {
+      npcRels[key] = updatedRel;
+      // Refresh alias index so later updates in the same turn resolve correctly
+      for (const nm of [key, updatedRel.name, updatedRel.revealed_name, ...mergedAliases].filter(Boolean)) {
+        aliasIndex[norm(nm)] = key;
+      }
+
+      // Upsert NPC entity record (canonical dossier) — merge, never duplicate
+      try {
+        if (isNew) {
           await admin.entities.NPC.create({
             campaign_id,
-            name: nu.name || nu.key,
-            disposition: nu.disposition || 'neutral',
-            description: nu.description || '',
+            canonical_id: key,
+            name: updatedRel.name,
+            aliases: mergedAliases,
+            revealed_name: updatedRel.revealed_name,
+            role: updatedRel.role,
+            status: updatedRel.status,
+            disposition: updatedRel.disposition,
+            description: updatedRel.description,
+            what_we_know: updatedRel.player_knowledge,
             first_met_chapter: campaign.current_chapter || 1
           });
-        } catch (e) { /* NPC may already exist */ }
-      }
+        } else {
+          const byId = await admin.entities.NPC.filter({ campaign_id, canonical_id: key });
+          let npcRec = byId[0];
+          if (!npcRec) {
+            const byName = await admin.entities.NPC.filter({ campaign_id, name: existing.name || updatedRel.name });
+            npcRec = byName[0];
+          }
+          if (npcRec) {
+            await admin.entities.NPC.update(npcRec.id, {
+              canonical_id: key,
+              name: updatedRel.name,
+              aliases: mergedAliases,
+              revealed_name: updatedRel.revealed_name,
+              role: updatedRel.role,
+              status: updatedRel.status,
+              disposition: updatedRel.disposition,
+              description: updatedRel.description,
+              what_we_know: updatedRel.player_knowledge
+            });
+          }
+        }
+      } catch (e) { /* NPC upsert best-effort — registry in flags is source of truth */ }
     }
     updatedFlags.npc_relationships = npcRels;
 

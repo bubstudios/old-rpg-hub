@@ -6,16 +6,32 @@
       "type": "string",
       "description": "The campaign this NPC belongs to"
     },
+    "canonical_id": {
+      "type": "string",
+      "description": "Permanent canonical key for this NPC (e.g. 'shard', 'spark'). Stable across name reveals \u2014 used for alias resolution and deduplication."
+    },
     "name": {
       "type": "string",
-      "description": "Canonical full name of the NPC, creature, faction, or entity"
+      "description": "Current display name. Starts as a descriptor ('Bald Woman') and updates to the revealed name ('Shard') when learned."
     },
     "aliases": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Other names or titles this entity is known by"
+      "description": "All names, titles, and descriptors this entity has been known by. Used for identity resolution so old descriptions resolve to the same record."
+    },
+    "revealed_name": {
+      "type": "string",
+      "description": "The NPC's true name once revealed (null until learned). When set, becomes the display name."
+    },
+    "role": {
+      "type": "string",
+      "description": "Role or title (e.g. 'Camp leader', 'Healer', 'Inventor')"
+    },
+    "status": {
+      "type": "string",
+      "description": "Alive, Dead, Unknown, etc."
     },
     "disposition": {
       "type": "string",
@@ -31,15 +47,15 @@
     },
     "attributes": {
       "type": "string",
-      "description": "Current notable abilities, gear, and status (e.g. 'armed with a hunting rifle; skilled surgeon; wounded')"
+      "description": "Current notable abilities, gear, and status (e.g. 'armed with a hunting spear; skilled surgeon; wounded')"
     },
     "what_we_know": {
       "type": "string",
-      "description": "Running biography of facts the party has learned \u2014 one fact per line, accumulates over time"
+      "description": "Running biography of facts the party has learned \u2014 one fact per line, accumulates over time. This is player knowledge."
     },
     "notes": {
       "type": "string",
-      "description": "Brief freeform notes"
+      "description": "Brief freeform notes \u2014 used for hidden GM notes not shown to the player"
     },
     "first_met_chapter": {
       "type": "number",
