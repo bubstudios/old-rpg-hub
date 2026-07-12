@@ -169,6 +169,53 @@ Respond with vivid narration (2-4 paragraphs, second-person present tense, dark 
 FUTURE_CONSEQUENCE SPOILER RULE (CRITICAL): The future_consequence field is shown to the player immediately. It must NEVER spoil specific narrative outcomes — do NOT name characters who will be endangered, die, or suffer; do NOT reveal who survives or fails; do NOT describe specific upcoming events. Write future_consequence as a vague, atmospheric hint about thematic or mechanical stakes only. Example GOOD: "The wall's fate and the cost of standing it will weigh on Bullet and the camp." Example BAD: "Whether Cowboy survives the opening minutes of the assault." Never use a named character's survival, death, injury, or fate as the subject of a future_consequence.`;
 }
 
+// ─── Narration Sanitizer ───
+// Code-enforced guardrails: scans GM narration BEFORE it's saved and auto-corrects
+// violations that the LLM prompt rules should prevent but can't guarantee.
+// Makes word-level rules (no guns, always barefoot) deterministic — same tier as
+// the province-sequence validator.
+function sanitizeNarration(text) {
+  const corrections = [];
+  let cleaned = text;
+
+  // Firearms never exist in the realm — replace with a melee equivalent
+  const firearmRules = [
+    [/\brevolver\b/gi, 'blade'],
+    [/\bpistol\b/gi, 'blade'],
+    [/\bhandgun\b/gi, 'blade'],
+    [/\brifle\b/gi, 'crossbow'],
+    [/\bshotgun\b/gi, 'crossbow'],
+    [/\bmusket\b/gi, 'crossbow']
+  ];
+  for (const [pattern, replacement] of firearmRules) {
+    const matches = cleaned.match(pattern);
+    if (matches) {
+      cleaned = cleaned.replace(pattern, replacement);
+      corrections.push(`firearm "${matches[0]}" → "${replacement}"`);
+    }
+  }
+
+  // Bullet is always barefoot — second-person footwear references are always wrong
+  const barefootRules = [
+    [/your boots\b/gi, 'your bare feet'],
+    [/your shoes\b/gi, 'your bare feet'],
+    [/your booted feet\b/gi, 'your bare feet']
+  ];
+  for (const [pattern, replacement] of barefootRules) {
+    const matches = cleaned.match(pattern);
+    if (matches) {
+      cleaned = cleaned.replace(pattern, replacement);
+      corrections.push(`footwear "${matches[0]}" → "${replacement}"`);
+    }
+  }
+
+  if (corrections.length) {
+    console.warn('[PullGM Sanitizer] Auto-corrected:', corrections.join('; '));
+  }
+
+  return { narration: cleaned, corrections };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -253,7 +300,9 @@ Deno.serve(async (req) => {
     if (typeof result === 'string') { try { result = JSON.parse(result); } catch { result = {}; } }
     if (result && result.response && typeof result.response === 'object') result = result.response;
 
-    const narration = result.narration || 'The Pull drags you forward. The world shifts around you.';
+    let narration = result.narration || 'The Pull drags you forward. The world shifts around you.';
+    const sanitizeResult = sanitizeNarration(narration);
+    narration = sanitizeResult.narration;
 
     // Create journal entry
     await base44.entities.JournalEntry.create({
