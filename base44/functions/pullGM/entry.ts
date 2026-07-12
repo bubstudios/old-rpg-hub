@@ -53,6 +53,7 @@ const RESPONSE_SCHEMA = {
     clock_changes: { type: "array", items: { type: "object", properties: { clock: { type: "string" }, change: { type: "number" }, reason: { type: "string" } } } },
     local_clock_changes: { type: "array", items: { type: "object", properties: { clock: { type: "string" }, change: { type: "number" }, reason: { type: "string" } } } },
     codex_unlocks: { type: "array", items: { type: "string" }, description: "New codex entry keys unlocked by this action" },
+    knowledge_unlocks: { type: "object", description: "Set specific spoiler-knowledge flags to true this turn (e.g. {knowsSeeker: true}). Only set when the player genuinely learns the concept through story events — never speculatively. Keys: knowsProvince1Exists, knowsProvince1IsDestination, knowsSeeker, knowsDreadwraith, knowsSentinels, knowsShardFocus, knowsShardResonance, knowsShardOrigin, knowsFather, knowsGarden, knowsLeaderBrother, knowsBladeOfDawn, knowsStarCrownedEmber, knowsSilentPulse.", additionalProperties: { type: "boolean" } },
     decision_impact: { type: "object", properties: {
       is_meaningful: { type: "boolean" },
       impacts: { type: "array", items: { type: "object", properties: {
@@ -121,6 +122,7 @@ RULES:
 - Player choices should matter whenever possible.
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
 - PROVINCE TRANSITIONS (CRITICAL): Bullet can ONLY move to the next Province in the canonical sequence — never skip ahead. The current Province is ${ctx.currentProvince}. Do NOT return a province_transition unless the story has genuinely reached the boundary between the current Province and the next. Narrating within the same Province (e.g. moving from the dunes to the camp interior) is NOT a province transition. Never reference, foreshadow, or transition to Provinces that are far ahead in the story — doing so spoils major plot reveals.
+- SPOILER FIREWALL (CRITICAL): You know the full hidden truth, but the player does not. Never reveal future lore, future Province names/numbers, future enemies, Bullet's final identity (Michael), Father, the Garden, the final destination, the Seeker, the Dreadwraith, Sentinels, Cleanup Mode, the Leader as brother, Blade of Dawn, Star-Crowned Ember, Silent Pulse, Shard Focus, or Shard Resonance before its knowledge flag is true (see KNOWLEDGE FLAGS below). Do not mention hidden concepts even as locked entries, tooltips, clock labels, objective names, codex category names, or vague-but-obvious hints. Before writing any player-facing text, check: (1) Does Bullet know this? (2) Has the player unlocked this? (3) Is this term allowed right now? If not, rewrite using only what Bullet can currently observe — "forward," "the horizon," "a distant pull," "something unseen," "the shard pulses," "the desert is not empty." Never name Province 1 as a destination until the way-station monitor reveal.
 
 CURRENT GAME STATE:
 Province: ${ctx.currentProvince} — ${p.n}
@@ -154,6 +156,9 @@ Moral Choice: ${p.m}
 Lore Clue: ${p.l}
 
 UNLOCKED CODEX: ${codexStr}
+
+KNOWLEDGE FLAGS (concepts the PLAYER may currently see — do NOT put any unlisted hidden concept into narration, objectives, clocks, or codex):
+${Object.entries(ctx.knowledgeFlags || {}).filter(([, v]) => v).map(([k]) => `- ${k}: ALLOWED`).join('\n') || '- Only opening concepts allowed: the Pull, the scar, the etched shard, thirst, heat, fatigue. Everything else is hidden — do not name it.'}
 
 CURRENT CAST / KNOWN NPCS:
 ${Object.entries(ctx.npcRelationships || {}).map(([key, n]) => `- ${n.name || key} [key: ${key}] | Aliases: ${(n.aliases || []).join(', ') || 'none'} | Role: ${n.role || 'unknown'} | Status: ${n.status || 'Alive'} | Known: ${(n.player_knowledge || '').slice(0, 100) || (n.first_met ? 'Met.' : 'unknown')}`).join('\n') || '(No NPCs met yet.)'}
@@ -294,6 +299,72 @@ function validateNarrationAgainstEventLog(text, events, carriedItems) {
   return { narration: cleaned, corrections };
 }
 
+// ─── Spoiler Firewall ───
+// Derives the player's current knowledge from codex unlocks, explicit knowledge
+// flags, shard-focus state, and the canonical province stage. The sanitizer below
+// uses this to block hidden terms from narration until their concept is unlocked.
+function deriveKnowledgeFlags(flags, currentProvince) {
+  const stageIdx = CANONICAL_PROVINCE_ORDER.indexOf(currentProvince);
+  const stageAt = (idx) => stageIdx >= 0 && stageIdx >= idx;
+  const codex = flags.codex_unlocks || [];
+  const kf = flags.knowledge_flags || {};
+  return {
+    knowsProvince1Exists: !!kf.knowsProvince1Exists || stageAt(11),
+    knowsProvince1IsDestination: !!kf.knowsProvince1IsDestination || stageAt(11),
+    knowsSeeker: codex.includes('seeker') || !!kf.knowsSeeker,
+    knowsDreadwraith: codex.includes('dreadwraith') || stageAt(1),
+    knowsSentinels: codex.includes('sentinels') || stageAt(2),
+    knowsShardFocus: !!flags.shard_focus_unlocked || !!kf.knowsShardFocus,
+    knowsShardResonance: !!kf.knowsShardResonance || stageAt(1),
+    knowsShardOrigin: !!kf.knowsShardOrigin || stageAt(16),
+    knowsFather: !!kf.knowsFather || stageAt(16),
+    knowsGarden: !!kf.knowsGarden || stageAt(16),
+    knowsMichael: stageAt(16),
+    knowsLeaderBrother: !!kf.knowsLeaderBrother || stageAt(16),
+    knowsBladeOfDawn: codex.includes('blade_of_dawn') || stageAt(12),
+    knowsStarCrownedEmber: codex.includes('star_crowned_ember') || stageAt(12),
+    knowsSilentPulse: codex.includes('silent_pulse') || stageAt(12),
+    knowsCleanupMode: stageAt(17)
+  };
+}
+
+// Deterministic spoiler blocker: if a hidden term appears in narration before its
+// knowledge flag is true, replace it with player-safe language. Same code-enforced
+// tier as the firearm/barefoot/weapon sanitizers — catches what prompt rules miss.
+function sanitizeSpoilers(text, knowledgeFlags) {
+  const corrections = [];
+  let cleaned = text;
+  const rules = [
+    { re: /\bMichael\b/g, ok: knowledgeFlags.knowsMichael, replace: 'Bullet' },
+    { re: /\bFather\b/g, ok: knowledgeFlags.knowsFather, replace: 'the unseen will' },
+    { re: /\bthe Garden\b/gi, ok: knowledgeFlags.knowsGarden, replace: 'home' },
+    { re: /\bGarden\b/g, ok: knowledgeFlags.knowsGarden, replace: 'home' },
+    { re: /\bProvince 1\b/g, ok: knowledgeFlags.knowsProvince1IsDestination, replace: 'the place ahead' },
+    { re: /\bCleanup Mode\b/gi, ok: knowledgeFlags.knowsCleanupMode, replace: 'the reckoning' },
+    { re: /\bCleanup\b/g, ok: knowledgeFlags.knowsCleanupMode, replace: 'the reckoning' },
+    { re: /\bDreadwraith\b/gi, ok: knowledgeFlags.knowsDreadwraith, replace: 'the hunter in the dark' },
+    { re: /\bSeeker\b/g, ok: knowledgeFlags.knowsSeeker, replace: 'something unseen' },
+    { re: /\bSentinel\b/gi, ok: knowledgeFlags.knowsSentinels, replace: 'the guardian' },
+    { re: /\bBlade of Dawn\b/gi, ok: knowledgeFlags.knowsBladeOfDawn, replace: 'a lost hero' },
+    { re: /\bStar-Crowned Ember\b/gi, ok: knowledgeFlags.knowsStarCrownedEmber, replace: 'a fallen light' },
+    { re: /\bSilent Pulse\b/gi, ok: knowledgeFlags.knowsSilentPulse, replace: 'the quiet will' },
+    { re: /\bShard Focus\b/gi, ok: knowledgeFlags.knowsShardFocus, replace: "the shard's pull" },
+    { re: /\bShard Resonance\b/gi, ok: knowledgeFlags.knowsShardResonance, replace: "the shard's warmth" }
+  ];
+  for (const r of rules) {
+    if (r.ok) continue;
+    const matches = cleaned.match(r.re);
+    if (matches) {
+      cleaned = cleaned.replace(r.re, r.replace);
+      corrections.push(`spoiler "${matches[0]}" → "${r.replace}"`);
+    }
+  }
+  if (corrections.length) {
+    console.warn('[PullGM Spoiler Firewall] Auto-corrected:', corrections.join('; '));
+  }
+  return { narration: cleaned, corrections };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -362,6 +433,7 @@ Deno.serve(async (req) => {
       clocks,
       localClocks,
       codexUnlocks,
+      knowledgeFlags: deriveKnowledgeFlags(flags, currentProvince),
       pipeState: flags.pipe_state || 'unfound',
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
@@ -392,6 +464,23 @@ Deno.serve(async (req) => {
     // Validate narration against the canonical event ledger (weapon misattribution, etc.)
     const eventValidation = validateNarrationAgainstEventLog(narration, recentEvents, bullet.equipment || []);
     narration = eventValidation.narration;
+
+    // Spoiler firewall — block hidden terms that aren't unlocked yet (this turn's
+    // unlocks count, so a reveal scene can name its own concept). Uses the merged
+    // codex/knowledge state and the effective post-transition province.
+    const gateFlags = {
+      codex_unlocks: [...new Set([...codexUnlocks, ...(result.codex_unlocks || [])])],
+      knowledge_flags: { ...(flags.knowledge_flags || {}), ...(result.knowledge_unlocks || {}) },
+      shard_focus_unlocked: !!(flags.shard_focus_unlocked || result.shard_focus_unlocked)
+    };
+    let effectiveProvince = currentProvince;
+    if (result.province_transition && typeof result.province_transition.to_province === 'number') {
+      const toProv = result.province_transition.to_province;
+      const ci = CANONICAL_PROVINCE_ORDER.indexOf(currentProvince);
+      const ti = CANONICAL_PROVINCE_ORDER.indexOf(toProv);
+      if (toProv === currentProvince || (ci >= 0 && ti === ci + 1)) effectiveProvince = toProv;
+    }
+    narration = sanitizeSpoilers(narration, deriveKnowledgeFlags(gateFlags, effectiveProvince)).narration;
 
     // Create journal entry
     await base44.entities.JournalEntry.create({
@@ -446,6 +535,11 @@ Deno.serve(async (req) => {
     // Apply codex unlocks
     if (result.codex_unlocks && result.codex_unlocks.length) {
       updatedFlags.codex_unlocks = [...new Set([...codexUnlocks, ...result.codex_unlocks])];
+    }
+
+    // Apply spoiler-knowledge flag unlocks (advance the firewall as the player learns concepts)
+    if (result.knowledge_unlocks && Object.keys(result.knowledge_unlocks).length) {
+      updatedFlags.knowledge_flags = { ...(flags.knowledge_flags || {}), ...result.knowledge_unlocks };
     }
 
     // Shard focus unlock
@@ -700,7 +794,8 @@ Deno.serve(async (req) => {
       current_objective: updatedFlags.current_objective || null,
       equipped_weapon: updatedFlags.equipped_weapon || '',
       last_weapon_used: updatedFlags.last_weapon_used || '',
-      events: result.events || []
+      events: result.events || [],
+      knowledge_flags: updatedFlags.knowledge_flags || {}
     });
 
   } catch (error) {
