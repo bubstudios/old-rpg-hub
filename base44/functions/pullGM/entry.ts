@@ -24,6 +24,10 @@ const PROVINCES = {
 
 const PROVINCE_CHAPTERS = { 618: 1, 472: 2, 837: 3, 269: 4, 391: 6, 512: 8, 713: 9, 927: 10, 108: 12, 429: 13, 998: 14, 0: 15, 14: 16, 140: 17, 5121: 18, 3911: 19, 1: 20, [-1]: 21 };
 
+// Canonical province sequence — the GM may only transition to the NEXT province in this order.
+// This prevents the LLM from spoiling late-game provinces (e.g. jumping from Chapter 1 to Province 0).
+const CANONICAL_PROVINCE_ORDER = [618, 472, 837, 269, 391, 512, 713, 927, 108, 429, 998, 0, 14, 140, 5121, 3911, 1, -1];
+
 const PULL_LABELS = ['Quiet', 'Tug', 'Ache', 'Burn', 'Commanding', 'Blackout Risk', 'Override'];
 
 // Server-side validation: a clock can only be discovered once its narrative
@@ -109,6 +113,7 @@ RULES:
 - CAMP MEMBERS VS EXTERNAL THREATS (CRITICAL): Camp members (Shard, Patch, Spark, Maul, Cowboy, Rivet) are SURVIVORS who live in the camp. Maul is a camp member — a mean, untrustworthy rival who is hostile to Bullet. He is NOT connected to the raiders, does NOT lead or control them, and is NOT secretly allied with them. The raiders are a separate external threat. Do not imply, foreshadow, or reveal that any camp member is secretly working with or leading the raiders unless the story has explicitly established it. Key NPCs: Shard (leader), Patch (healer), Spark (inventor), Maul (rival), Cowboy, Rivet. Discovery triggers: Shard when she names Bullet; Patch when she treats him; Spark near camp tech; Maul when he confronts Bullet; Cowboy on purifier mission; Rivet during raid setup.
 - Player choices should matter whenever possible.
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
+- PROVINCE TRANSITIONS (CRITICAL): Bullet can ONLY move to the next Province in the canonical sequence — never skip ahead. The current Province is ${ctx.currentProvince}. Do NOT return a province_transition unless the story has genuinely reached the boundary between the current Province and the next. Narrating within the same Province (e.g. moving from the dunes to the camp interior) is NOT a province transition. Never reference, foreshadow, or transition to Provinces that are far ahead in the story — doing so spoils major plot reveals.
 
 CURRENT GAME STATE:
 Province: ${ctx.currentProvince} — ${p.n}
@@ -353,24 +358,34 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Province transition
+    // Province transition — validate against canonical sequence to prevent spoiler skips
     let chapterUpdate = {};
+    let validTransition = null;
     if (result.province_transition && typeof result.province_transition.to_province === 'number') {
       const toProv = result.province_transition.to_province;
-      updatedFlags.current_province = toProv;
-      // Only record a province change in history if Bullet actually moved to a different province
-      // (the GM sometimes narrates sub-area transitions within the same province, e.g. "Red Sand" → "Red Sand Camp")
-      if (toProv !== currentProvince) {
-        updatedFlags.province_history = [...(flags.province_history || []), currentProvince];
+      const currentIdx = CANONICAL_PROVINCE_ORDER.indexOf(currentProvince);
+      const targetIdx = CANONICAL_PROVINCE_ORDER.indexOf(toProv);
+      // Allow: same province (sub-area transition) OR the next province in canonical order
+      if (toProv === currentProvince || (currentIdx >= 0 && targetIdx === currentIdx + 1)) {
+        validTransition = result.province_transition;
+        updatedFlags.current_province = toProv;
+        // Only record a province change in history if Bullet actually moved to a different province
+        // (the GM sometimes narrates sub-area transitions within the same province, e.g. "Red Sand" → "Red Sand Camp")
+        if (toProv !== currentProvince) {
+          updatedFlags.province_history = [...(flags.province_history || []), currentProvince];
+        }
+        const nextCh = PROVINCE_CHAPTERS[toProv];
+        if (nextCh && nextCh > (campaign.current_chapter || 1)) {
+          chapterUpdate.current_chapter = nextCh;
+        }
+        // Update phase
+        if (toProv === 1) updatedFlags.phase = 'Final Revelation';
+        else if (toProv === -1) updatedFlags.phase = 'Cleanup';
+        else if (toProv === 0 || toProv === 14 || toProv === 140) updatedFlags.phase = 'System Breaker';
+      } else {
+        // Invalid transition (skip ahead) — reject silently to prevent spoilers
+        console.warn(`Rejected province transition ${currentProvince} → ${toProv}: not next in canonical sequence`);
       }
-      const nextCh = PROVINCE_CHAPTERS[result.province_transition.to_province];
-      if (nextCh && nextCh > (campaign.current_chapter || 1)) {
-        chapterUpdate.current_chapter = nextCh;
-      }
-      // Update phase
-      if (result.province_transition.to_province === 1) updatedFlags.phase = 'Final Revelation';
-      else if (result.province_transition.to_province === -1) updatedFlags.phase = 'Cleanup';
-      else if (result.province_transition.to_province === 0 || result.province_transition.to_province === 14 || result.province_transition.to_province === 140) updatedFlags.phase = 'System Breaker';
     }
 
     // Save campaign state
@@ -424,7 +439,7 @@ Deno.serve(async (req) => {
       decision_impact: result.decision_impact || null,
       npc_updates: result.npc_updates || [],
       discovered_clocks: result.discovered_clocks || [],
-      province_transition: result.province_transition || null,
+      province_transition: validTransition || null,
       enemy_turn: result.enemy_turn || null,
       condition_changes: result.condition_changes || [],
       item_changes: result.item_changes || [],
