@@ -12,25 +12,25 @@ export default function PullDecisionImpact({ impact, onDismiss, setting }) {
   useEffect(() => {
     if (impact && setting !== 'off') {
       setVisible(true);
-      const timer = setTimeout(() => {
-        setVisible(false);
-        setTimeout(onDismiss, 300);
-      }, 12000);
-      return () => clearTimeout(timer);
     }
   }, [impact, setting]);
+
+  const handleDismiss = () => {
+    setVisible(false);
+    setTimeout(onDismiss, 200);
+  };
 
   if (!impact || setting === 'off') return null;
 
   const impacts = (impact.impacts || []).slice(0, setting === 'minimal' ? 2 : 4);
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 w-80 max-w-[calc(100vw-2rem)] transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+    <div className={`fixed bottom-4 right-4 z-50 w-96 max-w-[calc(100vw-2rem)] transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="border border-border/60 rounded-lg bg-card/95 backdrop-blur-sm panel-glow overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 bg-primary/5">
-          <span className="font-heading text-[10px] tracking-[0.15em] text-primary">DECISION IMPACT</span>
-          <button onClick={() => { setVisible(false); setTimeout(onDismiss, 200); }} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X className="w-3.5 h-3.5" />
+          <span className="font-heading text-sm tracking-[0.15em] text-primary">DECISION IMPACT</span>
+          <button onClick={handleDismiss} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
         <div className="p-3 space-y-2">
@@ -42,16 +42,16 @@ export default function PullDecisionImpact({ impact, onDismiss, setting }) {
                 <div className={`shrink-0 w-1 h-full rounded-full ${isPositive ? 'bg-emerald-500' : isNegative ? 'bg-red-500' : 'bg-amber-500'}`} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-heading text-foreground truncate">{imp.label}</span>
-                    <span className={`text-xs font-heading tabular-nums shrink-0 ${isPositive ? 'text-emerald-400' : isNegative ? 'text-red-400' : 'text-amber-400'}`}>
+                    <span className="text-sm font-heading text-foreground truncate">{imp.label}</span>
+                    <span className={`text-sm font-heading tabular-nums shrink-0 ${isPositive ? 'text-emerald-400' : isNegative ? 'text-red-400' : 'text-amber-400'}`}>
                       {imp.change > 0 ? '+' : ''}{imp.change}
                     </span>
                   </div>
                   {imp.change_label && (
-                    <p className="text-[10px] text-muted-foreground font-body">{imp.change_label}</p>
+                    <p className="text-xs text-muted-foreground font-body mt-0.5">{imp.change_label}</p>
                   )}
                   {setting === 'detailed' && imp.reason && (
-                    <p className="text-[10px] text-muted-foreground/70 font-body italic mt-0.5 leading-snug">{imp.reason}</p>
+                    <p className="text-xs text-muted-foreground/80 font-body italic mt-1 leading-relaxed">{imp.reason}</p>
                   )}
                 </div>
               </div>
@@ -59,9 +59,14 @@ export default function PullDecisionImpact({ impact, onDismiss, setting }) {
           })}
           {setting === 'detailed' && impact.future_consequence && (
             <div className="pt-2 border-t border-border/30">
-              <p className="text-[10px] text-primary/70 font-body italic">{impact.future_consequence}</p>
+              <p className="text-xs text-primary/80 font-body italic leading-relaxed">{impact.future_consequence}</p>
             </div>
           )}
+          <div className="pt-2 border-t border-border/30 flex justify-end">
+            <Button size="sm" variant="outline" onClick={handleDismiss} className="h-7 text-xs">
+              Dismiss
+            </Button>
+          </div>
         </div>
       </div>
     </div>
