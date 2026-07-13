@@ -603,6 +603,14 @@ RULES:
   * ITEM UNLOCKS fire ONCE: Spark's shard (after the tent scene), breathing apparatus (after Shard gives it at dawn), Patch's cloak (during camp rest or Chapter 2 transition), Thread's blade (after Thread gives it in the dome). Set the corresponding flag (spark_shard_acquired / breathing_gear_acquired / patch_cloak_acquired / thread_blade_acquired) and add the item via item_changes the FIRST time only. If the item already exists, update the card — do NOT re-add or re-popup.
 - INTERLUDE CUTSCENES (CRITICAL): Some beats are player-only — Bullet cannot see or react to them. Deliver these via the 'interlude' field (e.g. the Leader on a distant throne, operatives discussing 'the anomaly', the metal bird scanning Bullet). The interlude is shown to the player BEFORE the main narration. It does NOT update Bullet's state — no clocks, codex, items, HP, knowledge flags, or objectives. The player may learn atmospheric partial truths (a powerful figure elsewhere, Bullet is an anomaly, someone wants him investigated). NEVER reveal Michael, Father's identity, the Garden, or the full hidden truth in an interlude — keep it to 'elsewhere,' 'a distant throne,' 'the one who watches.' Narrative fear in main narration ('something was watching') is allowed; formal status unlocks (Hunted, Province 1 Alert, Hunter Proximity) are NEVER shown to the player — those are hidden GM clocks only.
 
+- MECHANICAL BIRD LIMITS (CRITICAL): The mechanical bird's direct scar scan is a ONE-TIME early Chapter 1 event. Once it has happened (Mechanical Bird Scanned = YES below), it must NEVER happen again.
+  * If Mechanical Bird Scanned = YES: DO NOT narrate the bird scanning Bullet. No beam, no red eyes locking on, no scar pulsing from a scan. That already happened — it is done.
+  * The bird may appear ONLY as a DISTANT GLIMPSE: "Far above, something metallic flashes once in the heat haze, then vanishes" or "For a moment, Bullet has the feeling of being watched."
+  * Distant glimpses: MAX 2 per chapter. At least 8 responses must pass between each glimpse. Current glimpse count: ${ctx.birdGlimpseCount}. Responses since last bird mention: ${ctx.responsesSinceBirdMention}. If responses since last mention < 8, DO NOT mention the bird AT ALL.
+  * Direct rescans: ZERO allowed. Do not have the bird circle, scan, study, beam, or lock onto Bullet again. The scan already happened.
+  * OTHER TENSION SOURCES (use these instead of the bird): heat, thirst, ruin instability, silence, strange hum, distant camp smoke, Pull discomfort, sand shifting, metallic smell, the weight of the sky, the emptiness of the dunes.
+  * During task stages (heading to ruins, searching for the purifier part), tension should come from the RUIN and the TASK — not from the bird.
+
 PREVIOUS CHAPTER HANDOFF (CRITICAL — Chapter Module System):
 This is the ONLY data from the previous chapter you receive. Do NOT reference events, NPCs, or details from previous chapters beyond what is listed here. Do NOT invent continuity from previous chapters — if it is not in the handoff, Bullet does not remember it in detail.
 ${formatHandoffForPrompt(ctx.previousHandoff)}
@@ -619,6 +627,8 @@ Inventory: ${equipmentStr}
 Equipped Weapon: ${ctx.equippedWeapon || 'none (bare hands)'}
 Last Weapon Used: ${ctx.lastWeaponUsed || 'none'}
 Pipe State: ${ctx.pipeState}
+Mechanical Bird Scanned: ${ctx.mechanicalBirdScanned ? 'YES — DO NOT rescan. The scan already happened. Bird may only appear as a rare distant glimpse.' : 'No — scan has not happened yet'}
+Bird Glimpses: ${ctx.birdGlimpseCount}/2 this chapter | Responses Since Last Bird Mention: ${ctx.responsesSinceBirdMention} (need 8+ for next glimpse)
 Bullet Named: ${ctx.bulletNamed ? 'Yes — use the name "Bullet" freely' : 'No — he is still nameless; NPCs call him "stranger"'}
 Camp Arc Complete: ${ctx.campArcComplete ? 'YES — the Chapter 1 mission is done and raiders are handled. ESCALATE the Pull toward forced departure. Do NOT assign new camp errands or side missions. Drive toward the departure beat and transition to Province 472.' : 'No — camp arc still in progress'}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
@@ -998,6 +1008,38 @@ function sanitizeNpcNameLeaks(text, existingNpcRels, npcUpdates, currentProvince
   return { narration: cleaned, corrections };
 }
 
+// ─── Mechanical Bird Repeat-Scan Firewall ───
+// The mechanical bird's direct scar scan is a ONE-TIME early Chapter 1 event.
+// After it happens (mechanical_bird_scanned flag set), any narration containing
+// bird + scan terms is auto-corrected to a distant glimpse, preventing the LLM
+// from rescanning Bullet every turn. Deterministic — same tier as the other
+// narration sanitizers.
+function sanitizeRepeatBirdScan(text, scanAlreadyHappened) {
+  if (!scanAlreadyHappened) return { narration: text, corrections: [] };
+  const birdRe = /\b(mechanical bird|metal bird|winged machine|bird-shaped machine|red-eyed bird|red eyed bird|scanning bird|the bird)\b/i;
+  const scanRe = /\b(scan|scanned|scanning|beam|red eye|red eyes|scar pulse|scar pulses|studies you|studies him|locks? on)\b/i;
+  if (!birdRe.test(text) || !scanRe.test(text)) return { narration: text, corrections: [] };
+
+  // Replace bird-scan sentences with distant glimpse language
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const glimpses = [
+    'Far above, something metallic flashes once in the heat haze, then vanishes.',
+    'For a moment, Bullet has the feeling of being watched.',
+    'Something glints high above — too high, too quick — then it is gone.'
+  ];
+  let gIdx = 0;
+  const corrected = sentences.map(sent => {
+    if (birdRe.test(sent) && scanRe.test(sent)) {
+      const rep = glimpses[gIdx % glimpses.length];
+      gIdx++;
+      return rep;
+    }
+    return sent;
+  }).join(' ');
+  console.warn('[PullGM Bird Firewall] Replaced repeat bird scan sentence(s) with distant glimpse(s)');
+  return { narration: corrected, corrections: ['repeat bird scan → distant glimpse'] };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -1176,6 +1218,9 @@ Deno.serve(async (req) => {
       chapter1Stage: flags.chapter1_stage || CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0],
       previousHandoff,
       chapter1Replay: flags.chapter1_replay || null,
+      mechanicalBirdScanned: !!(flags.unlock_flags || {}).mechanical_bird_scanned || (flags.codex_unlocks || []).includes('mechanical_bird'),
+      birdGlimpseCount: flags.bird_glimpse_count || 0,
+      responsesSinceBirdMention: (flags.responses_since_bird_mention || 0) + 1,
       action
     });
 
@@ -1218,6 +1263,9 @@ Deno.serve(async (req) => {
     // NPC name reveal firewall — block NPC canonical names from narration until
     // the NPC has actually revealed their name (or is revealing it this turn)
     narration = sanitizeNpcNameLeaks(narration, flags.npc_relationships || {}, result.npc_updates || [], currentProvince).narration;
+
+    // Mechanical bird repeat-scan firewall — replaces any repeat scan with a distant glimpse
+    narration = sanitizeRepeatBirdScan(narration, !!(flags.unlock_flags || {}).mechanical_bird_scanned || codexUnlocks.includes('mechanical_bird')).narration;
 
     // Interlude — player-only cutscene, saved BEFORE the narration so it leads
     // the feed. Shown to the player, NOT Bullet. Does not update any state.
@@ -1585,6 +1633,46 @@ Deno.serve(async (req) => {
         if (!(updatedFlags.discovered_clocks || []).includes('raider_threat')) {
           updatedFlags.discovered_clocks = [...(updatedFlags.discovered_clocks || []), 'raider_threat'];
           console.log('[PullGM] Auto-discovered raider_threat clock (raider danger explained)');
+        }
+      }
+    }
+
+    // ─── Mechanical Bird Mention Tracking ───
+    // The mechanical bird's direct scar scan is a ONE-TIME Chapter 1 event.
+    // Track bird mentions for the cooldown system: after the first scan, the
+    // bird may only appear as a distant glimpse (max 2/chapter, 8-response cooldown).
+    {
+      const birdRe = /\b(mechanical bird|metal bird|winged machine|bird-shaped machine|red-eyed bird|red eyed bird|scanning bird|the bird)\b/i;
+      const scanWasSet = !!((flags.unlock_flags || {}).mechanical_bird_scanned) || (flags.codex_unlocks || []).includes('mechanical_bird');
+      const scanIsSet = !!((updatedFlags.unlock_flags || {}).mechanical_bird_scanned) || (updatedFlags.codex_unlocks || []).includes('mechanical_bird');
+      const firstScanThisTurn = !scanWasSet && scanIsSet;
+
+      if (firstScanThisTurn) {
+        // Record the one-time scan in the event ledger
+        savePromises.push(admin.entities.EventLog.create({
+          campaign_id,
+          chapter: campaign.current_chapter || 1,
+          province: (PROVINCES[currentProvince] || {}).n || `Province ${currentProvince}`,
+          scene: 'mechanical_bird_scan',
+          event_type: 'discover',
+          actor_id: 'entity_618_mechanical_bird',
+          actor_name: 'Mechanical Bird',
+          summary: 'A mechanical bird scanned Bullet. The beam paused on the scar over his heart.',
+          memory_summary: 'The bird scanned Bullet once — a one-time event. Do not rescan.',
+          tags: ['surveillance', 'mechanical_bird', 'chapter_1']
+        }).catch(() => {}));
+        updatedFlags.responses_since_bird_mention = 0;
+        console.log('[PullGM] First mechanical bird scan — event ledger recorded.');
+      } else {
+        // Detect bird mention in this turn's ORIGINAL narration (before sanitization)
+        // for glimpse tracking and cooldown management
+        const birdMentioned = birdRe.test(result.narration || '');
+        if (birdMentioned && scanIsSet) {
+          updatedFlags.bird_glimpse_count = (flags.bird_glimpse_count || 0) + 1;
+          updatedFlags.responses_since_bird_mention = 0;
+          console.log('[PullGM] Bird glimpse/mention detected. Count:', updatedFlags.bird_glimpse_count, 'of 2 max. Cooldown reset.');
+        } else {
+          updatedFlags.responses_since_bird_mention = (flags.responses_since_bird_mention || 0) + 1;
         }
       }
     }
