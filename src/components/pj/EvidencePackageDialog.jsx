@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Package, Check, AlertTriangle } from 'lucide-react';
 import {
-  PJ_EVIDENCE, EVIDENCE_PACKAGE_PURPOSES, EVIDENCE_COMBOS,
+  PJ_EVIDENCE, EVIDENCE_PACKAGE_PURPOSES, EVIDENCE_COMBOS, EVIDENCE_PACKAGE_TEMPLATES,
   isEvidenceDiscovered, getEvidenceCredibility, findCombosForKeys
 } from '@/lib/pjEvidence';
 
@@ -30,6 +30,12 @@ export default function EvidencePackageDialog({ open, onOpenChange, campaign, on
     ? selectedItems.reduce((min, e) => Math.min(min, CRED_RANK[getEvidenceCredibility(campaign, e.key)] || 2), 4)
     : 0;
   const isPackage = selected.size >= 3;
+
+  function applyTemplate(tpl) {
+    setSelected(new Set(tpl.items.filter(k => available.some(e => e.key === k))));
+    setPurpose('persuade_new_titan');
+    setAudience('');
+  }
 
   function toggle(key) {
     setSelected((prev) => {
@@ -61,6 +67,25 @@ export default function EvidencePackageDialog({ open, onOpenChange, campaign, on
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Quick-select package templates */}
+          <div>
+            <p className="text-[10px] font-heading tracking-[0.12em] text-primary/60 mb-2">
+              QUICK-SELECT PACKAGE TEMPLATES
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {EVIDENCE_PACKAGE_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.key}
+                  onClick={() => applyTemplate(tpl)}
+                  className="text-left p-2 rounded border border-border/40 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                >
+                  <p className="text-[11px] font-heading text-foreground truncate">{tpl.shortLabel}</p>
+                  <p className="text-[9px] font-body text-muted-foreground leading-tight mt-0.5 line-clamp-2">{tpl.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Step 1: Select evidence */}
           <div>
             <p className="text-[10px] font-heading tracking-[0.12em] text-primary/60 mb-2">
@@ -93,6 +118,30 @@ export default function EvidencePackageDialog({ open, onOpenChange, campaign, on
               })}
             </div>
           </div>
+
+          {/* Template effect preview */}
+          {(() => {
+            const matchedTpl = EVIDENCE_PACKAGE_TEMPLATES.find(t => t.items.every(k => selected.has(k)));
+            if (!matchedTpl) return null;
+            return (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-2.5">
+                <p className="text-[10px] font-heading tracking-[0.12em] text-primary/70 mb-1">{matchedTpl.label}</p>
+                <p className="text-xs font-body text-foreground/70 mb-1.5 leading-relaxed">{matchedTpl.desc}</p>
+                <div className="space-y-0.5">
+                  {matchedTpl.effects.map((eff, i) => (
+                    <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                      <span className={`font-heading ${eff.direction === 'up' ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {eff.direction === 'up' ? '↑' : '↓'}
+                      </span>
+                      <span className="font-body text-foreground/80">{eff.clock.replace(/_/g, ' ')}</span>
+                      <span className="text-muted-foreground/60 text-[10px]">— {eff.note}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] font-body italic text-muted-foreground/70 mt-1.5">{matchedTpl.bestFor}</p>
+              </div>
+            );
+          })()}
 
           {/* Combo preview */}
           {applicableCombos.length > 0 && (

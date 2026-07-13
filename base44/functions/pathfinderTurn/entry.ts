@@ -80,7 +80,8 @@ const CANON = {
     dead_graveyards: 'Dead Civilization Graveyards [UNLOCKED] — Worlds Confluence destroyed. Warnings, precedent.',
     omega_seven: 'Omega-Seven [UNKNOWN/BLACK SITE] — Prison. Real Chen may be here. Hide until ~40hrs.',
     kepler_station: 'Kepler Station [RUMORED] — Earth military station. Covert infiltration.',
-    gungi_belt: 'Gungi Belt [RUMORED] — Debris from fake "pirate attacks." Proof of replacements.'
+    gungi_belt: 'Gungi Belt [RUMORED] — Debris from fake "pirate attacks." Proof of replacements.',
+    off_world_rendezvous: 'Off-World Rendezvous Point [UNLOCKED when New Titan agrees to meet] — Neutral meeting location away from main colony network. New Titan Control wants: proof, a reason to trust Bub, assurance Pathfinder won\'t bring war. Risks: Confluence monitoring, Chen interference, shapeshifter infiltration, ambush, evidence tampering. Player decides who to bring: Sarah (trust + Chen tension), James (survivor credibility), Clark (evidence handling), Mitchell (security detection), Farah (New Titan personal connection). Each choice has trust, risk, and future consequences.'
   },
 
   factions: {
@@ -102,7 +103,8 @@ const CANON = {
     sanctuary_trust: 'Sanctuary Trust (good) — Alien ally confidence.',
     crew_morale: 'Crew Morale (good) — Inspired, strained, shaken, breaking.',
     temporal_instability: 'Temporal Instability (bad) — Rises with future memory overuse.',
-    public_truth: 'Public Truth (good) — Galaxy knows Chen/Confluence are lying.'
+    public_truth: 'Public Truth (good) — Galaxy knows Chen/Confluence are lying.',
+    discredit_campaign: 'Discredit Campaign (bad) — Enemy propaganda painting Bub as rogue/compromised/fraudulent. Rises with broadcasts, evidence transfers, future memory use, unproven accusations. Lowers with verified evidence, credible testimony, controlled releases, visible victories.'
   },
 
   arc2: {
@@ -115,8 +117,9 @@ const CANON = {
     black_site: '40hr: Black Site — Omega-Seven, captured shapeshifter memory. Sarah: "My mother is alive."'
   },
 
-  response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
-Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.`
+  response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"enemy_countermove":{"faction":"confluence|chen|vask|vescarri|guild|shapeshifters","action":"what the enemy does in response to Bub's success","clock_effects":[{"clock":"discredit_campaign|confluence_heat|chen_countermeasures|etc","delta":number}],"narration":"brief scene of the enemy countermove (1-3 sentences, woven into the main narration or appended)"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
+Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.
+ENEMY COUNTERMOVE: When Bub achieves a major success (convincing a faction, broadcasting evidence, winning a battle, securing an alliance), include enemy_countermove. The enemy does NOT sit still — Confluence sends injunctions, Chen issues recall orders, shapeshifters try to infiltrate, Vask moves closer, Guild starts sniffing around. Include clock_effects that reflect the enemy's response (typically raising discredit_campaign, confluence_heat, or chen_countermeasures). Omit enemy_countermove entirely for minor actions with no significant success.`
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -372,7 +375,7 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
   }
 
   // --- Select relevant locations ---
-  const locKw = { 'new titan': 'new_titan', 'titan': 'new_titan', 'earth': 'earth', 'novara': 'novara', 'sanctuary': 'sanctuary', 'confluence space': 'confluence_space', 'vescarri': 'vescarri_space', 'guild route': 'guild_routes', 'architect site': 'architect_sites', 'lost colon': 'lost_colonies', 'graveyard': 'dead_graveyards', 'omega': 'omega_seven', 'kepler': 'kepler_station', 'gungi': 'gungi_belt' };
+  const locKw = { 'new titan': 'new_titan', 'titan': 'new_titan', 'earth': 'earth', 'novara': 'novara', 'sanctuary': 'sanctuary', 'confluence space': 'confluence_space', 'vescarri': 'vescarri_space', 'guild route': 'guild_routes', 'architect site': 'architect_sites', 'lost colon': 'lost_colonies', 'graveyard': 'dead_graveyards', 'omega': 'omega_seven', 'kepler': 'kepler_station', 'gungi': 'gungi_belt', 'rendezvous': 'off_world_rendezvous', 'off-world': 'off_world_rendezvous', 'off world': 'off_world_rendezvous', 'meeting point': 'off_world_rendezvous' };
   const relevantLocations = [];
   for (const [kw, key] of Object.entries(locKw)) {
     if (actionLower.includes(kw) && !relevantLocations.includes(key)) relevantLocations.push(key);
@@ -583,6 +586,24 @@ ${CANON.response_format}`;
               future_consequence: { type: "string" }
             }
           },
+          enemy_countermove: {
+            type: "object",
+            properties: {
+              faction: { type: "string" },
+              action: { type: "string" },
+              clock_effects: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    clock: { type: "string" },
+                    delta: { type: "number" }
+                  }
+                }
+              },
+              narration: { type: "string" }
+            }
+          },
           new_scene: { type: "string" },
           in_world_days_advanced: { type: "number" },
           arc2_elements_introduced: { type: "array", items: { type: "string" } }
@@ -656,6 +677,19 @@ ${CANON.response_format}`;
       }
       flags.campaign_clocks = clocks;
       flags.clock_changes = changeLog.slice(0, 15);
+    }
+
+    // Enemy countermove — apply clock effects from the enemy's response
+    const enemyCountermove = result.enemy_countermove || null;
+    if (enemyCountermove && Array.isArray(enemyCountermove.clock_effects)) {
+      const clocks = { ...(flags.campaign_clocks || {}) };
+      for (const ce of enemyCountermove.clock_effects) {
+        const delta = Number(ce.delta) || 0;
+        if (!delta || !ce.clock) continue;
+        const curVal = typeof clocks[ce.clock] === 'number' ? clocks[ce.clock] : 0;
+        clocks[ce.clock] = Math.max(0, Math.min(100, curVal + delta));
+      }
+      flags.campaign_clocks = clocks;
     }
 
     // Faction updates
@@ -784,6 +818,7 @@ ${CANON.response_format}`;
       npc_updates: npcUpdates,
       location_updates: locationUpdates,
       decision_impact: result.decision_impact || null,
+      enemy_countermove: enemyCountermove,
       new_scene: result.new_scene || campaign.current_scene,
       in_world_days_advanced: result.in_world_days_advanced || 0,
       arc2_elements_introduced: result.arc2_elements_introduced || [],

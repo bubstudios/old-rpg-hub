@@ -340,6 +340,48 @@ export const PJ_CLOCKS_FULL = [
     ]
   },
   {
+    key: 'discredit_campaign',
+    label: 'Discredit Campaign',
+    highIsBad: true,
+    start: 0,
+    mainVisible: false,
+    crisisClock: false,
+    statusLabels: [
+      { max: 24, label: 'Silent' },
+      { max: 49, label: 'Whispers' },
+      { max: 74, label: 'Active' },
+      { max: 89, label: 'Aggressive' },
+      { max: 100, label: 'Overwhelming' }
+    ],
+    whatItMeans: 'How hard Confluence and Admiral Chen are working to paint Pathfinder as rogue, compromised, fraudulent, temporally unstable, or terrorist-aligned. Higher values mean more propaganda, recall orders, edited transmissions, public denials, and political isolation.',
+    whyHigh: [
+      'Bub broadcast evidence publicly.',
+      'Chen detected evidence transfers.',
+      'The Confluence issued a public denial.',
+      'EarthGov sent a recall order.',
+      'A false evidence packet appeared.'
+    ],
+    howToLower: [
+      'Release verified, authenticated evidence that counters the narrative.',
+      'Have credible witnesses vouch for Bub publicly.',
+      'Let Hayes prepare a controlled, contextualized broadcast.',
+      'Win a visible victory that makes the propaganda look foolish.'
+    ],
+    howToRise: [
+      'Broadcasting without verification or context.',
+      'Using future memories publicly.',
+      'Accusing Chen without proof.',
+      'Suffering a public defeat or scandal.',
+      'Time passing while enemies control the narrative.'
+    ],
+    whatCanIDo: [
+      'Release evidence with verification — let Clark authenticate first.',
+      'Have James or Sarah testify publicly — human faces counter "alien propaganda."',
+      'Ask Hayes to prepare a controlled release with context.',
+      'Win a victory that makes the discredit campaign look desperate.'
+    ]
+  },
+  {
     key: 'public_truth',
     label: 'Public Truth',
     highIsBad: false,
@@ -647,7 +689,7 @@ export const CRISIS_CLOCKS = [
 // === SCENE-BASED MAIN CLOCK SELECTION ===
 // Main screen shows only the 4 most relevant clocks for the current scene.
 export const SCENE_CLOCKS = {
-  new_titan: ['new_titan_stability', 'confluence_heat', 'public_truth', 'crew_morale'],
+  new_titan: ['new_titan_stability', 'confluence_heat', 'public_truth', 'discredit_campaign'],
   confluence_space: ['confluence_heat', 'mission_exposure', 'crew_morale', 'public_truth'],
   architect_event: ['temporal_instability', 'crew_morale', 'confluence_heat', 'resistance_spark'],
   default: ['confluence_heat', 'crew_morale', 'resistance_spark', 'public_truth']

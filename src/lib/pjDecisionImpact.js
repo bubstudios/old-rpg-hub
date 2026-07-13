@@ -10,6 +10,7 @@ export const CLOCK_LABELS = {
   crew_morale: { label: 'Crew Morale', highIsBad: false },
   temporal_instability: { label: 'Temporal Instability', highIsBad: true },
   public_truth: { label: 'Public Truth', highIsBad: false },
+  discredit_campaign: { label: 'Discredit Campaign', highIsBad: true },
   harvester_arrival: { label: 'Harvester Arrival', highIsBad: true },
   mission_exposure: { label: 'Mission Exposure', highIsBad: true },
   shapeshifter_suspicion: { label: 'Shapeshifter Suspicion', highIsBad: true },

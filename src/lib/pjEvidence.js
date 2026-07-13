@@ -262,6 +262,71 @@ export const PJ_EVIDENCE = [
   }
 ];
 
+// === EVIDENCE PACKAGE TEMPLATES ===
+// Named, pre-built packages the player can quick-select. Each has known effects
+// on clocks — powerful, but dangerous. The GM still evaluates context, timing,
+// and audience, but these give the player a strategic starting point.
+export const EVIDENCE_PACKAGE_TEMPLATES = [
+  {
+    key: 'legal_fraud',
+    label: 'Package A — Legal Fraud',
+    shortLabel: 'Legal Fraud',
+    items: ['new_titan_claim_file', 'korath_database', 'novara_transaction_record'],
+    desc: 'Strong against the Confluence legal claim. Proves a pattern of fraud across species and colonies.',
+    effects: [
+      { clock: 'confluence_claim', direction: 'down', note: 'Legal challenge contests the claim' },
+      { clock: 'public_truth', direction: 'up', note: 'Evidence of fraud becomes public' },
+      { clock: 'confluence_heat', direction: 'up', note: 'Confluence detects evidence transfer' }
+    ],
+    bestFor: 'Challenging the Confluence claim in a legal or political forum. Best shown to leaders privately first.'
+  },
+  {
+    key: 'human_betrayal',
+    label: 'Package B — Human Betrayal',
+    shortLabel: 'Human Betrayal',
+    items: ['sakura_chen_technology_exchange', 'novara_transaction_record', 'sarah_chen_testimony'],
+    desc: 'Proves human lives and colonies were traded for Confluence technology. Pressures Admiral Chen directly.',
+    effects: [
+      { clock: 'chen_countermeasures', direction: 'up', note: 'Chen network escalates counterattacks' },
+      { clock: 'public_truth', direction: 'up', note: 'Human betrayal becomes public' },
+      { clock: 'resistance_spark', direction: 'up', note: 'Earth-aligned officers may defect' }
+    ],
+    bestFor: 'Pressuring Admiral Chen and fracturing Earth Command loyalty. High risk — Chen will counterattack hard.'
+  },
+  {
+    key: 'survivor_testimony',
+    label: 'Package C — Survivor Testimony',
+    shortLabel: 'Survivor Testimony',
+    items: ['james_stellar_testimony', 'sanctuary_archive_records', 'prometheus_warning'],
+    desc: 'Builds moral trust through human faces and multi-species suffering. Strong with civilians and refugees.',
+    effects: [
+      { clock: 'resistance_spark', direction: 'up', note: 'Moral outrage spreads' },
+      { clock: 'sanctuary_trust', direction: 'up', note: 'Allies feel seen and respected' },
+      { clock: 'new_titan_stability', direction: 'up', note: 'Colony leaders moved by testimony' },
+      { clock: 'confluence_heat', direction: 'up', note: 'Confluence detects public testimony' }
+    ],
+    bestFor: 'Persuading New Titan civilians, refugee factions, and skeptical colonies. Less legally potent, more emotionally powerful.'
+  },
+  {
+    key: 'future_warning',
+    label: 'Package D — Future Warning',
+    shortLabel: 'Future Warning',
+    items: ['architect_future_history_data', 'korath_database', 'prometheus_warning'],
+    desc: 'Uses future-history to prove the Confluence can fall. Very powerful. Very dangerous.',
+    effects: [
+      { clock: 'resistance_spark', direction: 'up', note: 'Hope spreads — victory is possible' },
+      { clock: 'temporal_instability', direction: 'up', note: 'Timeline ripples from future knowledge' },
+      { clock: 'confluence_heat', direction: 'up', note: 'Confluence detects Architect data' },
+      { clock: 'discredit_campaign', direction: 'up', note: 'Enemies call Bub temporally compromised' }
+    ],
+    bestFor: 'Inspiring despairing allies and resistance cells. Use sparingly — raises Temporal Instability and gives enemies ammunition for the Discredit Campaign.'
+  }
+];
+
+export function findPackageTemplate(key) {
+  return EVIDENCE_PACKAGE_TEMPLATES.find(t => t.key === key);
+}
+
 // === HELPER FUNCTIONS ===
 export function findEvidenceItem(key) {
   return PJ_EVIDENCE.find((e) => e.key === key);

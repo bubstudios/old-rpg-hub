@@ -26,6 +26,7 @@ import PJCampaignStatus from '@/components/PJCampaignStatus';
 import StorySoFarModal from '@/components/pj/StorySoFarModal';
 import CodexDialog from '@/components/pj/CodexDialog';
 import MissionsPanel from '@/components/pj/MissionsPanel';
+import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
 import { buildDecisionImpact } from '@/lib/pjDecisionImpact';
@@ -45,7 +46,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library, Target, Gavel
+  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -79,6 +80,7 @@ export default function CampaignDetail() {
   const [codexSection, setCodexSection] = useState(null);
   const [codexEntryKey, setCodexEntryKey] = useState(null);
   const [missionsOpen, setMissionsOpen] = useState(false);
+  const [crewAdviceOpen, setCrewAdviceOpen] = useState(false);
   const [decisionImpact, setDecisionImpact] = useState(null);
   const [decisionLogOpen, setDecisionLogOpen] = useState(false);
   const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
@@ -202,6 +204,15 @@ export default function CampaignDetail() {
       impact = dmData.decision_impact;
     } else {
       impact = buildDecisionImpact(dmData);
+    }
+
+    // Enemy countermove — show a toast when the enemy responds to a success
+    if (dmData?.enemy_countermove?.faction) {
+      const ec = dmData.enemy_countermove;
+      toast.warning(`⚠ ENEMY COUNTERMOVE — ${ec.faction.toUpperCase()}`, {
+        description: ec.action || ec.narration || 'The enemy has responded.',
+        duration: 8000,
+      });
     }
     if (!impact) return;
     base44.functions.invoke('campaignData', {
@@ -438,6 +449,27 @@ export default function CampaignDetail() {
             }
           };
         });
+        // Apply enemy countermove clock effects to local state
+        if (dmRes.data?.enemy_countermove?.clock_effects) {
+          setCampaign(prev => {
+            if (!prev) return prev;
+            const ws = prev.world_state || {};
+            const flags = ws.quest_flags || {};
+            const campaignClocks = { ...(flags.campaign_clocks || {}) };
+            for (const ce of dmRes.data.enemy_countermove.clock_effects) {
+              if (ce.clock && typeof ce.delta === 'number') {
+                campaignClocks[ce.clock] = Math.max(0, Math.min(100, (campaignClocks[ce.clock] || 0) + ce.delta));
+              }
+            }
+            return {
+              ...prev,
+              world_state: {
+                ...ws,
+                quest_flags: { ...flags, campaign_clocks: campaignClocks }
+              }
+            };
+          });
+        }
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);
@@ -609,6 +641,14 @@ export default function CampaignDetail() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Target className="w-3.5 h-3.5" strokeWidth={1.5} /> Missions
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
+              onClick={() => setCrewAdviceOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Lightbulb className="w-3.5 h-3.5" strokeWidth={1.5} /> Crew
             </button>
           )}
           {campaign?.game_system === 'pathfinder' && (
@@ -1011,6 +1051,12 @@ export default function CampaignDetail() {
           <MissionsPanel
             open={missionsOpen}
             onOpenChange={setMissionsOpen}
+            campaign={campaign}
+            onSuggestAction={handleSuggestAction}
+          />
+          <CrewAdviceDialog
+            open={crewAdviceOpen}
+            onOpenChange={setCrewAdviceOpen}
             campaign={campaign}
             onSuggestAction={handleSuggestAction}
           />
