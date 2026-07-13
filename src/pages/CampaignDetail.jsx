@@ -21,7 +21,6 @@ import LocationDossier from '@/components/LocationDossier';
 import EndSessionDialog from '@/components/EndSessionDialog';
 import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
-import SessionTimer from '@/components/SessionTimer';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
 import PJCampaignStatus from '@/components/PJCampaignStatus';
@@ -71,7 +70,7 @@ export default function CampaignDetail() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [endSessionOpen, setEndSessionOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [hasBillingAccess, setHasBillingAccess] = useState(false);
+  const [hasBillingAccess, setHasBillingAccess] = useState(true);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [storyOpen, setStoryOpen] = useState(false);
@@ -488,11 +487,6 @@ export default function CampaignDetail() {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <SessionTimer
-            campaignId={campaignId}
-            onAccessChange={setHasBillingAccess}
-            onPurchaseClick={() => setPurchaseOpen(true)}
-          />
           {campaign?.game_system === 'pathfinder' && (
             <button
               onClick={() => openCodex('story')}
