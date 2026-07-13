@@ -48,10 +48,10 @@ export default function PullDecisionImpact({ impact, onDismiss, setting }) {
                     </span>
                   </div>
                   {imp.change_label && (
-                    <p className="text-xs text-muted-foreground font-body mt-0.5">{imp.change_label}</p>
+                    <p className="text-xs text-foreground/70 font-body mt-0.5">{imp.change_label}</p>
                   )}
                   {setting === 'detailed' && imp.reason && (
-                    <p className="text-xs text-muted-foreground/80 font-body italic mt-1 leading-relaxed">{imp.reason}</p>
+                    <p className="text-sm text-foreground/90 font-body mt-1 leading-relaxed">{imp.reason}</p>
                   )}
                 </div>
               </div>
@@ -59,7 +59,7 @@ export default function PullDecisionImpact({ impact, onDismiss, setting }) {
           })}
           {setting === 'detailed' && impact.future_consequence && (
             <div className="pt-2 border-t border-border/30">
-              <p className="text-xs text-primary/80 font-body italic leading-relaxed">{impact.future_consequence}</p>
+              <p className="text-sm text-foreground/90 font-body leading-relaxed">{impact.future_consequence}</p>
             </div>
           )}
           <div className="pt-2 border-t border-border/30 flex justify-end">
