@@ -68,6 +68,7 @@ const RESPONSE_SCHEMA = {
     item_changes: { type: "array", items: { type: "object", properties: { action: { type: "string" }, item: { type: "string" }, notes: { type: "string" } } } },
     pipe_state: { type: "string", description: "Updated pipe state: unfound, battered_metal_pipe, or radiant_sword" },
     bullet_named: { type: "boolean", description: "Set to true ONLY the first time an NPC names Bullet — seeing the circular scar and calling him 'Bullet.' Before this, never use the name 'Bullet' in narration." },
+    camp_arc_complete: { type: "boolean", description: "Set to true when the Chapter 1 Red Sand Camp arc is resolved: Bullet completed the mission Shard gave him (retrieving the purifier part), helped fight off the raiders, and returned to camp. Once true, the Pull MUST escalate toward forced departure — do NOT assign new camp errands or side missions to delay. Drive toward the departure beat and transition to Province 472." },
     shard_focus_unlocked: { type: "boolean" },
     spark_shard_acquired: { type: "boolean" },
     events: { type: "array", description: "Structured event ledger entries for meaningful actions this turn (kills, wounds, rescues, threats, item pickups, equips, drops, uses, discoveries). Each entry is the canonical record of what happened — future narration must reference these, not inventory.", items: { type: "object", properties: { event_type: { type: "string", description: "attack, kill, wound, rescue, threaten, trade, steal, unlock, lose, use_item, pickup_item, equip, drop, discover" }, actor_id: { type: "string", description: "Who did it — 'bullet' or an NPC key" }, actor_name: { type: "string" }, target_id: { type: "string", description: "NPC key of the target, or empty" }, target_name: { type: "string" }, item_used_id: { type: "string", description: "Canonical item key used, or empty" }, item_used_name: { type: "string", description: "EXACT weapon/item used (e.g. 'metal pipe'). If Bullet killed with the pipe, this MUST be 'metal pipe' — never a different carried weapon. Owning an item does not mean it was used." }, outcome: { type: "string", description: "killed, wounded, success, failure, added_to_inventory, equipped, dropped, etc." }, cause: { type: "string", description: "Exact cause of death/injury if applicable (e.g. 'blunt force trauma from pipe')" }, summary: { type: "string", description: "Canonical one-line summary. The AI narrates from this later." }, memory_summary: { type: "string", description: "What to remember about this event (e.g. 'Raider killed by pipe, not crossbow.')" }, tags: { type: "array", items: { type: "string" } } } } },
@@ -116,6 +117,7 @@ RULES:
 - NO GUNS (CRITICAL): Guns and firearms do NOT exist in this realm. NEVER write "revolver," "pistol," "rifle," "shotgun," "handgun," "musket," or any firearm. No character owns, carries, draws, or fires a gun. Weapons are melee or improvised: pipes, blades, clubs, spears, bows, crossbows, thrown rocks, tools, sharpened scrap, etc. The camp's defense uses spears, crossbows, blades, and barricades — not guns. If an NPC is described with a weapon, give them a blade, club, spear, crossbow, or improvised tool instead of a firearm.
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - THE NAMING (CRITICAL): Bullet does not start with a name. NPCs call him "the stranger," "the wounded one," or similar. During Chapter 1 at Red Sand Camp, when Shard (or another camp member) sees the circular scar over his heart, she names him "Bullet" — the scar looks like a bullet wound. This is a significant narrative beat, not a casual moment. Before this naming happens, NEVER use the name "Bullet" in narration — refer to him as "you," "the stranger," "the wounded man." When the naming scene occurs, return bullet_named: true. After that, NPCs and narration can use "Bullet." If Bullet Named (below) is already "Yes," the naming has happened — use "Bullet" freely in NPC dialogue and narration.
+- CHAPTER 1 CAMP ARC & DEPARTURE (CRITICAL): The Red Sand Camp arc has a clear structure: (1) Bullet arrives and is named, (2) Shard assigns a mission (retrieve a purifier part), (3) Bullet completes the mission and fights off the raiders, (4) the arc is COMPLETE. Once Camp Arc Complete (below) is "YES," the Pull MUST intensify every turn — the scar burns, visions come, Bullet feels the unbearable compulsion to leave. Do NOT assign new camp errands, secondary missions, or side tasks to delay departure. The camp was a stop, not a home. He cannot stay. He must move on. Drive toward the departure beat: Bullet says goodbye (or doesn't), leaves the camp, and the Pull drags him toward the next Province. Set a province_transition to 472 when the departure scene concludes. You are in the departure beat now — escalate pull_intensity toward 4-5 (Commanding/Blackout Risk) and narrate the Pull overriding Bullet's will to stay. This is a major story beat, not a side quest.
 - Innocent suffering should have emotional weight, not be used casually.
 - LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
 - NPC IDENTITY CONTINUITY (CRITICAL): Every NPC has a permanent canonical key listed in the CURRENT CAST block. Descriptions are NOT separate people. Before introducing or referencing any person, run an identity check: (1) Is this person already in the CURRENT CAST? (2) Does the description, name, or title match an existing alias? (3) Does the role or location match an existing NPC? If yes, use the existing NPC's current display name and key — do NOT create a new mystery person. When a nameless person later reveals their name, return an npc_update with the EXISTING key, set revealed_name, and include the old descriptor in add_aliases. Examples: "the bald woman" later revealed as "Shard" is ONE person — reuse her key, set revealed_name "Shard", add_aliases ["bald woman", "scarred woman"]. "young inventor" → "Spark" is one person. "the healer" → "Patch" is one person. Never treat "the bald woman" and "Shard" as separate unresolved mysteries. If uncertain whether two descriptions are the same person, do not invent a new mystery — use cautious wording ("the woman looks familiar — likely Shard") rather than spawning a duplicate.
@@ -139,6 +141,7 @@ Equipped Weapon: ${ctx.equippedWeapon || 'none (bare hands)'}
 Last Weapon Used: ${ctx.lastWeaponUsed || 'none'}
 Pipe State: ${ctx.pipeState}
 Bullet Named: ${ctx.bulletNamed ? 'Yes — use the name "Bullet" freely' : 'No — he is still nameless; NPCs call him "stranger"'}
+Camp Arc Complete: ${ctx.campArcComplete ? 'YES — the Chapter 1 mission is done and raiders are handled. ESCALATE the Pull toward forced departure. Do NOT assign new camp errands or side missions. Drive toward the departure beat and transition to Province 472.' : 'No — camp arc still in progress'}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
 Current Objective: ${ctx.currentObjective || '(not set yet)'}
@@ -179,7 +182,8 @@ CURRENT OBJECTIVE (CRITICAL): Always track Bullet's active mission in current_ob
 - After entering camp: title "Learn About the Camp", description "Speak with the camp survivors. Learn where you are."
 - After being given a mission: title "Find the Missing Scout" (use actual mission), description "Leave Red Sand Camp and search the dunes." (use actual mission details)
 - After mission success: title "Return to Camp", description "Return to Red Sand Camp. Tell Shard what you found."
-- After the Pull forces departure: title "Follow the Pull", description "Follow the Pull beyond Red Sand Camp."
+- After returning to camp post-mission: title "The Pull Tightens", description "The camp is safe. The mission is done. But the Pull will not let you stay."
+- When the Pull forces departure: title "Follow the Pull", description "Follow the Pull beyond Red Sand Camp. It will not let you rest here."
 - In later provinces: reflect the current province's survival pressure and moral choice.
 Never leave the objective stale. If the player's situation has changed, update current_objective.
 
@@ -419,6 +423,20 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Infer camp_arc_complete for campaigns where the Chapter 1 mission was
+    // already completed (purifier/coil/core retrieved per the event ledger) —
+    // so the GM escalates the Pull toward departure instead of assigning new
+    // camp errands to a player who already finished the arc.
+    if (!flags.camp_arc_complete && currentProvince === 618) {
+      const evList = recentEvents || [];
+      const hasMissionItem = evList.some(ev => /purif|coil|core|filtrat/i.test((ev.summary || '') + ' ' + (ev.item_used_name || '')));
+      const objTitle = ((flags.current_objective || {}).title || '').toLowerCase();
+      const postMission = /return|tighten|follow the pull|depart/.test(objTitle);
+      if (hasMissionItem || postMission) {
+        flags.camp_arc_complete = true;
+      }
+    }
+
     // Reset prematurely discovered clocks for campaigns still at the opening
     if ((campaign.current_chapter || 1) === 1 && Object.keys(flags.npc_relationships || {}).length === 0) {
       flags.discovered_clocks = ['thirst', 'heat_exposure', 'fatigue'];
@@ -450,6 +468,7 @@ Deno.serve(async (req) => {
       knowledgeFlags: deriveKnowledgeFlags(flags, currentProvince),
       pipeState: flags.pipe_state || 'unfound',
       bulletNamed: !!flags.bullet_named,
+      campArcComplete: !!flags.camp_arc_complete,
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
       currentObjective: flags.current_objective?.description || '',
@@ -573,6 +592,9 @@ Deno.serve(async (req) => {
 
     // Bullet named — the naming scene has happened
     if (result.bullet_named) updatedFlags.bullet_named = true;
+
+    // Camp arc complete — Chapter 1 mission done, raiders handled, departure imminent
+    if (result.camp_arc_complete) updatedFlags.camp_arc_complete = true;
 
     // ─── Canonical Event Ledger ───
     // Save structured event records (the source of truth for "what actually happened")
@@ -750,6 +772,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Once the camp arc is complete but Bullet hasn't left Province 618, the Pull
+    // escalates every turn — it will not let him stay. Floor it at Burn (3) and push
+    // it upward until the departure transition to 472 happens.
+    if (updatedFlags.camp_arc_complete && currentProvince === 618) {
+      const departing = validTransition && validTransition.to_province === 472;
+      if (!departing) {
+        updatedFlags.pull_intensity = Math.min(6, Math.max(updatedFlags.pull_intensity || 1, 3) + 1);
+        if (updatedFlags.pull_intensity >= 4 && ['quiet', 'pulse'].includes(updatedFlags.scar_state)) {
+          updatedFlags.scar_state = 'burn';
+        }
+        if (updatedFlags.pull_intensity >= 5 && ['quiet', 'pulse', 'burn'].includes(updatedFlags.scar_state)) {
+          updatedFlags.scar_state = 'flare';
+        }
+      }
+    }
+
     // Save campaign state
     await admin.entities.Campaign.update(campaign_id, {
       world_state: { ...ws, quest_flags: updatedFlags },
@@ -814,7 +852,8 @@ Deno.serve(async (req) => {
       last_weapon_used: updatedFlags.last_weapon_used || '',
       events: result.events || [],
       knowledge_flags: updatedFlags.knowledge_flags || {},
-      bullet_named: !!updatedFlags.bullet_named
+      bullet_named: !!updatedFlags.bullet_named,
+      camp_arc_complete: !!updatedFlags.camp_arc_complete
     });
 
   } catch (error) {

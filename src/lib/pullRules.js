@@ -490,6 +490,7 @@ export const PULL_INITIAL_STATE = {
   spark_shard: false,
   pipe_state: 'unfound',
   bullet_named: false,
+  camp_arc_complete: false,
   shard_focus_unlocked: false,
   conditions: [],
   codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'province_618'],
