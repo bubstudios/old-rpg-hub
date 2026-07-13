@@ -195,7 +195,14 @@ export default function CampaignDetail() {
       }
       return;
     }
-    const impact = buildDecisionImpact(dmData);
+    // Pathfinder: the LLM returns a curated decision_impact directly — use it
+    // when available. Fall back to building from state-change arrays.
+    let impact = null;
+    if (dmData?.decision_impact && dmData.decision_impact.is_meaningful && (dmData.decision_impact.impacts || []).length) {
+      impact = dmData.decision_impact;
+    } else {
+      impact = buildDecisionImpact(dmData);
+    }
     if (!impact) return;
     base44.functions.invoke('campaignData', {
       op: 'saveDecisionLog',

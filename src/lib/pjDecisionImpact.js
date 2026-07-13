@@ -129,11 +129,25 @@ export function buildDecisionImpact(dmData) {
     });
   }
 
+  // Evidence state changes
+  for (const eu of (dmData?.evidence_updates || [])) {
+    if (!eu.state || eu.state === 'UNKNOWN') continue;
+    impacts.push({
+      label: prettyKey(eu.key),
+      change: 0,
+      change_label: eu.state.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      reason: eu.notes || '',
+      category: 'evidence',
+      tone: 'neutral',
+      character_note: null
+    });
+  }
+
   if (impacts.length === 0) return null;
 
-  // Sort by absolute change value (most significant first), take top 4
+  // Sort by absolute change value (most significant first), take top 6
   impacts.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
-  const topImpacts = impacts.slice(0, 4);
+  const topImpacts = impacts.slice(0, 6);
 
   return {
     is_meaningful: true,

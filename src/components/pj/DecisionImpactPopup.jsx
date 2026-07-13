@@ -17,13 +17,13 @@ export default function DecisionImpactPopup({ impact, onDismiss, onOpenLog, sett
     const timer = setTimeout(() => {
       setVisible(false);
       setTimeout(onDismiss, 400);
-    }, 5000);
+    }, 12000);
     return () => clearTimeout(timer);
   }, [impact, onDismiss]);
 
   if (!impact || !impact.is_meaningful || setting === 'off') return null;
 
-  let impacts = impact.impacts || [];
+  let impacts = (impact.impacts || []).slice(0, 6);
   if (setting === 'minimal') {
     impacts = impacts.filter(i => Math.abs(i.change || 0) >= 6 || i.tone === 'hidden');
     if (!impacts.length) return null;
@@ -32,6 +32,25 @@ export default function DecisionImpactPopup({ impact, onDismiss, onOpenLog, sett
   const characterNote = setting !== 'minimal'
     ? impacts.find(i => i.character_note)?.character_note
     : null;
+
+  // Group impacts by category for section headers
+  const CATEGORY_LABELS = {
+    clock: 'CLOCK UPDATED',
+    ally: 'CREW REACTION',
+    faction: 'FACTION SHIFT',
+    evidence: 'EVIDENCE EFFECT',
+    hidden: 'HIDDEN CONSEQUENCE'
+  };
+  const grouped = [];
+  const seen = new Set();
+  for (const imp of impacts) {
+    const cat = imp.category || 'clock';
+    if (!seen.has(cat)) {
+      seen.add(cat);
+      grouped.push({ category: cat, label: CATEGORY_LABELS[cat] || cat.toUpperCase(), items: [] });
+    }
+    grouped.find(g => g.category === cat).items.push(imp);
+  }
 
   return (
     <div className={`fixed bottom-4 right-4 z-50 w-80 max-w-[calc(100vw-2rem)] transition-all duration-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -44,32 +63,37 @@ export default function DecisionImpactPopup({ impact, onDismiss, onOpenLog, sett
             <X className="w-3 h-3" />
           </button>
         </div>
-        <div className="p-2.5 space-y-1.5">
-          {impacts.map((imp, i) => {
-            const tone = TONE_STYLES[imp.tone] || TONE_STYLES.neutral;
-            const Icon = tone.icon;
-            const sign = (imp.change || 0) > 0 ? '+' : '';
-            const showLabel = setting === 'detailed' || (imp.change || 0) === 0;
-            return (
-              <div key={i} className={`flex items-start gap-2 px-2 py-1.5 rounded ${tone.bg} border ${tone.border}`}>
-                <Icon className={`w-3 h-3 mt-0.5 shrink-0 ${tone.color}`} strokeWidth={1.5} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-heading text-foreground truncate">{imp.label}</span>
-                    {(imp.change || 0) !== 0 && (
-                      <span className={`text-xs font-heading font-600 tabular-nums shrink-0 ${tone.color}`}>{sign}{imp.change}</span>
-                    )}
+        <div className="p-2.5 space-y-2">
+          {grouped.map((group, gi) => (
+            <div key={gi} className="space-y-1">
+              <p className="text-[9px] font-heading tracking-[0.15em] text-muted-foreground/70 px-1">{group.label}</p>
+              {group.items.map((imp, i) => {
+                const tone = TONE_STYLES[imp.tone] || TONE_STYLES.neutral;
+                const Icon = tone.icon;
+                const sign = (imp.change || 0) > 0 ? '+' : '';
+                const showLabel = setting === 'detailed' || (imp.change || 0) === 0;
+                return (
+                  <div key={i} className={`flex items-start gap-2 px-2 py-1.5 rounded ${tone.bg} border ${tone.border}`}>
+                    <Icon className={`w-3 h-3 mt-0.5 shrink-0 ${tone.color}`} strokeWidth={1.5} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-heading text-foreground truncate">{imp.label}</span>
+                        {(imp.change || 0) !== 0 && (
+                          <span className={`text-xs font-heading font-600 tabular-nums shrink-0 ${tone.color}`}>{sign}{imp.change}</span>
+                        )}
+                      </div>
+                      {showLabel && imp.change_label && (
+                        <span className={`text-[9px] font-heading tracking-wide ${tone.color}`}>{imp.change_label}</span>
+                      )}
+                      {imp.reason && (
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{imp.reason}</p>
+                      )}
+                    </div>
                   </div>
-                  {showLabel && imp.change_label && (
-                    <span className={`text-[9px] font-heading tracking-wide ${tone.color}`}>{imp.change_label}</span>
-                  )}
-                  {setting === 'detailed' && imp.reason && (
-                    <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{imp.reason}</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ))}
           {characterNote && (
             <div className="px-2 py-1.5 border-t border-border/30 mt-1">
               <p className="text-[10px] font-body italic text-foreground/70 leading-relaxed">{characterNote}</p>
