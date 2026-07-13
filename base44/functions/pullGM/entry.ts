@@ -126,6 +126,7 @@ function generateChapterHandoff(flags, equipment, chapterNum) {
     'Spark loaned Bullet her unetched shard.': !!flags.spark_shard,
     'Shard gave Bullet breathing apparatus.': !!flags.breathing_gear,
     'The Pull forced Bullet onward.': !!flags.camp_arc_complete,
+    'Bullet reached the wall of water.': !!uf.water_wall_reached,
   };
   const filteredEvents = packet.canonicalEvents.filter(e => eventGates[e] === undefined || eventGates[e]);
 
@@ -1278,7 +1279,7 @@ Deno.serve(async (req) => {
     // and save it. The next chapter loads ONLY this handoff — not the full state.
     let chapterComplete = false;
     let handoffData = null;
-    if (validTransition) {
+    if (validTransition && validTransition.to_province !== currentProvince) {
       handoffData = generateChapterHandoff(updatedFlags, [...(bullet.equipment || [])], currentChapterNum);
       if (handoffData) {
         const completedChapterId = 'chapter_' + String(currentChapterNum).padStart(3, '0');

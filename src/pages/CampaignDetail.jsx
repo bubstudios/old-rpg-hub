@@ -254,7 +254,7 @@ export default function CampaignDetail() {
       processDecisionImpact(res.data, rollResult?.summary);
       setLatestResult(res.data);
       setProcessing(false);
-      if (res.data?.chapter_complete && res.data?.handoff) {
+      if (res.data?.chapter_complete && res.data?.handoff && res.data?.chapter1_stage === 'water_wall_reached') {
         const completedNum = parseInt((res.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
         setChapterComplete({ handoff: res.data.handoff, chapterNumber: completedNum });
       }
@@ -353,7 +353,7 @@ export default function CampaignDetail() {
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);
-        if (dmRes.data?.chapter_complete && dmRes.data?.handoff) {
+        if (dmRes.data?.chapter_complete && dmRes.data?.handoff && dmRes.data?.chapter1_stage === 'water_wall_reached') {
           const completedNum = parseInt((dmRes.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
           setChapterComplete({ handoff: dmRes.data.handoff, chapterNumber: completedNum });
         }
