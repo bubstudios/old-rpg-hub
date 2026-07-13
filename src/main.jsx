@@ -10,6 +10,10 @@ import '@/index.css'
 // doesn't affect functionality — it's a development-time transient issue.
 const isTransientHMRError = (error) => {
   if (!error) return false;
+  // Handle plain strings (error events sometimes pass strings, not Error objects)
+  if (typeof error === 'string') {
+    return /Unexpected end of input|Unexpected token/i.test(error);
+  }
   const msg = error?.message || String(error);
   const isSyntax = error instanceof SyntaxError ||
     (error?.name === 'SyntaxError') ||

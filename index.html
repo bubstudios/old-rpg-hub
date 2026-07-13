@@ -21,14 +21,28 @@
       (function () {
         function isHMRParseError(e) {
           if (!e) return false;
-          if (e instanceof SyntaxError) return /Unexpected end of input/i.test(e.message);
+          if (e instanceof SyntaxError) return /Unexpected end of input|Unexpected token|JSON\.parse/i.test(e.message);
           var msg = e.message || String(e);
-          return /SyntaxError/i.test(msg) && /Unexpected end of input/i.test(msg);
+          return /SyntaxError/i.test(msg) && /Unexpected end of input|Unexpected token|JSON\.parse/i.test(msg);
+        }
+        // Pre-validate WebSocket messages: if data looks like JSON but is
+        // incomplete (transient HMR issue), suppress the message entirely
+        // before any listener can JSON.parse it and throw.
+        function suppressIfBadJSON(event) {
+          if (event && typeof event.data === 'string') {
+            var d = event.data.trim();
+            if (d.length > 0 && (d.charCodeAt(0) === 123 || d.charCodeAt(0) === 91)) {
+              try { JSON.parse(d); }
+              catch (e) { return true; } // suppressed
+            }
+          }
+          return false;
         }
         var origAdd = WebSocket.prototype.addEventListener;
         WebSocket.prototype.addEventListener = function (type, listener, options) {
           if (type === 'message' && typeof listener === 'function') {
             var wrapped = function (event) {
+              if (suppressIfBadJSON(event)) return;
               try { return listener.call(this, event); }
               catch (e) { if (isHMRParseError(e)) return; throw e; }
             };
@@ -46,6 +60,7 @@
             set: function (listener) {
               if (typeof listener === 'function') {
                 return origSet.call(this, function (event) {
+                  if (suppressIfBadJSON(event)) return;
                   try { return listener.call(this, event); }
                   catch (e) { if (isHMRParseError(e)) return; throw e; }
                 });
