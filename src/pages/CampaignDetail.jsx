@@ -29,6 +29,8 @@ import MissionsPanel from '@/components/pj/MissionsPanel';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
+import FutureEchoPopup from '@/components/pj/FutureEchoPopup';
+import FutureEchoLog from '@/components/pj/FutureEchoLog';
 import { buildDecisionImpact } from '@/lib/pjDecisionImpact';
 import PullStatusPanel from '@/components/pull/PullStatusPanel';
 import PullCodex from '@/components/pull/PullCodex';
@@ -46,7 +48,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb
+  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -83,6 +85,8 @@ export default function CampaignDetail() {
   const [crewAdviceOpen, setCrewAdviceOpen] = useState(false);
   const [decisionImpact, setDecisionImpact] = useState(null);
   const [decisionLogOpen, setDecisionLogOpen] = useState(false);
+  const [futureEcho, setFutureEcho] = useState(null);
+  const [futureEchoLogOpen, setFutureEchoLogOpen] = useState(false);
   const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
   const [pullCodexOpen, setPullCodexOpen] = useState(false);
   const [pullImpact, setPullImpact] = useState(null);
@@ -212,6 +216,17 @@ export default function CampaignDetail() {
       toast.warning(`⚠ ENEMY COUNTERMOVE — ${ec.faction.toUpperCase()}`, {
         description: ec.action || ec.narration || 'The enemy has responded.',
         duration: 8000,
+      });
+    }
+    // Future Echo — show popup when GM triggers one
+    if (dmData?.future_echo?.memory_fragment) {
+      setFutureEcho(dmData.future_echo);
+    }
+    // Future Echo public use — show secrecy warning
+    if (dmData?.future_echo_public_use === true) {
+      toast.error('CREW SECRET VIOLATED', {
+        description: 'Future Memories cannot be verified. Credibility damaged — Chen Countermeasures +8, Temporal Instability +3, Public Truth -5, New Titan Trust -4.',
+        duration: 10000,
       });
     }
     if (!impact) return;
@@ -485,6 +500,33 @@ export default function CampaignDetail() {
             };
           });
         }
+        // Apply future echo state to local campaign
+        if (dmRes.data?.future_echo || dmRes.data?.echo_cooldown !== undefined) {
+          setCampaign(prev => {
+            if (!prev) return prev;
+            const ws = prev.world_state || {};
+            const flags = ws.quest_flags || {};
+            const echoLog = Array.isArray(flags.future_echoes) ? [...flags.future_echoes] : [];
+            if (dmRes.data?.future_echo?.memory_fragment) {
+              echoLog.push({
+                ...dmRes.data.future_echo,
+                acted_on: false,
+                timestamp: new Date().toISOString()
+              });
+            }
+            return {
+              ...prev,
+              world_state: {
+                ...ws,
+                quest_flags: {
+                  ...flags,
+                  future_echoes: echoLog.slice(-30),
+                  echo_cooldown: dmRes.data?.echo_cooldown ?? flags.echo_cooldown
+                }
+              }
+            };
+          });
+        }
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);
@@ -664,6 +706,14 @@ export default function CampaignDetail() {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Lightbulb className="w-3.5 h-3.5" strokeWidth={1.5} /> Crew
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
+              onClick={() => setFutureEchoLogOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-purple-500/40 text-muted-foreground hover:text-purple-400 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Echoes
             </button>
           )}
           {campaign?.game_system === 'pathfinder' && (
@@ -1120,6 +1170,17 @@ export default function CampaignDetail() {
             campaignId={campaignId}
             setting={popupSetting}
             onSettingChange={handlePopupSettingChange}
+          />
+          <FutureEchoPopup
+            echo={futureEcho}
+            onDismiss={() => setFutureEcho(null)}
+            onOpenLog={() => setFutureEchoLogOpen(true)}
+          />
+          <FutureEchoLog
+            open={futureEchoLogOpen}
+            onOpenChange={setFutureEchoLogOpen}
+            campaignId={campaignId}
+            campaign={campaign}
           />
         </>
       )}

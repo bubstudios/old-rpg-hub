@@ -77,7 +77,7 @@ export const CODEX_SECTIONS = [
   { id: 'clocks', label: 'Sandbox Clocks' },
   { id: 'factions', label: 'Factions' },
   { id: 'locations', label: 'Locations' },
-  { id: 'future', label: 'Future Memories' },
+  { id: 'future', label: 'Future Echoes' },
   { id: 'questions', label: 'Unresolved Questions' }
 ];
 
@@ -592,6 +592,17 @@ export const CODEX_ENEMIES = [
 export { CODEX_FACTIONS };
 
 export const CODEX_FUTURE_MEMORIES = [
+  {
+    key: 'future_echoes_system',
+    label: 'What Are Future Echoes?',
+    fields: [
+      { label: 'Not Evidence', value: 'Future Memories are NOT evidence. They are private crew knowledge from the 473-year future jump. They cannot be proven to outsiders. They should not be sent, transmitted, or cited publicly.' },
+      { label: 'What they are', value: 'Vague, emotional flashes — fragments of a war the crew already lived through. They surface as déjà vu, tactical instincts, warnings, and emotional weight during major decisions.' },
+      { label: 'How they trigger', value: 'Echoes fire occasionally during major command decisions, enemy moves, evidence use, Confluence legal language, Chen transmissions, rendezvous risk, shapeshifter clues, and temporal instability. They do NOT fire every turn.' },
+      { label: 'What they do', value: 'Echoes unlock safer options, warn about traps, identify suspicious behavior, suggest which evidence to use, reduce ambush risk, improve crew readiness, and foreshadow Arc 2 threats. They do NOT solve problems or replace evidence.' },
+      { label: 'Secrecy', value: 'Future Echoes are crew secrets. If you try to use them publicly — broadcasting, citing to New Titan, presenting as proof — it will damage your credibility, raise Chen Countermeasures, and increase Temporal Instability. You CAN reveal them in desperate moments, but it is risky.' }
+    ]
+  },
   {
     key: 'cascade_message',
     label: 'The Cascade Message',

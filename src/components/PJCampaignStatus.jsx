@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Rocket, Shield, Activity, AlertTriangle, Users, FileText, MapPin, ChevronDown, ChevronUp, Lock, Eye, Newspaper, UserCheck } from 'lucide-react';
+import { Rocket, Shield, Activity, AlertTriangle, Users, FileText, MapPin, ChevronDown, ChevronUp, Lock, Eye, Newspaper, UserCheck, Sparkles } from 'lucide-react';
 import { PJ_SHIP_STATS } from '@/lib/pjRules';
 import { codexKey } from '@/lib/pjCodex';
 import { getVisibleMainClocks, findClock, getClockStatus, getClockTier } from '@/lib/pjClocks';
@@ -29,6 +29,7 @@ export default function PJCampaignStatus({ campaign, onOpenCodex }) {
   const allies = flags.allies || [];
   const enemies = flags.enemies || [];
   const rendezvousTeam = flags.rendezvous_team || [];
+  const futureEchoes = flags.future_echoes || [];
   const currentLocation = flags.current_location || campaign?.current_scene || 'Unknown';
 
   const ntLabel = getNewTitanLabel(campaign);
@@ -168,6 +169,16 @@ export default function PJCampaignStatus({ campaign, onOpenCodex }) {
           </div>
         )}
       </div>
+
+      {/* Future Echoes badge */}
+      {futureEchoes.length > 0 && (
+        <div className="w-full flex items-center justify-between px-2 py-1.5 rounded border border-purple-500/20 bg-purple-500/5">
+          <span className="flex items-center gap-1.5 text-[9px] font-heading tracking-wide text-purple-400">
+            <Sparkles className="w-3 h-3 animate-flicker" strokeWidth={1.5} /> FUTURE ECHOES
+          </span>
+          <span className="text-[10px] font-heading tabular-nums text-purple-400">{futureEchoes.length}</span>
+        </div>
+      )}
 
       {/* Allies & Enemies */}
       <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border/30">

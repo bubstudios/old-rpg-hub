@@ -63,8 +63,8 @@ const CANON = {
     sakura_chen_exchange: 'Sakura-Chen Tech Exchange [MEDIUM] — Human tech from Confluence bargain. High impact, high risk.',
     new_titan_claim: 'New Titan Claim [HIGH] — Active legal claim. Use: warn Governor Thorne. Careful sharing.',
     sarah_chen_testimony: 'Sarah Chen Testimony [MEDIUM] — Daughter\'s testimony. Med impact.',
-    sanctuary_archive: 'Sanctuary Archives [HIGH] — Multi-species resistance records. Build alien alliances.',
-    architect_future: 'Architect Future-History [LOW] — Encoded future memories. High spark if careful, temporal risk if overused.'
+    sanctuary_archive: 'Sanctuary Archives [HIGH] — Multi-species resistance records. Build alien alliances.'
+    // NOTE: architect_future / Future Memories are NOT evidence. They are a separate crew-secret system (see CANON.future_echoes).
   },
 
   locations: {
@@ -125,10 +125,41 @@ BEHAVIORAL TELLS: Suddenly left-handed. Tea/coffee preference wrong. Doesn't fli
 DETECTION METHODS: Mitchell senses wrongness (not specific — just unease). Sequential biometric scans over 24 hours. Questions only the real person would answer correctly. Skin contact reveals slightly wrong texture. Unity can detect nanite-level inconsistency if present.
 REMEMBER: Shapeshifters are patient and terrifying. They maintain cover until mission demands violence. Do not reveal a shapeshifter until evidence is earned through play. Suspicion should build slowly, not resolve quickly.`,
 
+  future_echoes: `FUTURE ECHOES — Crew-secret memories from the 473-year future jump. NOT evidence. Cannot be proven to outsiders. Should not be sent/transmitted publicly.
+
+TRIGGER: Only generate a future_echo when the turn packet says "FUTURE ECHO REQUESTED". Do NOT generate one every turn.
+
+ECHO TYPES:
+- tactical: Flash of danger — ambush, blind spot, enemy move. Unlocks defensive option or reveals risk.
+- emotional: Weight of a future that hasn't happened. Shifts crew morale or urgency. Creates emotional weight.
+- evidence: Hint about where to look — not proof. Improves evidence package quality or points to inconsistency.
+- warning: Vague sense of regret. Warns against risky action, offers safer alternative. Does not force choice.
+
+CREW AFFINITY (who receives the echo — pick the most thematically tied):
+- Mitchell: combat, ambush, predator instinct, shapeshifter detection
+- Sarah: Chen, relay, communications, family protocols, compromised comms
+- James: Confluence procedure, captivity, survivor patterns, forced service
+- Clark: evidence structure, legal framing, document traps, far reach
+- Thorne/Farah: New Titan, civilian risk, colony loss, family stakes
+- Hayes: sacrifice, reactor danger, future Unity echoes
+- Reeves: investigation, inconsistencies, records, deception
+- Carmelon: temporal/Architect anomalies
+- Ramos: ship systems, damage patterns, engineering déjà vu
+- Patel: comms, signal oddities, small overlooked details
+- Bub: command consequence, moral crossroads, future-war pressure
+
+TONE: Memories are vague. Use: fragment, flash, echo, wrongness, déjà vu, half-memory, impossible memory. NEVER use exact spoilers like "Vask attacks from vector 7 at 14:22." Use: "Mitchell remembers the wrongness of the left approach corridor."
+
+SECRECY: Future Memories are crew-only. If the player tries to use them publicly (broadcast, cite to New Titan, present as evidence), warn: they cannot be verified, will damage credibility, raise Chen Countermeasures +8, Temporal Instability +3, lower Public Truth -5 and New Titan Trust -4. The player CAN still reveal them in desperate moments, but it should be risky.
+
+EFFECTS: Each echo should unlock an option, reveal a risk, or influence crew reactions. It should NOT solve the problem or replace evidence.`,
+
   response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"enemy_countermove":{"faction":"confluence|chen|vask|vescarri|guild|shapeshifters","action":"what the enemy does in response to Bub's success","clock_effects":[{"clock":"discredit_campaign|confluence_heat|chen_countermeasures|etc","delta":number}],"narration":"brief scene of the enemy countermove (1-3 sentences, woven into the main narration or appended)"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
 Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.
 ENEMY COUNTERMOVE: When Bub achieves a major success (convincing a faction, broadcasting evidence, winning a battle, securing an alliance), include enemy_countermove. The enemy does NOT sit still — Confluence sends injunctions, Chen issues recall orders, shapeshifters try to infiltrate, Vask moves closer, Guild starts sniffing around. Include clock_effects that reflect the enemy's response (typically raising discredit_campaign, confluence_heat, or chen_countermeasures). Omit enemy_countermove entirely for minor actions with no significant success.
-RENDEZVOUS_TEAM: When the player brings crew members to a meeting/rendezvous, include rendezvous_team as an array of crew keys (sarah, james, clark, mitchell, thorne, hayes, reeves, ramos). Apply the personnel consequences listed in the Personnel Consequences section as clock changes and decision_impact entries. Each person brought should create at least one clock effect and one decision_impact entry.`
+RENDEZVOUS_TEAM: When the player brings crew members to a meeting/rendezvous, include rendezvous_team as an array of crew keys (sarah, james, clark, mitchell, thorne, hayes, reeves, ramos). Apply the personnel consequences listed in the Personnel Consequences section as clock changes and decision_impact entries. Each person brought should create at least one clock effect and one decision_impact entry.
+FUTURE_ECHO: ONLY include future_echo when the turn packet says "FUTURE ECHO REQUESTED". Include: crew_member (key), echo_type (tactical|emotional|evidence|warning), certainty (low|medium|high|critical), memory_fragment (vague sensory/emotional flash — NEVER exact spoilers), practical_hint (what it means for the crew), effects (array of unlocked options/revealed risks), trigger (brief context that caused it). Do NOT generate a future_echo unless requested.
+FUTURE_ECHO_PUBLIC_USE: Set to true ONLY if the player explicitly tries to use, broadcast, cite, or present future memories as evidence to outsiders. This triggers secrecy penalties: Public Truth -5, New Titan Trust -4, Chen Countermeasures +8, Temporal Instability +3.`
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -370,7 +401,7 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
   if (relevantEnemies.length === 0) relevantEnemies.push('confluence');
 
   // --- Select relevant evidence ---
-  const evKw = { 'prometheus': 'prometheus_warning', 'james testimony': 'james_testimony', 'james stellar testimony': 'james_testimony', 'korath': 'korath_database', 'novara': 'novara_transaction', 'sakura': 'sakura_chen_exchange', 'titan claim': 'new_titan_claim', 'new titan claim': 'new_titan_claim', 'sarah testimony': 'sarah_chen_testimony', 'sarah chen testimony': 'sarah_chen_testimony', 'sanctuary archive': 'sanctuary_archive', 'architect': 'architect_future', 'future memory': 'architect_future', 'future-history': 'architect_future' };
+  const evKw = { 'prometheus': 'prometheus_warning', 'james testimony': 'james_testimony', 'james stellar testimony': 'james_testimony', 'korath': 'korath_database', 'novara': 'novara_transaction', 'sakura': 'sakura_chen_exchange', 'titan claim': 'new_titan_claim', 'new titan claim': 'new_titan_claim', 'sarah testimony': 'sarah_chen_testimony', 'sarah chen testimony': 'sarah_chen_testimony', 'sanctuary archive': 'sanctuary_archive' };
   const relevantEvidence = [];
   for (const [kw, key] of Object.entries(evKw)) {
     if (actionLower.includes(kw) && !relevantEvidence.includes(key)) relevantEvidence.push(key);
@@ -450,6 +481,35 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
   // --- Rendezvous team tracking ---
   const rendezvousTeam = flags.rendezvous_team || [];
 
+  // --- Future Echo trigger ---
+  // Calculate trigger strength from action context. Echoes fire when strength >= 60
+  // and cooldown is 0. Cooldown decrements each turn.
+  const echoCooldown = typeof flags.echo_cooldown === 'number' ? flags.echo_cooldown : 0;
+  const tempInstability = clocks.temporal_instability || 0;
+  const echoLog = Array.isArray(flags.future_echoes) ? flags.future_echoes : [];
+
+  let echoStrength = 0;
+  const act = actionLower;
+  if (act.includes('confluence') && (act.includes('legal') || act.includes('claim') || act.includes('clause') || act.includes('adjudicat'))) echoStrength += 20;
+  if (act.includes('chen') && (act.includes('transmission') || act.includes('order') || act.includes('broadcast'))) echoStrength += 25;
+  if (act.includes('rendezvous') || act.includes('off-world') || act.includes('off world') || act.includes('meeting point')) echoStrength += 20;
+  if (act.includes('evidence') && (act.includes('transmit') || act.includes('send') || act.includes('broadcast') || act.includes('share'))) echoStrength += 15;
+  if (act.includes('shapeshifter') || act.includes('infiltrat') || act.includes('verification') || act.includes('who is real')) echoStrength += 30;
+  if (act.includes('new titan') && (act.includes('civilian') || act.includes('evacuat') || act.includes('danger') || act.includes('attack'))) echoStrength += 25;
+  if (act.includes('vask') || act.includes('ambush') || act.includes('attack') || act.includes('combat')) echoStrength += 15;
+  if (act.includes('harvester')) echoStrength += 20;
+  if (act.includes('unity') || act.includes('nanite')) echoStrength += 15;
+  if (tempInstability >= 50) echoStrength += 20;
+  else if (tempInstability >= 25) echoStrength += 10;
+  // Major command decisions — longer actions tend to be more significant
+  if (act.length > 150) echoStrength += 15;
+  // Enemy countermove context raises echo chance
+  if (act.includes('countermove') || act.includes('enemy response') || act.includes('chen recall') || act.includes('injunction')) echoStrength += 15;
+
+  const echoTriggered = echoCooldown === 0 && echoStrength >= 60;
+  // If not triggered, decrement cooldown for next turn
+  const newCooldown = echoCooldown > 0 ? echoCooldown - 1 : 0;
+
   // --- Timeline status ---
   const timelineStatus = timeline
     ? `Player Runtime: ${timeline.runtimeHours.toFixed(1)}hrs | In-World Day: ${timeline.inWorldDays}
@@ -493,6 +553,8 @@ ${locationStatus || 'none mentioned'}
 ${personnelCards ? `## Personnel Consequences (Rendezvous Scene)\nThe player is organizing or attending a meeting/rendezvous. Track who they bring — each crew member has specific trust, risk, and clock consequences. Apply these in effects and decision_impact.\nPreviously brought: ${rendezvousTeam.length ? rendezvousTeam.join(', ') : 'none yet'}\n${personnelCards}` : ''}
 
 ${shapeshifterSigns ? `## Shapeshifter Detection\nShapeshifter suspicion is active or the player is investigating infiltration. Use these narrative seeds to build tension slowly. Do NOT reveal a shapeshifter until evidence is earned through play.\n${shapeshifterSigns}` : ''}
+
+${echoTriggered ? `## FUTURE ECHO REQUESTED\nA future echo is triggering this turn. Generate a future_echo object in your response. Pick the crew member most thematically tied to this moment. The echo should be vague, emotional, and useful — NOT a spoiler. See CANON.future_echoes for rules, types, crew affinity, and tone. Previous echoes (${echoLog.length}): ${echoLog.length > 0 ? echoLog.slice(-3).map(e => e.crew_member + ': ' + (e.memory_fragment || '').substring(0, 40)).join('; ') : 'none'}.` : ''}
 
 ## Recent Events
 ${history || 'The adventure has just begun.'}
@@ -632,7 +694,20 @@ ${CANON.response_format}`;
           new_scene: { type: "string" },
           in_world_days_advanced: { type: "number" },
           arc2_elements_introduced: { type: "array", items: { type: "string" } },
-          rendezvous_team: { type: "array", items: { type: "string" } }
+          rendezvous_team: { type: "array", items: { type: "string" } },
+          future_echo: {
+            type: "object",
+            properties: {
+              crew_member: { type: "string" },
+              echo_type: { type: "string" },
+              certainty: { type: "string" },
+              memory_fragment: { type: "string" },
+              practical_hint: { type: "string" },
+              effects: { type: "array", items: { type: "string" } },
+              trigger: { type: "string" }
+            }
+          },
+          future_echo_public_use: { type: "boolean" }
         },
         required: ["narration"]
       },
@@ -793,6 +868,39 @@ ${CANON.response_format}`;
       flags.rendezvous_team = existing;
     }
 
+    // Future Echo — save to log and set cooldown
+    if (result.future_echo && result.future_echo.memory_fragment) {
+      const echoLog = Array.isArray(flags.future_echoes) ? flags.future_echoes : [];
+      echoLog.push({
+        crew_member: String(result.future_echo.crew_member || 'bub'),
+        echo_type: String(result.future_echo.echo_type || 'warning'),
+        certainty: String(result.future_echo.certainty || 'low'),
+        memory_fragment: String(result.future_echo.memory_fragment),
+        practical_hint: String(result.future_echo.practical_hint || ''),
+        effects: Array.isArray(result.future_echo.effects) ? result.future_echo.effects : [],
+        trigger: String(result.future_echo.trigger || ''),
+        acted_on: false,
+        timestamp: new Date().toISOString()
+      });
+      flags.future_echoes = echoLog.slice(-30); // keep last 30
+      flags.echo_cooldown = 4 + Math.floor(Math.random() * 3); // 4-6 turn cooldown
+    } else {
+      // Decrement cooldown if no echo this turn
+      const curCd = typeof flags.echo_cooldown === 'number' ? flags.echo_cooldown : 0;
+      flags.echo_cooldown = curCd > 0 ? curCd - 1 : 0;
+    }
+
+    // Future Echo public use — apply secrecy penalties
+    if (result.future_echo_public_use === true) {
+      const clocks = { ...(flags.campaign_clocks || {}) };
+      clocks.public_truth = Math.max(0, (clocks.public_truth || 0) - 5);
+      clocks.chen_countermeasures = Math.max(0, Math.min(100, (clocks.chen_countermeasures || 0) + 8));
+      clocks.temporal_instability = Math.max(0, Math.min(100, (clocks.temporal_instability || 0) + 3));
+      // New Titan Trust tracked via new_titan_stability
+      clocks.new_titan_stability = Math.max(0, (clocks.new_titan_stability || 0) - 4);
+      flags.campaign_clocks = clocks;
+    }
+
     newWorldState.quest_flags = flags;
 
     // ═══ UPDATE CAMPAIGN ═══
@@ -860,6 +968,9 @@ ${CANON.response_format}`;
       in_world_days_advanced: result.in_world_days_advanced || 0,
       arc2_elements_introduced: result.arc2_elements_introduced || [],
       rendezvous_team: flags.rendezvous_team || [],
+      future_echo: result.future_echo || null,
+      future_echo_public_use: result.future_echo_public_use || false,
+      echo_cooldown: flags.echo_cooldown || 0,
       discovery_effects: discoveryEffects || [],
       player_runtime_hours: timeline ? timeline.runtimeHours : 0,
       in_world_day: campaignUpdates.in_world_day || (campaign.in_world_day || 0),
