@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Heart, Activity, Zap, AlertTriangle, Brain, Eye, Package } from 'lucide-react';
 import { PULL_SCALE, getPullLevel, SCAR_STATES, CONDITIONS, CONDITION_CATEGORIES, HIDDEN_CLOCKS, PROVINCE_SEQUENCE, getProvinceInfo } from '@/lib/pullRules';
 import { isStageUnlocked } from '@/lib/pullSheetData';
+import { LOCAL_CLOCK_META, getClockLabel } from '@/lib/pullClocks';
 
 export default function PullStatusPanel({ campaign, onOpenCodex }) {
   const [showClocks, setShowClocks] = useState(false);
@@ -13,7 +14,7 @@ export default function PullStatusPanel({ campaign, onOpenCodex }) {
   const clocks = flags.campaign_clocks || {};
   const localClocks = flags.local_clocks || {};
   const discoveredClocks = flags.discovered_clocks || ['thirst', 'heat_exposure', 'fatigue'];
-  const allLocalClocks = { thirst: 20, heat_exposure: 15, fatigue: 10, ...localClocks };
+  const allLocalClocks = { thirst: 75, heat_exposure: 65, fatigue: 55, ...localClocks };
   const visibleLocalClocks = Object.entries(allLocalClocks).filter(([key]) => discoveredClocks.includes(key));
   const conditions = flags.conditions || [];
   const pullLevel = getPullLevel(flags.pull_intensity ?? 1);
@@ -116,12 +117,19 @@ export default function PullStatusPanel({ campaign, onOpenCodex }) {
             <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">LOCAL CLOCKS</h3>
           </div>
           <div className="space-y-1.5">
-            {visibleLocalClocks.map(([key, val]) => (
-              <div key={key} className="flex items-center justify-between text-[11px]">
-                <span className="text-muted-foreground font-body capitalize">{key.replace(/_/g, ' ')}</span>
-                <span className="font-heading tabular-nums text-foreground/80">{val}</span>
-              </div>
-            ))}
+            {visibleLocalClocks.map(([key, val]) => {
+              const meta = LOCAL_CLOCK_META[key] || { highIsBad: true };
+              const qualLabel = getClockLabel(key, val);
+              const colorClass = meta.highIsBad
+                ? (val > 75 ? 'text-red-400' : val > 50 ? 'text-amber-400' : val > 25 ? 'text-yellow-300' : 'text-emerald-400')
+                : (val > 65 ? 'text-emerald-400' : val > 35 ? 'text-amber-400' : 'text-red-400');
+              return (
+                <div key={key} className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground font-body capitalize">{key.replace(/_/g, ' ')}</span>
+                  <span className={`font-heading tabular-nums ${colorClass}`}>{val} <span className="opacity-50 text-[9px] font-body">{qualLabel}</span></span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

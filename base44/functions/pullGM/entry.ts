@@ -201,6 +201,7 @@ const RESPONSE_SCHEMA = {
     condition_changes: { type: "array", items: { type: "object", properties: { type: { type: "string" }, severity: { type: "string" }, status: { type: "string", description: "new, worsened, or healed" } } } },
     clock_changes: { type: "array", items: { type: "object", properties: { clock: { type: "string" }, change: { type: "number" }, reason: { type: "string" } } } },
     local_clock_changes: { type: "array", items: { type: "object", properties: { clock: { type: "string" }, change: { type: "number" }, reason: { type: "string" } } } },
+    water_received: { type: "boolean", description: "Set to true when Bullet receives water this turn. Triggers a visible thirst reduction and WATER RECEIVED notification. Mandatory when water is given — do not narrate water without setting this." },
     codex_unlocks: { type: "array", items: { type: "string" }, description: "New codex entry keys unlocked by this action" },
     knowledge_unlocks: { type: "object", description: "Set specific spoiler-knowledge flags to true this turn (e.g. {knowsSeeker: true}). Only set when the player genuinely learns the concept through story events — never speculatively. Keys: knowsProvince1Exists, knowsProvince1IsDestination, knowsSeeker, knowsDreadwraith, knowsSentinels, knowsShardFocus, knowsShardResonance, knowsShardOrigin, knowsFather, knowsGarden, knowsLeaderBrother, knowsBladeOfDawn, knowsStarCrownedEmber, knowsSilentPulse.", additionalProperties: { type: "boolean" } },
     interlude: { type: "string", description: "Optional player-only cutscene shown BEFORE narration. Events elsewhere Bullet cannot see or react to (the Leader on a distant throne, operatives discussing 'the anomaly', the metal bird scanning Bullet). Does NOT update Bullet's state — no clocks, codex, items, HP, knowledge flags, or objectives. Keep atmospheric and partial: never name Province 1, Michael, Father, or the Garden. Use 'elsewhere,' 'a distant throne,' 'the one who watches.'" },
@@ -281,6 +282,20 @@ RULES:
 - FAREWELL GIFTS BEFORE DEPARTURE (CRITICAL): Before Bullet leaves Red Sand Camp, two final beats MUST happen as part of the farewell scene: (1) Spark gives Bullet her unetched shard as a loaner — she presses a cool, unetched shard into his hand for good luck, with a quiet promise that he'll bring it back someday. Set spark_shard_acquired: true and add "Spark's Unetched Shard" to inventory via item_changes. (2) Shard gives Bullet a breathing apparatus — salvaged gear so he can survive the liquid and oxygen scarcity of the next Province. Set breathing_gear_acquired: true and add "Shard's Breathing Apparatus" to inventory via item_changes. Deliver these during the goodbye scene as the Pull burns to leave. Do NOT transition to Province 472 until BOTH gifts have been given. If Spark's Shard or Breathing Apparatus (above) is still "Not acquired," deliver that gift this turn before any transition.
 - Innocent suffering should have emotional weight, not be used casually.
 - LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
+- CLOCK DIRECTION (CRITICAL): Survival danger clocks (thirst, heat_exposure, fatigue, raider_threat, pressure, swimming_fatigue, blood_loss, dreadwraith_threat) — HIGHER = WORSE. Trust/stability clocks (camp_trust, purifier_stability, air, dome_stability, dome_trust, air_supply) — HIGHER = BETTER. When Bullet drinks water, thirst DECREASES (change is negative, e.g. -35). When Bullet earns trust, camp_trust INCREASES (change is positive, e.g. +5). Never set a survival clock to 0 from full in one action, and never set camp_trust above the stage cap.
+- WATER ACKNOWLEDGMENT (CRITICAL): When Bullet receives water (from Shard, a camp member, or any source), you MUST: (1) return water_received: true, (2) return a local_clock_changes entry reducing thirst by 30-50 points (e.g. {clock: "thirst", change: -35, reason: "First water in days"}), (3) optionally reduce heat_exposure by 5 and fatigue by 3. This is mandatory — the player must SEE that getting water mattered. Do not narrate water without also reducing the thirst clock.
+- CAMP TRUST SCALE (CRITICAL): Camp Trust starts at 10 (Wary) — the camp barely tolerates Bullet. It rises GRADUALLY through story events. Use these exact event values as your guide:
+  * First enters camp: camp_trust unlocked at 10
+  * Admits he has no memory: +2
+  * Shard gives him water: +0 to +3 (this is MERCY, not trust — they are not monsters, but they do not trust him)
+  * Agrees to help with Shard's task: +5
+  * Succeeds in retrieving the purifier core: +15 to +25
+  * Protects someone during the task: +5 to +10
+  * Causes trouble, panics, or abandons someone: -5 to -15
+  * Helps defend against raiders: +15 to +25
+  * Saves Spark, Shard, or the Cache: +10 to +20
+  * Leaves because of the Pull: trust stays stable, guilt/bond entries update
+  Chapter 1 should usually end at 55-85. Only a near-perfect run reaches 90+. NEVER set camp_trust to 100 — the system enforces stage caps and will clamp it. Water means Bullet survived; it does NOT mean the camp fully trusts him.
 - NPC IDENTITY CONTINUITY (CRITICAL): Every NPC has a permanent canonical key listed in the CURRENT CAST block. Descriptions are NOT separate people. Before introducing or referencing any person, run an identity check: (1) Is this person already in the CURRENT CAST? (2) Does the description, name, or title match an existing alias? (3) Does the role or location match an existing NPC? If yes, use the existing NPC's current display name and key — do NOT create a new mystery person. When a nameless person later reveals their name, return an npc_update with the EXISTING key, set revealed_name, and include the old descriptor in add_aliases. Examples: "the bald woman" later revealed as "Shard" is ONE person — reuse her key, set revealed_name "Shard", add_aliases ["bald woman", "scarred woman"]. "young inventor" → "Spark" is one person. "the healer" → "Patch" is one person. Never treat "the bald woman" and "Shard" as separate unresolved mysteries. If uncertain whether two descriptions are the same person, do not invent a new mystery — use cautious wording ("the woman looks familiar — likely Shard") rather than spawning a duplicate.
 - UNIVERSAL AMNESIA (CRITICAL): No one in ANY Province remembers their origins. Every person — Shard, Spark, Patch, every NPC in every Province — woke up here with no memory, exactly like Bullet. They do not know where they came from, who they were before, or how long they have been here. They have ALWAYS been here. They NEVER leave. When an NPC is asked "How long have you been here?" or "Where did you come from?", the answer is always some variation of not knowing: "Long enough to forget," "I don't remember a before," "This is all there is." They are not hiding a secret past — they genuinely do not have one. The only exception: Shard (and some camp elders) have heard rumors of the "province of water" (Province 472) — a place no one has been to and returned, a place they believe no one can live in. Shard speaks of it as a vague, distant legend — not a place she has visited. No NPC has knowledge of any Province beyond their own and the water province rumor. Bullet's amnesia is not unique — it is the universal condition of every soul trapped in the Provinces.
 - CAMP MEMBERS VS EXTERNAL THREATS (CRITICAL): Camp members (Shard, Patch, Spark, Maul, Cowboy, Rivet) are SURVIVORS who live in the camp. Maul is a camp member — a mean, untrustworthy rival who is hostile to Bullet. He is NOT connected to the raiders, does NOT lead or control them, and is NOT secretly allied with them. The raiders are a separate external threat. Do not imply, foreshadow, or reveal that any camp member is secretly working with or leading the raiders unless the story has explicitly established it. Key NPCs: Shard (leader), Patch (healer), Spark (inventor), Maul (rival), Cowboy, Rivet. Discovery triggers: Shard when she names Bullet; Patch when she treats him; Spark near camp tech; Maul when he confronts Bullet; Cowboy on purifier mission; Rivet during raid setup.
@@ -764,6 +779,18 @@ Deno.serve(async (req) => {
     for (const cc of (result.local_clock_changes || [])) {
       updatedLocalClocks[cc.clock] = Math.max(0, Math.min(100, (updatedLocalClocks[cc.clock] || 0) + (cc.change || 0)));
     }
+
+    // ─── Water enforcement ───
+    // If the LLM reports Bullet received water, ensure thirst drops by at least 30.
+    // The LLM sometimes narrates water without reducing the thirst clock — this
+    // forces a visible reduction so the player sees that getting water mattered.
+    if (result.water_received) {
+      const preThirst = localClocks.thirst ?? 75;
+      if (preThirst - (updatedLocalClocks.thirst ?? preThirst) < 30) {
+        updatedLocalClocks.thirst = Math.max(5, preThirst - 40);
+      }
+    }
+
     updatedFlags.local_clocks = updatedLocalClocks;
 
     // Apply condition changes
@@ -987,6 +1014,35 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── Camp Trust stage cap + initialization ───
+    // Camp Trust cannot exceed the cap for the current story stage. This prevents
+    // the LLM from jumping trust to 100 after a minor action like receiving water.
+    // Mercy (giving water) is not the same as trust. Caps: before water 15, after
+    // water 20, after agreeing to help 30, after task success 55, after raider
+    // defense 85. Also: when camp_trust is FIRST discovered, reset to 10 if a
+    // legacy campaign had it inflated to 100.
+    {
+      const tc = { ...(updatedFlags.local_clocks || {}) };
+      // First-discovery reset for legacy campaigns
+      const oldClockSet = new Set(flags.discovered_clocks || []);
+      const newClockList = updatedFlags.discovered_clocks || [];
+      if (newClockList.includes('camp_trust') && !oldClockSet.has('camp_trust') && (tc.camp_trust || 0) > 25) {
+        tc.camp_trust = 10;
+      }
+      // Stage cap
+      const uf = updatedFlags.unlock_flags || {};
+      const seq = updatedFlags.chapter1_sequence || 1;
+      let trustCap = 15;
+      if (uf.raiders_defeated) trustCap = 85;
+      else if (uf.task_complete) trustCap = 55;
+      else if (seq >= 7) trustCap = 30;
+      else if (seq >= 5) trustCap = 20;
+      if (typeof tc.camp_trust === 'number') {
+        tc.camp_trust = Math.min(tc.camp_trust, trustCap);
+      }
+      updatedFlags.local_clocks = tc;
+    }
+
     // Province transition — validate against canonical sequence to prevent spoiler skips
     let chapterUpdate = {};
     let validTransition = null;
@@ -1158,6 +1214,7 @@ Deno.serve(async (req) => {
       hp_max: bullet.hp_max,
       clock_changes: result.clock_changes || [],
       local_clock_changes: result.local_clock_changes || [],
+      water_received: !!result.water_received,
       codex_unlocks: result.codex_unlocks || [],
       decision_impact: result.decision_impact || null,
       npc_updates: result.npc_updates || [],

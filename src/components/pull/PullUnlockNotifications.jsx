@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, BookOpen, Package, Users, MapPin, Eye, AlertCircle, Zap, X, ChevronRight } from 'lucide-react';
+import { Sparkles, BookOpen, Package, Users, MapPin, Eye, AlertCircle, Zap, X, ChevronRight, Droplet, Activity } from 'lucide-react';
 
 const TYPE_CONFIG = {
   province: { icon: MapPin, color: 'text-emerald-400', bg: 'border-emerald-800/40 bg-emerald-950/20' },
@@ -9,7 +9,9 @@ const TYPE_CONFIG = {
   bond: { icon: Users, color: 'text-violet-400', bg: 'border-violet-800/40 bg-violet-950/20' },
   condition: { icon: AlertCircle, color: 'text-red-400', bg: 'border-red-800/40 bg-red-950/20' },
   hidden: { icon: Eye, color: 'text-muted-foreground', bg: 'border-border/40 bg-secondary/20' },
-  memory: { icon: Sparkles, color: 'text-indigo-400', bg: 'border-indigo-800/40 bg-indigo-950/20' }
+  memory: { icon: Sparkles, color: 'text-indigo-400', bg: 'border-indigo-800/40 bg-indigo-950/20' },
+  water: { icon: Droplet, color: 'text-sky-400', bg: 'border-sky-800/40 bg-sky-950/20' },
+  clock: { icon: Activity, color: 'text-primary', bg: 'border-primary/30 bg-primary/5' }
 };
 
 export default function PullUnlockNotifications({ notifications, onDismiss }) {
@@ -47,7 +49,7 @@ export default function PullUnlockNotifications({ notifications, onDismiss }) {
           <Icon className={`w-5 h-5 ${config.color} shrink-0 mt-0.5`} strokeWidth={1.5} />
           <div className="min-w-0 flex-1">
             <p className={`text-xs font-heading tracking-[0.15em] ${config.color}`}>{n.title}</p>
-            <p className="text-sm font-heading text-foreground mt-1 capitalize break-words">{n.message}</p>
+            <p className="text-sm font-heading text-foreground mt-1 capitalize break-words whitespace-pre-line">{n.message}</p>
             {n.detail && (
               <p className="text-sm text-muted-foreground font-body mt-1 leading-relaxed">{n.detail}</p>
             )}

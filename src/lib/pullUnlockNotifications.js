@@ -99,6 +99,38 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     });
   }
 
+  // Water received (priority 2) — major survival moment
+  if (dmData.water_received) {
+    notifications.push({
+      type: 'water',
+      title: 'WATER RECEIVED',
+      message: 'Thirst Greatly Reduced',
+      priority: 2
+    });
+  }
+
+  // Local clock updates (priority 3) — show before → after for significant changes
+  if (dmData.local_clock_changes && dmData.local_clock_changes.length) {
+    const oldLocal = oldFlags?.local_clocks || {};
+    const lines = [];
+    for (const cc of dmData.local_clock_changes) {
+      if (Math.abs(cc.change || 0) < 5) continue;
+      const oldVal = oldLocal[cc.clock];
+      if (oldVal === undefined) continue;
+      const newVal = Math.max(0, Math.min(100, oldVal + (cc.change || 0)));
+      const pretty = cc.clock.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      lines.push(`${pretty} ${oldVal} → ${newVal}`);
+    }
+    if (lines.length) {
+      notifications.push({
+        type: 'clock',
+        title: 'CLOCK UPDATED',
+        message: lines.slice(0, 4).join('\n'),
+        priority: 3
+      });
+    }
+  }
+
   // Spark's shard acquired (priority 2)
   if (dmData.spark_shard_acquired) {
     notifications.push({

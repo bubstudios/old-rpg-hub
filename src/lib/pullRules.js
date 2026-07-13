@@ -487,7 +487,7 @@ export const PULL_INITIAL_STATE = {
     witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100,
     mechanical_bird_surveillance: 0, camp_raider_pressure: 0, camp_task_danger: 0
   },
-  local_clocks: { thirst: 20, heat_exposure: 15, fatigue: 10, camp_trust: 30, purifier_stability: 60, raider_threat: 20, air: 0, pressure: 0, swimming_fatigue: 0 },
+  local_clocks: { thirst: 75, heat_exposure: 65, fatigue: 55, camp_trust: 10, purifier_stability: 40, raider_threat: 20, air: 0, pressure: 0, swimming_fatigue: 0 },
   discovered_clocks: ['thirst', 'heat_exposure', 'fatigue'],
   unlock_flags: {},
   pull_intensity: 1,
