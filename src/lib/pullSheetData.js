@@ -27,6 +27,10 @@ export function isStageUnlocked(condition, flags) {
       return !!flags.shard_focus_unlocked || isMichael;
     case 'spark_shard':
       return !!flags.spark_shard || isMichael;
+    case 'dome_discovered':
+      return !!((flags.npc_relationships || {}).ember) || isMichael;
+    case 'dreadwraith':
+      return !!((flags.knowledge_flags || {}).knowsDreadwraith) || codexUnlocks.includes('dreadwraith') || isMichael;
     case 'met_camp':
       return Object.keys(flags.npc_relationships || {}).length > 0 || history.length > 0 || currentProvince !== 618 || isMichael;
     case 'pipe_found':
@@ -148,7 +152,6 @@ export function deriveCurrentState(hpCurrent, hpMax, conditions, clocks) {
   const has = k => (conditions || []).some(c => (c.type || c.label || '').toLowerCase().replace(/\s/g, '_') === k);
   if (pct < 100 || has('blood_loss') || has('broken_ribs')) labels.push('Wounded');
   if (has('fatigue') || has('dehydration') || has('hunger')) labels.push('Exhausted');
-  if ((clocks?.hunter_proximity || 0) > 0 || (clocks?.seeker_frustration || 0) > 0) labels.push('Hunted');
   labels.push('Pull-bound');
   return labels.join(' / ');
 }
@@ -240,6 +243,16 @@ export const INVENTORY_DETAILS = {
     uses: ['Warmth', 'Disguise', 'Emotional anchor'],
     meaning: 'Proof someone once cared whether Bullet survived.'
   },
+  "Thread's Algae-Wrapped Blade": {
+    type: 'Weapon', condition: 'algae-wrapped',
+    uses: ['Melee combat', 'Underwater use'],
+    meaning: 'A blade from Thread in the underwater dome.'
+  },
+  "Shard's Breathing Apparatus": {
+    type: 'Survival Gear', condition: 'salvaged',
+    uses: ['Breathe underwater', 'Survive liquid Provinces'],
+    meaning: 'Salvaged breathing gear for Province 472.'
+  },
   'Torn Clothing': {
     type: 'Clothing', condition: 'barely functional',
     uses: ['Minimal coverage'],
@@ -252,7 +265,11 @@ export const GUILT_ENTRIES = [
   { name: 'Patch', bond: 'Unresolved', province: 618, npcKey: 'patch', note: 'A healer who gave Bullet a cloak. Left behind.', trigger: (f, ctx) => ctx.leftCamp || !!f.patch_cloak },
   { name: 'Spark', bond: 'Debt carried', province: 618, npcKey: 'spark', note: 'A young inventor whose unetched shard Bullet carries.', trigger: (f) => !!f.spark_shard },
   { name: 'Shard', bond: 'Abandonment', province: 618, npcKey: 'shard', note: 'The camp leader. Left behind when the Pull dragged Bullet away.', trigger: (f, ctx) => ctx.leftCamp },
-  { name: 'Cowboy', bond: 'Witness Guilt', province: 618, npcKey: 'cowboy', note: 'Death memory from the camp.', trigger: (f) => !!f.cowboy_death },
+  { name: 'Cowboy', bond: 'Witness Guilt', province: 618, npcKey: 'cowboy', note: 'Taken by the sand maw during the purifier run.', trigger: (f) => !!f.cowboy_death },
+  { name: 'Rivet', bond: 'Abandonment', province: 618, npcKey: 'rivet', note: 'A fighter of Red Sand Camp. Left behind when the Pull dragged Bullet away.', trigger: (f, ctx) => ctx.leftCamp },
+  { name: 'Ember', bond: 'Abandonment', province: 472, npcKey: 'ember', note: 'The dome leader. Left behind when the Pull dragged Bullet onward.', trigger: (f, ctx) => ctx.leftDome },
+  { name: 'Thread', bond: 'Debt carried', province: 472, npcKey: 'thread', note: 'A gentle weaver whose algae-wrapped blade Bullet carries.', trigger: (f) => !!f.thread_blade },
+  { name: 'The Underwater Dome', bond: 'Witness Guilt', province: 472, npcKey: null, note: 'A fragile refuge Bullet could not stay to protect.' },
   { name: 'Glow', bond: 'Rescue', province: 269, npcKey: 'glow', note: 'Stayed behind to save dreamers in the Dream Jungle.' },
   { name: 'Thorn', bond: 'Regret', province: 512, npcKey: 'thorn', note: 'False hope in the Sky-Mist Ascents.' },
   { name: 'Frosthawk', bond: 'Trust', province: 713, npcKey: 'frosthawk', note: 'Trust and failure in the Frozen Tundra.' },
@@ -270,7 +287,8 @@ export function isGuiltVisible(entry, flags) {
   const currentProvince = flags.current_province || 618;
   const isMichael = flags.phase === 'Final Revelation' || flags.phase === 'Cleanup' || currentProvince === 1 || currentProvince === -1;
   const leftCamp = history.some(p => p !== 618) || currentProvince !== 618;
-  const ctx = { leftCamp, isMichael };
+  const leftDome = history.includes(837) || (history.includes(472) && currentProvince !== 472);
+  const ctx = { leftCamp, leftDome, isMichael };
 
   if (isMichael) return true;
 
@@ -419,9 +437,13 @@ export const PLAYER_CODEX = {
     ]
   },
   province_472: {
-    title: 'Province 472: Liquid Block / Dome',
+    title: 'Province 472: The Water Block',
     category: 'provinces',
-    stages: [{ content: 'A floating cube of thick jelly-water. An underwater dome settlement. Oxygen is scarce. The Dreadwraith first appeared here.', condition: 'province_472' }]
+    stages: [
+      { content: 'A massive suspended block of liquid — not normal water, but thick and alive. The breathing apparatus is necessary to enter it. Strange ocean-like life moves inside. The Pull leads deeper.', condition: 'province_472' },
+      { content: 'Deep in the murk, an underwater dome settlement. Ember leads it. Thread, Veil, Glint, and Flicker live inside. The dome is cracking.', condition: 'dome_discovered' },
+      { content: 'The Dreadwraith — an adaptive material hunter — appeared here. It is not natural. An exposed core is its weakness; Bullet shattered it with the pipe.', condition: 'dreadwraith' }
+    ]
   },
   province_837: {
     title: 'Province 837: Digger/Borer Tunnels',

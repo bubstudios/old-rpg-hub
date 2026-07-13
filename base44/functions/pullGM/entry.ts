@@ -2,8 +2,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ─── Province data (compact, for GM context) ───
 const PROVINCES = {
-  618: { n: 'Red Sand Camp', b: 'Red dunes, harsh sun, water scarcity, ruins, raiders, metal bird drone', d: 'Thirst, raiders, sand maws', npcs: 'Shard (leader — the bald woman with the wrench who later names Bullet), Patch (healer), Spark (young inventor), Maul (a CAMP MEMBER — a mean, untrustworthy rival bruiser who is hostile to Bullet within the camp; he is NOT a raider, NOT connected to the raiders, and NOT leading any external threat), Cowboy, Rivet', e: 'Raiders, Sand Maw', c: 'Thirst, Camp Trust, Purifier Stability, Raider Threat', m: 'Help retrieve purifier core or follow the Pull alone', l: 'Metal bird scans Bullet and recognizes something. Etched symbol matches ruins.', t: 'Tutorial survival' },
-  472: { n: 'Liquid Block / Dome', b: 'Floating liquid cube, jelly-water, pressure, oxygen scarcity, underwater dome', d: 'Oxygen depletion, spine creatures, Dreadwraith', npcs: 'Ember (dome leader), Thread (net weaver), Veil (suspicious), Glint (engineer), Flicker (apprentice)', e: 'Dreadwraith (first appearance — adaptive material hunter)', c: 'Oxygen, Pressure, Dome Stability, Dreadwraith Adaptation', m: 'Save dome resources or fight Dreadwraith and leave while needed', l: 'Dreadwraith adapts to materials. Exposed core is its weakness. It is not natural.', t: 'Oxygen survival and first monster' },
+  618: { n: 'Red Sand Camp', b: 'Red dunes, harsh sun, water scarcity, ruins, raiders, metal bird drone', d: 'Thirst, raiders, sand maws', npcs: 'Shard (leader — bald/scarred woman with the wrench who later names Bullet), Patch (healer), Maul (a CAMP MEMBER — mean, untrustworthy rival bruiser hostile to Bullet; NOT a raider, NOT connected to raiders), Spark (young inventor), Ash (cook/grower), Hawk (lookout), Cowboy (survivor/scavenger), Rivet (fighter)', e: 'Raiders, Sand Maw', c: 'Thirst, Camp Trust, Purifier Stability, Raider Threat', m: 'Help retrieve purifier core or follow the Pull alone', l: 'Metal bird scans Bullet and recognizes something. Etched symbol matches ruins.', t: 'Tutorial survival' },
+  472: { n: 'The Water Block', b: 'Massive suspended block/cube of thick living liquid (NOT normal water). Breathing apparatus required. Alien ocean life, spined metallic creatures, pressure, blood in the water, blackout/memory fragments, vortex/current. An underwater dome is discovered INSIDE the murk — NOT the starting scene', d: 'Air depletion, pressure, spined creatures, Dreadwraith (revealed late, not at start)', npcs: 'Discovered later at the dome: Ember (dome leader), Thread (gentle weaver), Veil (suspicious diver), Glint (tech worker), Flicker (young trainee)', e: 'Spined Creatures (early), Dreadwraith (revealed during underwater battle — adaptive material hunter)', c: 'Air, Pressure, Swimming Fatigue, then Dome Stability, Air Supply, Dome Trust, then Dreadwraith Threat', m: 'Traverse the block, find the dome, survive the crisis, then fight the Dreadwraith and exit to Province 837', l: 'The block is not water. The Dreadwraith adapts to materials (liquid to solid to crystal to granite to exposed core). Bullet shatters its core with the pipe after pinning it in granite form beneath falling stone.', t: 'Liquid survival, dome discovery, first major monster' },
   837: { n: 'Digger/Borer Tunnels', b: 'Rock tunnels, root gardens, underground farms, First Sowing altar', d: 'Sentinels, Cragbeasts, faction war', npcs: 'Ridge, Vest, Flint, Drift, Stitch, Knot, Husk, Gash', e: 'Sentinel, Cragbeasts', c: 'Tunnel Stability, Faction Trust, First Sowing Truth, Sentinel Escalation', m: 'Side with Diggers, Borers, or broker a truce', l: 'First Sowing altar reveals Provinces were seeded — not natural.', t: 'Faction conflict and scarcity morality' },
   269: { n: 'Dream Jungle', b: 'Bioluminescent fungal jungle, spores, dream moss, trapped sleepers', d: 'Spore exposure, Weaver, identity loss', npcs: 'Glow, Sol, Lumen, Shade', e: 'Weaver / corrupted Hive-Warden', c: 'Dream Grip, Spore Exposure, Identity Fragment Risk, Weaver Corruption', m: 'Stay in the dream or fight free and help others escape', l: 'Dreamers are being consumed, not resting. The jungle is a trap disguised as mercy.', t: 'Stasis and dream temptation' },
   391: { n: 'Mirrorheart Plain', b: 'Endless mirror plain, glass trees, mirror spires, eyeless wanderers', d: 'Twisted Bullet reflections, Mirrorheart', npcs: 'Whisper, Glare, Echo', e: 'Mirrorheart (becomes dormant, not destroyed)', c: 'Reflection Fracture, False Identity Visions, Mirrorheart Dormancy', m: 'Confront reflections or flee', l: 'Reflections show tyrant/thief/monster possibilities — what Bullet could become.', t: 'Identity horror' },
@@ -38,7 +38,15 @@ const CLOCK_DISCOVERY_RULES = {
     const r = f.npc_relationships || {};
     return !!(r.shard || r.spark || r.patch);
   },
-  raider_threat: (f) => (f.discovered_clocks || []).includes('camp_trust')
+  raider_threat: (f) => (f.discovered_clocks || []).includes('camp_trust'),
+  air: (f) => (f.current_province || 618) === 472,
+  pressure: (f) => (f.current_province || 618) === 472,
+  swimming_fatigue: (f) => (f.current_province || 618) === 472,
+  blood_loss: (f) => (f.current_province || 618) === 472,
+  dome_stability: (f) => !!((f.npc_relationships || {}).ember),
+  dome_trust: (f) => !!((f.npc_relationships || {}).ember),
+  air_supply: (f) => !!((f.npc_relationships || {}).ember),
+  dreadwraith_threat: (f) => !!((f.knowledge_flags || {}).knowsDreadwraith)
 };
 
 const RESPONSE_SCHEMA = {
@@ -54,6 +62,12 @@ const RESPONSE_SCHEMA = {
     local_clock_changes: { type: "array", items: { type: "object", properties: { clock: { type: "string" }, change: { type: "number" }, reason: { type: "string" } } } },
     codex_unlocks: { type: "array", items: { type: "string" }, description: "New codex entry keys unlocked by this action" },
     knowledge_unlocks: { type: "object", description: "Set specific spoiler-knowledge flags to true this turn (e.g. {knowsSeeker: true}). Only set when the player genuinely learns the concept through story events — never speculatively. Keys: knowsProvince1Exists, knowsProvince1IsDestination, knowsSeeker, knowsDreadwraith, knowsSentinels, knowsShardFocus, knowsShardResonance, knowsShardOrigin, knowsFather, knowsGarden, knowsLeaderBrother, knowsBladeOfDawn, knowsStarCrownedEmber, knowsSilentPulse.", additionalProperties: { type: "boolean" } },
+    interlude: { type: "string", description: "Optional player-only cutscene shown BEFORE narration. Events elsewhere Bullet cannot see or react to (the Leader on a distant throne, operatives discussing 'the anomaly', the metal bird scanning Bullet). Does NOT update Bullet's state — no clocks, codex, items, HP, knowledge flags, or objectives. Keep atmospheric and partial: never name Province 1, Michael, Father, or the Garden. Use 'elsewhere,' 'a distant throne,' 'the one who watches.'" },
+    memory_unlocks: { type: "array", items: { type: "string" }, description: "Memory fragment keys unlocked this turn (e.g. 'heard_to_end_its_torment'). Partial fragments only — never a full explanation." },
+    guilt_unlocks: { type: "array", items: { type: "object", properties: { key: { type: "string" }, label: { type: "string" }, reason: { type: "string" }, flag: { type: "string", description: "Optional flag to set true (e.g. 'cowboy_death', 'rivet_guilt', 'ember_guilt', 'thread_guilt', 'dome_guilt')" } } }, description: "New guilt/bond entries unlocked by a story scene (e.g. {key:'cowboy_death', label:'Cowboy - Witnessed Death', reason:'Taken by the sand maw during the purifier run.', flag:'cowboy_death'}). Fire only once per key. Meeting someone does NOT create guilt — only loss, failure, abandonment, violence, receiving a debt object, or being saved does." },
+    unlock_flags: { type: "object", description: "Set one-time unlock flags to true this turn (e.g. {spark_shard:true, cowboy_death:true}). Prevents duplicate popups — if a flag is already true, do not re-unlock or re-add the item.", additionalProperties: { type: "boolean" } },
+    thread_blade_acquired: { type: "boolean", description: "Set to true when Thread gives Bullet the algae-wrapped blade in the underwater dome." },
+    patch_cloak_acquired: { type: "boolean", description: "Set to true when Bullet receives Patch's cloak (during camp rest or at Chapter 2 transition)." },
     decision_impact: { type: "object", properties: {
       is_meaningful: { type: "boolean" },
       impacts: { type: "array", items: { type: "object", properties: {
@@ -130,6 +144,17 @@ RULES:
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
 - PROVINCE TRANSITIONS (CRITICAL): Bullet can ONLY move to the next Province in the canonical sequence — never skip ahead. The current Province is ${ctx.currentProvince}. Do NOT return a province_transition unless the story has genuinely reached the boundary between the current Province and the next. Narrating within the same Province (e.g. moving from the dunes to the camp interior) is NOT a province transition. Never reference, foreshadow, or transition to Provinces that are far ahead in the story — doing so spoils major plot reveals.
 - SPOILER FIREWALL (CRITICAL): You know the full hidden truth, but the player does not. Never reveal future lore, future Province names/numbers, future enemies, Bullet's final identity (Michael), Father, the Garden, the final destination, the Seeker, the Dreadwraith, Sentinels, Cleanup Mode, the Leader as brother, Blade of Dawn, Star-Crowned Ember, Silent Pulse, Shard Focus, or Shard Resonance before its knowledge flag is true (see KNOWLEDGE FLAGS below). Do not mention hidden concepts even as locked entries, tooltips, clock labels, objective names, codex category names, or vague-but-obvious hints. Before writing any player-facing text, check: (1) Does Bullet know this? (2) Has the player unlocked this? (3) Is this term allowed right now? If not, rewrite using only what Bullet can currently observe — "forward," "the horizon," "a distant pull," "something unseen," "the shard pulses," "the desert is not empty." Never name Province 1 as a destination until the way-station monitor reveal.
+
+- DISCOVERY ORDER CANON (CRITICAL): The player must experience the world in the same order Bullet experiences it. Do NOT reveal systems, places, enemies, clocks, objectives, items, or guilt entries before the story actually gives them to Bullet. Specific Chapter 1 and 2 triggers:
+  * PROVINCE 472 IS THE WATER BLOCK, NOT THE DOME. Chapter 2 begins with an impossible suspended block/cube of thick living liquid — not normal water. The breathing apparatus is necessary. Bullet enters it, swims through it, meets spined metallic creatures, suffers air-tank pressure, may see blood in the water, may black out and surface a memory fragment (e.g. 'to end its torment'), and may hit a vortex/current. The dome is a DISCOVERED LOCATION inside the block — do NOT reveal the dome, Ember, Thread, Veil, Glint, Flicker, dome_stability, dome_trust, or air_supply until Bullet sees the dome in the murk. Before the dome, visible clocks are air, pressure, swimming_fatigue, pull_intensity, and injury/blood_loss only.
+  * DREADWRAITH REVEAL: Do NOT name the Dreadwraith until Bullet sees it during the underwater battle. Before the reveal use atmospheric cues only: 'the water stills, the creatures scatter, something moves against the current, the Pull screams.' Then return an enemy discovery and set knowsDreadwraith via knowledge_unlocks. The battle has phases: liquid form, hardened fist/solid matter, crystal/glass form, granite form (after reaching rock), exposed core, core shattered with the pipe. CANONICAL TRUTH: Bullet defeats the Dreadwraith by shattering its exposed core with the pipe after pinning it in granite form beneath falling stone. Record this exactly in events[] (item_used_name 'metal pipe'). Never attribute the kill to another weapon.
+  * CAMP NPC ORDER: Unlock People as met, in order: Shard (bald/scarred leader), Patch (healer), Maul (hostile rival), Spark (young inventor), Ash (cook/grower), Hawk (lookout), Cowboy (survivor/scavenger), Rivet (fighter).
+  * PURIFIER STABILITY clock unlocks only after Shard explains the purifier problem.
+  * RAIDER THREAT clock unlocks only after Spark warns 'Raiders are coming!' — never before.
+  * GUILT entries unlock only after the triggering scene (e.g. Cowboy - Witnessed Death, only after the sand maw scene; return guilt_unlocks with flag 'cowboy_death'). Meeting someone does NOT create guilt — only loss, failure, abandonment, violence, receiving a debt object, or being saved does.
+  * MEMORY fragments (e.g. 'to end its torment') unlock via memory_unlocks — partial, never a full explanation.
+  * ITEM UNLOCKS fire ONCE: Spark's shard (after the tent scene), breathing apparatus (after Shard gives it at dawn), Patch's cloak (during camp rest or Chapter 2 transition), Thread's blade (after Thread gives it in the dome). Set the corresponding flag (spark_shard_acquired / breathing_gear_acquired / patch_cloak_acquired / thread_blade_acquired) and add the item via item_changes the FIRST time only. If the item already exists, update the card — do NOT re-add or re-popup.
+- INTERLUDE CUTSCENES (CRITICAL): Some beats are player-only — Bullet cannot see or react to them. Deliver these via the 'interlude' field (e.g. the Leader on a distant throne, operatives discussing 'the anomaly', the metal bird scanning Bullet). The interlude is shown to the player BEFORE the main narration. It does NOT update Bullet's state — no clocks, codex, items, HP, knowledge flags, or objectives. The player may learn atmospheric partial truths (a powerful figure elsewhere, Bullet is an anomaly, someone wants him investigated). NEVER reveal Michael, Father's identity, the Garden, or the full hidden truth in an interlude — keep it to 'elsewhere,' 'a distant throne,' 'the one who watches.' Narrative fear in main narration ('something was watching') is allowed; formal status unlocks (Hunted, Province 1 Alert, Hunter Proximity) are NEVER shown to the player — those are hidden GM clocks only.
 
 CURRENT GAME STATE:
 Province: ${ctx.currentProvince} — ${p.n}
@@ -521,6 +546,23 @@ Deno.serve(async (req) => {
     }
     narration = sanitizeSpoilers(narration, deriveKnowledgeFlags(gateFlags, effectiveProvince)).narration;
 
+    // Interlude — player-only cutscene, saved BEFORE the narration so it leads
+    // the feed. Shown to the player, NOT Bullet. Does not update any state.
+    // Sanitized for firearms only; spoiler firewall skipped (interludes are
+    // explicitly player-facing atmospheric scenes).
+    let interludeText = '';
+    if (result.interlude) {
+      interludeText = sanitizeNarration(result.interlude).narration;
+      try {
+        await base44.entities.JournalEntry.create({
+          campaign_id,
+          entry_type: 'system',
+          narration: `✦ INTERLUDE — ELSEWHERE ✦\n\n${interludeText}`,
+          chapter: campaign.current_chapter
+        });
+      } catch { /* best-effort */ }
+    }
+
     // Create journal entry
     await base44.entities.JournalEntry.create({
       campaign_id,
@@ -589,6 +631,34 @@ Deno.serve(async (req) => {
 
     // Breathing apparatus acquired
     if (result.breathing_gear_acquired) updatedFlags.breathing_gear = true;
+
+    // Thread's blade acquired (Province 472 dome)
+    if (result.thread_blade_acquired) updatedFlags.thread_blade = true;
+
+    // Patch's cloak acquired (camp rest or Chapter 2 transition)
+    if (result.patch_cloak_acquired) updatedFlags.patch_cloak = true;
+
+    // One-time unlock flags — prevent duplicate popups and re-adds
+    if (result.unlock_flags && Object.keys(result.unlock_flags).length) {
+      updatedFlags.unlock_flags = { ...(flags.unlock_flags || {}), ...result.unlock_flags };
+    }
+
+    // Memory fragments — partial, never full explanation. Also surface as codex
+    // unlocks so the player-facing codex/memories UI reveals them.
+    if (result.memory_unlocks && result.memory_unlocks.length) {
+      updatedFlags.memories = [...new Set([...(flags.memories || []), ...result.memory_unlocks])];
+      updatedFlags.codex_unlocks = [...new Set([...(updatedFlags.codex_unlocks || codexUnlocks), ...result.memory_unlocks])];
+    }
+
+    // Guilt/bond entries — fire once per key, optionally set an associated flag
+    if (result.guilt_unlocks && result.guilt_unlocks.length) {
+      const guilt = [...(flags.guilt_echoes || [])];
+      for (const g of result.guilt_unlocks) {
+        if (g.key && !guilt.some(x => x.key === g.key)) guilt.push({ key: g.key, label: g.label, reason: g.reason });
+        if (g.flag) updatedFlags[g.flag] = true;
+      }
+      updatedFlags.guilt_echoes = guilt;
+    }
 
     // Current objective
     if (result.current_objective && result.current_objective.description) {
@@ -779,6 +849,14 @@ Deno.serve(async (req) => {
         if (toProv === 1) updatedFlags.phase = 'Final Revelation';
         else if (toProv === -1) updatedFlags.phase = 'Cleanup';
         else if (toProv === 0 || toProv === 14 || toProv === 140) updatedFlags.phase = 'System Breaker';
+        // Province 472 — seed water-block traversal clocks on arrival
+        if (toProv === 472) {
+          updatedLocalClocks.air = updatedLocalClocks.air ?? 80;
+          updatedLocalClocks.pressure = updatedLocalClocks.pressure ?? 10;
+          updatedLocalClocks.swimming_fatigue = updatedLocalClocks.swimming_fatigue ?? 5;
+          updatedFlags.local_clocks = updatedLocalClocks;
+          updatedFlags.discovered_clocks = [...new Set([...(updatedFlags.discovered_clocks || flags.discovered_clocks || []), 'air', 'pressure', 'swimming_fatigue'])];
+        }
       } else {
         // Invalid transition (skip ahead) — reject silently to prevent spoilers
         console.warn(`Rejected province transition ${currentProvince} → ${toProv}: not next in canonical sequence`);
@@ -836,6 +914,12 @@ Deno.serve(async (req) => {
     if (updatedFlags.breathing_gear && !updatedEquipment.some(e => /breathing apparatus/i.test(e.name))) {
       updatedEquipment.push({ name: "Shard's Breathing Apparatus", qty: 1, notes: 'Salvaged breathing gear for Province 472.' });
     }
+    if (updatedFlags.thread_blade && !updatedEquipment.some(e => /thread.*blade|algae.*wrapped.*blade/i.test(e.name))) {
+      updatedEquipment.push({ name: "Thread's Algae-Wrapped Blade", qty: 1, notes: 'A blade given by Thread in the underwater dome.' });
+    }
+    if (updatedFlags.patch_cloak && !updatedEquipment.some(e => /patch.*cloak/i.test(e.name))) {
+      updatedEquipment.push({ name: "Patch's Cloak", qty: 1, notes: "A healer's cloak. Proof someone once cared whether Bullet survived." });
+    }
     if (updatedEquipment.length !== (bullet.equipment || []).length || JSON.stringify(updatedEquipment) !== JSON.stringify(bullet.equipment || [])) {
       charUpdates.equipment = updatedEquipment;
     }
@@ -847,6 +931,7 @@ Deno.serve(async (req) => {
     // Return response
     return Response.json({
       narration,
+      interlude: interludeText || null,
       pull_intensity: updatedFlags.pull_intensity,
       scar_state: updatedFlags.scar_state,
       shard_resonance: updatedFlags.shard_resonance,

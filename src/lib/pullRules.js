@@ -107,12 +107,12 @@ export const PROVINCES = {
     cleanup: 'Are the survivors trapped here, or did they choose this place?'
   },
   472: {
-    name: 'Province 472: Liquid Block / Dome', biome: 'Floating liquid cube, thick jelly-water, pressure, oxygen scarcity, underwater dome settlement',
-    theme: 'Oxygen survival and first major monster', danger: 'Oxygen depletion, spine creatures, Dreadwraith',
-    npcs: 'Ember (dome leader), Thread (net weaver), Veil (suspicious survivor), Glint (engineer), Flicker (apprentice)',
-    enemy: 'Dreadwraith (first appearance — adaptive material hunter)', mechanics: 'Oxygen, Pressure, Dome Stability, Dreadwraith Adaptation',
-    choice: 'Save dome resources, fight the Dreadwraith, or leave while needed',
-    clue: 'The Dreadwraith adapts to materials — crystal, stone, liquid. It is not natural. An exposed core is its weakness.',
+    name: 'Province 472: The Water Block', biome: 'A massive suspended block/cube of thick living liquid — not normal water. The breathing apparatus is required to enter. Strange ocean-like life moves inside. An underwater dome is discovered deep in the murk.',
+    theme: 'Liquid survival, dome discovery, and first major monster', danger: 'Air depletion, pressure, spined creatures, Dreadwraith (revealed late)',
+    npcs: 'Discovered at the dome: Ember (dome leader), Thread (gentle weaver), Veil (suspicious diver), Glint (tech worker), Flicker (young trainee)',
+    enemy: 'Spined Creatures (early), Dreadwraith (revealed during underwater battle — adaptive material hunter)', mechanics: 'Air, Pressure, Swimming Fatigue, Dome Stability, Dome Trust, Dreadwraith Adaptation',
+    choice: 'Traverse the block, find the dome, survive its crisis, then fight the Dreadwraith and exit to Province 837',
+    clue: 'The block is not water. The Dreadwraith adapts to materials (liquid to solid to crystal to granite to exposed core). An exposed core is its weakness — Bullet shatters it with the pipe after pinning it in granite form beneath falling stone.',
     cleanup: 'Is the Dreadwraith a construct or a corrupted being?'
   },
   837: {
@@ -482,8 +482,9 @@ export const PULL_INITIAL_STATE = {
     bullet_mystery: 0, fear_of_self: 0, soul_fracture: 0,
     witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100
   },
-  local_clocks: { thirst: 20, heat_exposure: 15, fatigue: 10, camp_trust: 30, purifier_stability: 60, raider_threat: 20 },
+  local_clocks: { thirst: 20, heat_exposure: 15, fatigue: 10, camp_trust: 30, purifier_stability: 60, raider_threat: 20, air: 0, pressure: 0, swimming_fatigue: 0 },
   discovered_clocks: ['thirst', 'heat_exposure', 'fatigue'],
+  unlock_flags: {},
   pull_intensity: 1,
   scar_state: 'pulse',
   shard_resonance: 5,

@@ -84,6 +84,21 @@ export default function JournalEntryCard({ entry }) {
     );
   }
 
+  // Pull interlude — player-only cutscene (distinct from GM narration)
+  if (entry.entry_type === 'system' && entry.narration && entry.narration.startsWith('✦ INTERLUDE')) {
+    return (
+      <div className="animate-ink">
+        <div className="border border-indigo-900/40 bg-indigo-950/30 rounded-lg p-4 text-center panel-glow">
+          <p className="text-[10px] font-heading tracking-[0.25em] text-indigo-400/70 mb-2">✦ INTERLUDE — ELSEWHERE ✦</p>
+          <p className="text-sm font-body italic text-indigo-200/80 whitespace-pre-wrap leading-relaxed">
+            {entry.narration.replace(/^✦ INTERLUDE — ELSEWHERE ✦\n\n/, '')}
+          </p>
+          <p className="text-[9px] font-heading tracking-[0.2em] text-indigo-500/40 mt-3">— Bullet does not see this —</p>
+        </div>
+      </div>
+    );
+  }
+
   // Event / system entry
   return (
     <div className="flex justify-center animate-ink">
