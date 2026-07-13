@@ -1356,21 +1356,45 @@ Deno.serve(async (req) => {
     if (result.scar_state) updatedFlags.scar_state = result.scar_state;
     if (typeof result.shard_resonance === 'number') updatedFlags.shard_resonance = Math.max(0, Math.min(100, result.shard_resonance));
 
+    // ─── Clock change helpers ───
+    // The LLM may return change values as strings ("+2", "-5") or clock keys with
+    // different casing ("Camp Trust" vs "camp_trust"). These helpers normalize
+    // everything so no gain or loss is silently lost.
+    const parseChange = (v) => {
+      if (typeof v === 'number') return v;
+      const n = parseFloat(String(v || '').replace(/[^\d.-]/g, ''));
+      return isNaN(n) ? 0 : n;
+    };
+    const normalizeClockKey = (k) => {
+      const l = String(k || '').toLowerCase().replace(/\s+/g, '_');
+      if (/camp.*trust/.test(l)) return 'camp_trust';
+      if (/heat/.test(l)) return 'heat_exposure';
+      if (/fatigue|exhaust/.test(l)) return 'fatigue';
+      if (/thirst|dehydrat/.test(l)) return 'thirst';
+      if (/hunger|starv/.test(l)) return 'hunger';
+      if (/pull.*intens/.test(l)) return 'pull_intensity';
+      if (/scar/.test(l)) return 'scar_progression';
+      if (/purif/.test(l)) return 'purifier_stability';
+      return l;
+    };
+
     // Apply hidden clock changes + enemy turn
     const updatedClocks = { ...clocks };
     for (const cc of (result.clock_changes || [])) {
-      updatedClocks[cc.clock] = Math.max(0, Math.min(100, (updatedClocks[cc.clock] || 0) + (cc.change || 0)));
+      const ck = normalizeClockKey(cc.clock);
+      updatedClocks[ck] = Math.max(0, Math.min(100, (updatedClocks[ck] || 0) + parseChange(cc.change)));
     }
     if (result.enemy_turn) {
-      if (result.enemy_turn.province_1_alert_change) updatedClocks.province_1_alert = Math.max(0, Math.min(100, (updatedClocks.province_1_alert || 0) + result.enemy_turn.province_1_alert_change));
-      if (result.enemy_turn.hunter_proximity_change) updatedClocks.hunter_proximity = Math.max(0, Math.min(100, (updatedClocks.hunter_proximity || 0) + result.enemy_turn.hunter_proximity_change));
+      if (result.enemy_turn.province_1_alert_change) updatedClocks.province_1_alert = Math.max(0, Math.min(100, (updatedClocks.province_1_alert || 0) + parseChange(result.enemy_turn.province_1_alert_change)));
+      if (result.enemy_turn.hunter_proximity_change) updatedClocks.hunter_proximity = Math.max(0, Math.min(100, (updatedClocks.hunter_proximity || 0) + parseChange(result.enemy_turn.hunter_proximity_change)));
     }
     updatedFlags.campaign_clocks = updatedClocks;
 
     // Apply local clock changes
     const updatedLocalClocks = { ...localClocks };
     for (const cc of (result.local_clock_changes || [])) {
-      updatedLocalClocks[cc.clock] = Math.max(0, Math.min(100, (updatedLocalClocks[cc.clock] || 0) + (cc.change || 0)));
+      const ck = normalizeClockKey(cc.clock);
+      updatedLocalClocks[ck] = Math.max(0, Math.min(100, (updatedLocalClocks[ck] || 0) + parseChange(cc.change)));
     }
 
     // ─── Decision Impact → Clock Sync ───
@@ -1381,9 +1405,11 @@ Deno.serve(async (req) => {
     // doesn't move" bug.
     // SKIP camp_trust duplicates of already-completed one-time events.
     if (result.decision_impact && result.decision_impact.impacts) {
-      const existingChangeClocks = new Set((result.local_clock_changes || []).map(cc => cc.clock));
+      const existingChangeClocks = new Set((result.local_clock_changes || []).map(cc => normalizeClockKey(cc.clock)));
       const uf = flags.unlock_flags || {};
-      // Map impact labels to canonical clock keys
+      // Map impact labels to canonical clock keys — only return a key for
+      // recognized clock labels; return null for anything else so we don't
+      // create garbage clock entries from non-clock impact labels.
       const labelToClock = (label) => {
         const l = (label || '').toLowerCase();
         if (/camp\s*trust/.test(l)) return 'camp_trust';
@@ -1396,7 +1422,8 @@ Deno.serve(async (req) => {
         return null;
       };
       for (const imp of result.decision_impact.impacts) {
-        if (typeof imp.change !== 'number' || imp.change === 0) continue;
+        const delta = parseChange(imp.change);
+        if (delta === 0) continue;
         const clockKey = labelToClock(imp.label);
         if (!clockKey) continue;
         // Skip if local_clock_changes already covers this clock
@@ -1410,8 +1437,8 @@ Deno.serve(async (req) => {
           }
         }
         updatedLocalClocks[clockKey] = Math.max(0, Math.min(100,
-          (updatedLocalClocks[clockKey] || 0) + imp.change));
-        console.log(`[PullGM] Clock sync: injected ${clockKey} ${imp.change > 0 ? '+' : ''}${imp.change} from decision_impact (was missing from local_clock_changes)`);
+          (updatedLocalClocks[clockKey] || 0) + delta));
+        console.log(`[PullGM] Clock sync: injected ${clockKey} ${delta > 0 ? '+' : ''}${delta} from decision_impact (was missing from local_clock_changes)`);
       }
     }
 
