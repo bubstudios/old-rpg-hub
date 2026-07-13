@@ -305,7 +305,7 @@ Deno.serve(async (req) => {
       // The Pull — solo dark fantasy survival mystery RPG
       if (game_system === 'thepull') {
         const pullClocks = { province_1_alert: 0, hunter_proximity: 0, seeker_frustration: 0, dreadwraith_adaptation: 0, shard_resonance_trail: 0, bond_threat: 0, council_fracture: 0, ruler_strain: 50, realm_stability: 50, bullet_mystery: 0, fear_of_self: 0, soul_fracture: 0, witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100 };
-        const pullLocalClocks = { thirst: 20, camp_trust: 30, purifier_stability: 60, raider_threat: 20 };
+        const pullLocalClocks = { thirst: 20, heat_exposure: 65, fatigue: 55, camp_trust: 30, purifier_stability: 60, raider_threat: 20 };
 
         const campaign = await base44.entities.Campaign.create({
           name: name.trim(),

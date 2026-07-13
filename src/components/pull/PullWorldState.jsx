@@ -40,8 +40,8 @@ export default function PullWorldState({ campaign }) {
 
   // Only discovered local clocks are visible — hidden clocks stay in GM state
   const discoveredClocks = flags.discovered_clocks || ['thirst', 'heat_exposure', 'fatigue'];
-  const localClocks = flags.local_clocks || {};
-  const visibleClocks = discoveredClocks.map(k => ({ key: k, value: localClocks[k] || 0 }));
+  const allLocalClocks = { thirst: 75, heat_exposure: 65, fatigue: 55, ...(flags.local_clocks || {}) };
+  const visibleClocks = discoveredClocks.map(k => ({ key: k, value: allLocalClocks[k] ?? 0 }));
 
   // Known threats: derived from codex unlocks + hostile NPCs
   const codexUnlocks = flags.codex_unlocks || [];
