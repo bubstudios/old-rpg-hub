@@ -111,6 +111,31 @@ function generateChapterHandoff(flags, equipment, chapterNum) {
   }
 
   const conditions = flags.conditions || [];
+
+  // Filter canonical events to only include those that have ACTUALLY happened,
+  // based on unlock flags and story state. This prevents the handoff summary from
+  // showing future/spoiler events (e.g. "Spark loaned her shard") if the chapter
+  // ends before all beats are done.
+  const uf = flags.unlock_flags || {};
+  const eventGates = {
+    'A mechanical bird scanned Bullet and reported to something distant.': !!uf.mechanical_bird_scanned,
+    'Bullet reached Red Sand Camp.': Object.keys(flags.npc_relationships || {}).length > 0,
+    'Shard named him Bullet after seeing his circular scar.': !!flags.bullet_named,
+    "Bullet completed Shard's task (retrieving the purifier core).": !!uf.task_complete,
+    'Bullet fought raiders with the pipe.': !!uf.raiders_defeated,
+    'Spark loaned Bullet her unetched shard.': !!flags.spark_shard,
+    'Shard gave Bullet breathing apparatus.': !!flags.breathing_gear,
+    'The Pull forced Bullet onward.': !!flags.camp_arc_complete,
+  };
+  const filteredEvents = packet.canonicalEvents.filter(e => eventGates[e] === undefined || eventGates[e]);
+
+  // Filter debts to only include those whose triggering event has happened
+  const filteredDebts = packet.debts.filter(d => {
+    if (d.includes('Spark')) return !!flags.spark_shard;
+    if (d.includes('Shard')) return !!flags.bullet_named;
+    return true;
+  });
+
   return {
     completedChapter: chapterId,
     nextChapter: nextChapterId,
@@ -125,10 +150,10 @@ function generateChapterHandoff(flags, equipment, chapterNum) {
     knownPeople,
     requiredAlive: packet.requiredAlive,
     variableOutcomes,
-    canonicalEvents: packet.canonicalEvents,
+    canonicalEvents: filteredEvents,
     bulletKnowledge: packet.bulletKnowledge,
     playerOnlyKnowledge: packet.playerOnlyKnowledge,
-    debts: packet.debts
+    debts: filteredDebts
   };
 }
 
@@ -303,6 +328,7 @@ RULES:
 - Player choices should matter whenever possible.
 - Visions can be true memory, distorted memory, false guilt echo, Province-planted accusation, symbolic echo, or unverified myth. Do not treat all visions as true.
 - PROVINCE TRANSITIONS (CRITICAL): Bullet can ONLY move to the next Province in the canonical sequence — never skip ahead. The current Province is ${ctx.currentProvince}. Do NOT return a province_transition unless the story has genuinely reached the boundary between the current Province and the next. Narrating within the same Province (e.g. moving from the dunes to the camp interior) is NOT a province transition. Never reference, foreshadow, or transition to Provinces that are far ahead in the story — doing so spoils major plot reveals.
+- CHAPTER 1 COMPLETION GATE (CRITICAL): Do NOT return a province_transition to 472 until ALL of these story beats are complete: (1) Bullet is named, (2) Shard's task is done (purifier core retrieved — task_complete flag), (3) raiders are defeated (raiders_defeated flag), (4) Spark gave her shard (spark_shard_given flag), (5) Shard gave the breathing apparatus (breathing_gear_given flag), (6) the Province 1 interlude has been shown (province1_interlude_shown flag), (7) the Pull intensified for departure (camp_arc_complete), (8) Bullet reached the wall of water. Receiving water or agreeing to help is NOT the end of the chapter — it triggers the TASK ASSIGNMENT stage (Shard asks Bullet to retrieve the purifier core). The system enforces this gate server-side: any premature transition will be rejected and logged. Chapter 1 has 15 sequences — the transition can only fire at sequence 15.
 - SPOILER FIREWALL (CRITICAL): You know the full hidden truth, but the player does not. Never reveal future lore, future Province names/numbers, future enemies, Bullet's final identity (Michael), Father, the Garden, the final destination, the Seeker, the Dreadwraith, Sentinels, Cleanup Mode, the Leader as brother, Blade of Dawn, Star-Crowned Ember, Silent Pulse, Shard Focus, or Shard Resonance before its knowledge flag is true (see KNOWLEDGE FLAGS below). Do not mention hidden concepts even as locked entries, tooltips, clock labels, objective names, codex category names, or vague-but-obvious hints. Before writing any player-facing text, check: (1) Does Bullet know this? (2) Has the player unlocked this? (3) Is this term allowed right now? If not, rewrite using only what Bullet can currently observe — "forward," "the horizon," "a distant pull," "something unseen," "the shard pulses," "the desert is not empty." Never name Province 1 as a destination until the way-station monitor reveal.
 
 - DISCOVERY ORDER CANON (CRITICAL): The player must experience the world in the same order Bullet experiences it. Do NOT reveal systems, places, enemies, clocks, objectives, items, or guilt entries before the story actually gives them to Bullet. Specific Chapter 1 and 2 triggers:
@@ -1053,10 +1079,24 @@ Deno.serve(async (req) => {
       // Allow: same province (sub-area transition) OR the next province in canonical order
       // Block departure to Province 472 until both farewell gifts are delivered
       const giftsPending = toProv === 472 && (!updatedFlags.spark_shard || !updatedFlags.breathing_gear);
+      // ─── Chapter 1 story gate (CRITICAL) ───
+      // The transition to 472 (end of Chapter 1) can ONLY fire when the story
+      // has reached sequence 15 (wall of water) AND all required story beats
+      // are complete: task done, raiders defeated, Spark's shard given, breathing
+      // gear given, Province 1 interlude shown. This prevents the chapter from
+      // ending early just because the LLM set gift flags or returned a transition.
+      const uf = updatedFlags.unlock_flags || {};
+      const seq = updatedFlags.chapter1_sequence || 1;
+      const chapter1BeatsComplete = (currentProvince === 618 && toProv === 472)
+        ? (seq >= 15 && uf.task_complete && uf.raiders_defeated && uf.spark_shard_given && uf.breathing_gear_given && uf.province1_interlude_shown)
+        : true;
       if (giftsPending) {
         console.warn(`Held transition to 472: farewell gifts pending (spark_shard=${!!updatedFlags.spark_shard}, breathing_gear=${!!updatedFlags.breathing_gear})`);
       }
-      if (!giftsPending && (toProv === currentProvince || (currentIdx >= 0 && targetIdx === currentIdx + 1))) {
+      if (!chapter1BeatsComplete) {
+        console.warn(`Held transition to 472: story beats incomplete (seq=${seq}, task=${!!uf.task_complete}, raiders=${!!uf.raiders_defeated}, sparkShard=${!!uf.spark_shard_given}, breathingGear=${!!uf.breathing_gear_given}, interlude=${!!uf.province1_interlude_shown})`);
+      }
+      if (!giftsPending && chapter1BeatsComplete && (toProv === currentProvince || (currentIdx >= 0 && targetIdx === currentIdx + 1))) {
         validTransition = result.province_transition;
         updatedFlags.current_province = toProv;
         // Only record a province change in history if Bullet actually moved to a different province
