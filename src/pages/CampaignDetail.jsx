@@ -14,7 +14,6 @@ import HyDiceRollerPanel from '@/components/HyDiceRollerPanel';
 import GBDiceRollerPanel from '@/components/GBDiceRollerPanel';
 import GangDiceRollerPanel from '@/components/GangDiceRollerPanel';
 import LODDiceRollerPanel from '@/components/LODDiceRollerPanel';
-import PJDiceRollerPanel from '@/components/PJDiceRollerPanel';
 import JitsiVideoPanel from '@/components/JitsiVideoPanel';
 import NpcDossier from '@/components/NpcDossier';
 import LocationDossier from '@/components/LocationDossier';
@@ -708,7 +707,7 @@ export default function CampaignDetail() {
               >
                 <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} /> {discussMode ? 'Discussing' : 'Discuss'}
               </button>
-              {campaign?.game_system !== 'thepull' && (
+              {campaign?.game_system !== 'thepull' && campaign?.game_system !== 'pathfinder' && (
                 <button
                   onClick={() => setDiceOpen((o) => !o)}
                   className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
@@ -785,14 +784,6 @@ export default function CampaignDetail() {
                 />
               ) : campaign?.game_system === 'legionofdoom' ? (
                 <LODDiceRollerPanel
-                  myCharacter={myCharacter}
-                  campaignId={campaignId}
-                  chapter={campaign.current_chapter}
-                  onRolled={handleRollCompleted}
-                  onClose={() => setDiceOpen(false)}
-                />
-              ) : campaign?.game_system === 'pathfinder' ? (
-                <PJDiceRollerPanel
                   myCharacter={myCharacter}
                   campaignId={campaignId}
                   chapter={campaign.current_chapter}
