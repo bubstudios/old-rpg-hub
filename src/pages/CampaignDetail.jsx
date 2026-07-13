@@ -258,7 +258,7 @@ export default function CampaignDetail() {
     setProcessing(true);
     setLatestResult(null);
     try {
-      const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : campaign?.game_system === 'pathfinder' ? 'pathfinderTurn' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
       const res = await base44.functions.invoke(dmFunc, {
         campaign_id: campaignId,
         action: rollResult.summary,
@@ -376,7 +376,7 @@ export default function CampaignDetail() {
       }
 
       if (data.should_invoke_dm) {
-        const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e','pathfinder'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+        const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : campaign?.game_system === 'pathfinder' ? 'pathfinderTurn' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
         const dmRes = await base44.functions.invoke(dmFunc, {
           campaign_id: campaignId,
           action: data.combined_action,
