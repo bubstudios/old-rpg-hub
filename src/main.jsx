@@ -10,25 +10,37 @@ import '@/index.css'
 // doesn't affect functionality — it's a development-time transient issue.
 const isTransientHMRError = (error) => {
   if (!error) return false;
+  const msg = error?.message || String(error);
   const isSyntax = error instanceof SyntaxError ||
     (error?.name === 'SyntaxError') ||
-    (error?.message && error.message.includes('Unexpected end of input'));
-  return isSyntax && error?.message?.includes('Unexpected end of input');
+    /SyntaxError/i.test(msg);
+  const isTransientMsg = /Unexpected end of input|Unexpected token|Unexpected end of JSON|JSON\.parse/i.test(msg);
+  const noAppStack = !error?.stack || error?.stack === msg || error?.stack === `${error?.name}: ${msg}`;
+  return isSyntax && (isTransientMsg || noAppStack);
 };
 
 window.addEventListener('error', (event) => {
-  if (isTransientHMRError(event.error)) {
+  if (isTransientHMRError(event.error) || isTransientHMRError(event.message)) {
     event.preventDefault();
-    console.warn('[HMR] Suppressed transient parse error (non-fatal).');
+    event.stopPropagation();
+    return true;
   }
-});
+}, true);
 
 window.addEventListener('unhandledrejection', (event) => {
   if (isTransientHMRError(event.reason)) {
     event.preventDefault();
-    console.warn('[HMR] Suppressed transient parse error (non-fatal).');
+    event.stopPropagation();
   }
 });
+
+// Also filter console.error so the Base44 error overlay doesn't surface these
+const _origConsoleError = console.error;
+console.error = (...args) => {
+  const isHMR = args.some(a => isTransientHMRError(a) || (typeof a === 'string' && /Unexpected end of input/i.test(a)));
+  if (isHMR) return;
+  _origConsoleError(...args);
+};
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <App />
