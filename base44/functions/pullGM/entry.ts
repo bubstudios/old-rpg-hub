@@ -354,6 +354,9 @@ RULES:
 - Do not railroad. Let the player make choices. But the Pull should always create pressure.
 - PULL INTENSITY — FOLLOWING vs RESISTING (CRITICAL): The Pull is a direction, not a punishment. When Bullet MOVES WITH the Pull — heading in the direction it draws him, taking action toward wherever it leads, engaging with the forward path rather than stalling — the intensity FADES or stays low. The scar eases. The Pull goes quiet. This is the intended rhythm: follow, and it lets you breathe; resist, and it burns. When Bullet resists, lingers, delays, or moves against the Pull, the intensity RISES — the scar throbs, then burns, then commands. Set pull_intensity DOWN (by 1-2, toward 0-1) when the player follows the Pull's direction. Set it UP (by 1-2, toward 3+) when the player resists or stalls. At game start (intensity 1, "Tug"), if the player follows forward, drop it to 0 ("Quiet") so the player immediately learns that following eases the Pull. Never let the intensity climb without cause — if the player is following, it should be low. The Pull is not a timer; it is a compass that punishes defiance and rewards surrender to the journey.
 - CAMP ARC PULL TIMELINE (CRITICAL): The Pull brought Bullet to Red Sand Camp for a reason — to reach these people and help them. While the Camp Arc is NOT complete (Bullet is arriving, meeting NPCs, doing the mission, fighting raiders), the Pull should be QUIET (0-1, "Quiet"/"Tug"). Bullet is exactly where the Pull wants him. Do NOT narrate the Pull burning, commanding, or trying to drag him away during this phase — narrate it as eased, silent, or a faint warmth confirming he's on the right path. Only AFTER the camp arc is complete (mission done AND raiders fought off) does the Pull begin to intensify, driving him toward departure and the next Province. The escalation is a story beat signaling the arc's end, not a constant pressure during it.
+- QUEST ACCEPTANCE IS NOT DEPARTURE (CRITICAL): When Bullet accepts Shard's task and leaves camp to find the purifier part, he is leaving FOR the camp — not abandoning it. This is service, not departure. Do NOT: increase Pull intensity (keep it at 0-1, Present/Tug), create abandonment guilt, show "Leaving Red Sand Camp" penalties, set camp_arc_complete, or trigger the Province 1 interlude. DO: increase Camp Trust (+5 for accepting the quest), set the objective to the mission (e.g. "Retrieve the Purifier Core"), narrate the Pull as present but allowing the detour ("The Pull tugs faintly in the same general direction as the ruins, as if allowing this detour."). The Pull only escalates to Override/departure AFTER the camp arc is complete (mission done AND raiders fought off AND Spark gave her shard AND Shard gave breathing apparatus).
+- INTERLUDE TIMING (CRITICAL): The Province 1 / Leader interlude must ONLY fire after the raid is resolved (sequence 11+ with raiders_defeated). Do NOT return an interlude during the task stage, water stage, or naming stage. The system enforces this server-side — any interlude returned before the raid is resolved will be silently blocked.
+- DECISION IMPACT FOR QUEST ACCEPTANCE: When Bullet accepts Shard's quest, the decision_impact should be positive — label "Quest Accepted", Camp Trust +5, tone "positive". Do NOT create negative impacts like "Leaving Red Sand Camp" or "Abandonment" during the mission stage. Those only apply to the final departure after the camp arc is complete.
 - If the player delays too long, increase Pull intensity, danger, or Hunter Proximity.
 - Make survival costly. Make kindness matter. Make guilt matter. Make connection one of the few forces that can resist the realm.
 - Do not make self-harm a gameplay solution. Despair scenes should be crisis states that can be resisted, interrupted, or survived.
@@ -728,11 +731,17 @@ Deno.serve(async (req) => {
     // camp errands to a player who already finished the arc.
     if (!flags.camp_arc_complete && currentProvince === 618) {
       if ((flags.chapter1_sequence || 1) >= 13) flags.camp_arc_complete = true;
+      // Only infer camp_arc_complete if Bullet actually RETRIEVED the mission item
+      // (not just discussed it). "Depart" is removed from the objective regex because
+      // leaving camp for the mission is NOT the same as the final chapter departure.
       const evList = recentEvents || [];
-      const hasMissionItem = evList.some(ev => /purif|coil|core|filtrat/i.test((ev.summary || '') + ' ' + (ev.item_used_name || '')));
+      const retrievedMissionItem = evList.some(ev =>
+        /retriev|found|obtain|recover|brought back|returned with|secured/i.test(ev.summary || '') &&
+        /purif|coil|core|filtrat/i.test((ev.summary || '') + ' ' + (ev.item_used_name || ''))
+      );
       const objTitle = ((flags.current_objective || {}).title || '').toLowerCase();
-      const postMission = /return|tighten|follow the pull|depart/.test(objTitle);
-      if (hasMissionItem || postMission) {
+      const postMission = /return to camp|tighten|follow the pull/.test(objTitle);
+      if (retrievedMissionItem || postMission) {
         flags.camp_arc_complete = true;
       }
     }
@@ -834,13 +843,22 @@ Deno.serve(async (req) => {
     let interludeText = '';
     const savePromises = [];
     if (result.interlude) {
-      interludeText = sanitizeNarration(result.interlude).narration;
-      savePromises.push(base44.entities.JournalEntry.create({
-        campaign_id,
-        entry_type: 'system',
-        narration: `✦ INTERLUDE — ELSEWHERE ✦\n\n${interludeText}`,
-        chapter: campaign.current_chapter
-      }).catch(() => {}));
+      const interludeSeq = updatedFlags.chapter1_sequence || flags.chapter1_sequence || 1;
+      const uf = updatedFlags.unlock_flags || flags.unlock_flags || {};
+      // Only allow the Province 1 interlude after the raid is resolved (seq >= 11
+      // AND raiders_defeated). This prevents it from firing during the task stage
+      // or water stage — leaving for the mission is NOT the end of the chapter.
+      if (interludeSeq >= 11 && uf.raiders_defeated) {
+        interludeText = sanitizeNarration(result.interlude).narration;
+        savePromises.push(base44.entities.JournalEntry.create({
+          campaign_id,
+          entry_type: 'system',
+          narration: `✦ INTERLUDE — ELSEWHERE ✦\n\n${interludeText}`,
+          chapter: campaign.current_chapter
+        }).catch(() => {}));
+      } else {
+        console.warn(`[PullGM] Held Province 1 interlude: sequence ${interludeSeq} too early (needs seq >= 11 with raiders_defeated)`);
+      }
     }
 
     // Create journal entry (deferred to parallel save batch)
@@ -963,8 +981,17 @@ Deno.serve(async (req) => {
     // Bullet named — the naming scene has happened
     if (result.bullet_named) updatedFlags.bullet_named = true;
 
-    // Camp arc complete — Chapter 1 mission done, raiders handled, departure imminent
-    if (result.camp_arc_complete) updatedFlags.camp_arc_complete = true;
+    // Camp arc complete — only allow if raiders are defeated (prevents premature
+    // Pull escalation when Bullet leaves camp for the mission, which is service
+    // not departure)
+    if (result.camp_arc_complete) {
+      const uf = updatedFlags.unlock_flags || {};
+      if (uf.raiders_defeated || (updatedFlags.chapter1_sequence || 1) >= 13) {
+        updatedFlags.camp_arc_complete = true;
+      } else {
+        console.warn(`[PullGM] Held camp_arc_complete: raiders not yet defeated (seq=${updatedFlags.chapter1_sequence || 1})`);
+      }
+    }
 
     // ─── Canonical Event Ledger ───
     // Save structured event records (the source of truth for "what actually happened")
