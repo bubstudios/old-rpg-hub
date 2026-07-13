@@ -22,7 +22,7 @@ const isTransientHMRError = (error) => {
 window.addEventListener('error', (event) => {
   if (isTransientHMRError(event.error) || isTransientHMRError(event.message)) {
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
     return true;
   }
 }, true);
@@ -30,7 +30,7 @@ window.addEventListener('error', (event) => {
 window.addEventListener('unhandledrejection', (event) => {
   if (isTransientHMRError(event.reason)) {
     event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
   }
 });
 

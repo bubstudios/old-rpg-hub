@@ -20,7 +20,10 @@
       // delivery so the error never propagates to the error overlay.
       (function () {
         function isHMRParseError(e) {
-          return e instanceof SyntaxError && /Unexpected end of input/i.test(e.message);
+          if (!e) return false;
+          if (e instanceof SyntaxError) return /Unexpected end of input/i.test(e.message);
+          var msg = e.message || String(e);
+          return /SyntaxError/i.test(msg) && /Unexpected end of input/i.test(msg);
         }
         var origAdd = WebSocket.prototype.addEventListener;
         WebSocket.prototype.addEventListener = function (type, listener, options) {
