@@ -121,11 +121,14 @@ export default function CampaignDetail() {
     return () => unsubscribe();
   }, [campaignId]);
 
-  // Live-sync the round state (pending actions / DM processing) so every player sees who has acted
+  // Live-sync the full campaign state from the database (single source of truth).
+  // The GM saves updated clocks, world_state, and round state to the DB; this
+  // subscription merges ALL of it into the local campaign so the sidebar,
+  // popups, and clock panels always read the same live values.
   useEffect(() => {
     const unsubscribe = base44.entities.Campaign.subscribe((event) => {
       if (event.data?.id === campaignId) {
-        setCampaign(prev => prev ? { ...prev, pending_actions: event.data.pending_actions, dm_processing: event.data.dm_processing } : prev);
+        setCampaign(prev => prev ? { ...prev, ...event.data } : event.data);
       }
     });
     return () => unsubscribe();
@@ -263,6 +266,29 @@ export default function CampaignDetail() {
         acting_character_id: myCharacter.id,
         is_roll_result: true
       });
+      // Apply GM response state changes immediately (same as submitTurn)
+      setCampaign(prev => {
+        if (!prev) return prev;
+        const ws = prev.world_state || {};
+        const flags = ws.quest_flags || {};
+        const localClocks = { ...(flags.local_clocks || {}) };
+        for (const cc of (res.data?.local_clock_changes || [])) {
+          localClocks[cc.clock] = Math.max(0, Math.min(100, (localClocks[cc.clock] || 0) + (cc.change || 0)));
+        }
+        return {
+          ...prev,
+          world_state: {
+            ...ws,
+            quest_flags: {
+              ...flags,
+              local_clocks: localClocks,
+              ...(res.data?.pull_intensity !== undefined ? { pull_intensity: res.data.pull_intensity } : {}),
+              ...(res.data?.scar_state ? { scar_state: res.data.scar_state } : {}),
+              ...(res.data?.current_objective ? { current_objective: res.data.current_objective } : {})
+            }
+          }
+        };
+      });
       processDecisionImpact(res.data, rollResult?.summary);
       setLatestResult(res.data);
       setProcessing(false);
@@ -361,7 +387,53 @@ export default function CampaignDetail() {
           skip_action_log: true
         });
         await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+        // Apply GM response state changes to the local campaign immediately so
+        // the sidebar (clocks, pull intensity, conditions) updates without
+        // waiting for loadData(). The DB is the source of truth — loadData()
+        // confirms these values, and the subscription keeps them in sync.
+        setCampaign(prev => {
+          if (!prev) return prev;
+          const ws = prev.world_state || {};
+          const flags = ws.quest_flags || {};
+          const localClocks = { ...(flags.local_clocks || {}) };
+          // Apply local clock changes from the GM response
+          for (const cc of (dmRes.data?.local_clock_changes || [])) {
+            localClocks[cc.clock] = Math.max(0, Math.min(100, (localClocks[cc.clock] || 0) + (cc.change || 0)));
+          }
+          // Apply hidden clock changes
+          const campaignClocks = { ...(flags.campaign_clocks || {}) };
+          for (const cc of (dmRes.data?.clock_changes || [])) {
+            campaignClocks[cc.clock] = Math.max(0, Math.min(100, (campaignClocks[cc.clock] || 0) + (cc.change || 0)));
+          }
+          if (dmRes.data?.enemy_turn) {
+            if (dmRes.data.enemy_turn.province_1_alert_change) campaignClocks.province_1_alert = Math.max(0, Math.min(100, (campaignClocks.province_1_alert || 0) + dmRes.data.enemy_turn.province_1_alert_change));
+            if (dmRes.data.enemy_turn.hunter_proximity_change) campaignClocks.hunter_proximity = Math.max(0, Math.min(100, (campaignClocks.hunter_proximity || 0) + dmRes.data.enemy_turn.hunter_proximity_change));
+          }
+          return {
+            ...prev,
+            pending_actions: [],
+            dm_processing: false,
+            world_state: {
+              ...ws,
+              quest_flags: {
+                ...flags,
+                local_clocks: localClocks,
+                campaign_clocks: campaignClocks,
+                ...(dmRes.data?.pull_intensity !== undefined ? { pull_intensity: dmRes.data.pull_intensity } : {}),
+                ...(dmRes.data?.scar_state ? { scar_state: dmRes.data.scar_state } : {}),
+                ...(dmRes.data?.shard_resonance !== undefined ? { shard_resonance: dmRes.data.shard_resonance } : {}),
+                ...(dmRes.data?.current_objective ? { current_objective: dmRes.data.current_objective } : {}),
+                ...(dmRes.data?.bullet_named ? { bullet_named: true } : {}),
+                ...(dmRes.data?.camp_arc_complete !== undefined ? { camp_arc_complete: dmRes.data.camp_arc_complete } : {}),
+                ...(dmRes.data?.chapter1_sequence ? { chapter1_sequence: dmRes.data.chapter1_sequence } : {}),
+                ...(dmRes.data?.chapter1_stage ? { chapter1_stage: dmRes.data.chapter1_stage } : {}),
+                ...(dmRes.data?.pipe_state ? { pipe_state: dmRes.data.pipe_state } : {}),
+                ...(dmRes.data?.equipped_weapon ? { equipped_weapon: dmRes.data.equipped_weapon } : {}),
+                ...(dmRes.data?.discovered_clocks?.length ? { discovered_clocks: [...new Set([...(flags.discovered_clocks || []), ...dmRes.data.discovered_clocks])] } : {})
+              }
+            }
+          };
+        });
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);
