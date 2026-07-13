@@ -722,6 +722,7 @@ ADVANCE WHEN: ${seq.a}
 
 FORBIDDEN AT THIS STAGE (do NOT do any of these):
 ${forbiddenAtStage(ctx.chapter1Sequence || 1)}
+${ctx.foundationGate && ctx.foundationGate.length > 0 ? `\nFOUNDATION GATE (CRITICAL — these required beats are MISSING. Run them THIS TURN before any optional camp interaction, menial task, or freeplay):\n${ctx.foundationGate.map(d => `- ${d}`).join('\n')}\nDo NOT allow optional camp freeplay, menial tasks, or NPC small talk until ALL foundation beats above are complete. Replayable variation happens around the spine, not before the spine exists.` : ''}
 
 CHAPTER 1 REPLAY VARIANT (controlled variation for this run — use these pre-rolled elements, do not invent your own):
 ${formatReplayVariantForPrompt(ctx.chapter1Replay, ctx.chapter1Sequence || 1)}
@@ -1075,6 +1076,40 @@ function sanitizeRepeatBirdScan(text, scanAlreadyHappened) {
   return { narration: corrected, corrections: ['repeat bird scan → distant glimpse'] };
 }
 
+// ─── Pull Narration / Meter Mismatch Firewall ───
+// The Pull narration MUST match the Pull meter. If intensity is low (0-1:
+// Quiet/Tug), narration must NOT use intense language ("screams," "commands,"
+// "will not let him stay," "forces him onward"). This replaces intense
+// language with calm language that matches the meter, preventing the
+// dissonance of "The Pull screams" while the meter says "Tug."
+function sanitizePullNarration(text, pullIntensity) {
+  if (pullIntensity > 1) return { narration: text, corrections: [] };
+
+  const calmReplacements = [
+    [/\bthe pull screams?\b/gi, 'the Pull tugs faintly'],
+    [/\bthe pull commands?\b/gi, 'the Pull waits quietly'],
+    [/\bthe pull will not let (?:him|you) stay\b/gi, 'the Pull is patient, for now'],
+    [/\bthe pull forces? (?:him|you) onward\b/gi, 'the Pull nudges forward'],
+    [/\bthe pull drags?\b/gi, 'the Pull guides'],
+    [/\bthe pull (?:burns|sears)\b/gi, 'the Pull hums softly'],
+    [/\b(?:his|your) scar (?:burns|screams|sears|flares)\b/gi, 'the scar pulses gently'],
+  ];
+
+  let cleaned = text;
+  const corrections = [];
+  for (const [pattern, replacement] of calmReplacements) {
+    const matches = cleaned.match(pattern);
+    if (matches) {
+      cleaned = cleaned.replace(pattern, replacement);
+      corrections.push(`Pull/meter mismatch: replaced "${matches[0]}" (intensity ${pullIntensity})`);
+    }
+  }
+  if (corrections.length) {
+    console.warn('[PullGM Pull Narration Firewall] Auto-corrected:', corrections.join('; '));
+  }
+  return { narration: cleaned, corrections };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -1219,6 +1254,32 @@ Deno.serve(async (req) => {
       flags.discovered_clocks = ['thirst', 'heat_exposure', 'fatigue'];
     }
 
+    // ─── Foundation Beat Gate ───
+    // Required foundation beats must happen before optional camp freeplay.
+    // If any are missing, inject a FOUNDATION_GATE directive into the prompt
+    // telling the GM to route toward the missing beat immediately — NO camp
+    // freeplay, menial tasks, or NPC small talk until the spine is complete.
+    let foundationGateDirectives = [];
+    if (currentProvince === 618) {
+      const uf = flags.unlock_flags || {};
+      const npcRels = flags.npc_relationships || {};
+      const seq = flags.chapter1_sequence || 1;
+
+      if (!uf.mechanical_bird_scanned && seq >= 3) {
+        foundationGateDirectives.push('MECHANICAL BIRD SCAN — The scan has NOT happened yet. Run it THIS TURN: a shadow crosses the sand, Bullet looks up and sees a bird-shaped machine with red eyes, a beam sweeps over his body pausing on the scar, then it vanishes into heat shimmer. Set unlock_flags.mechanical_bird_scanned = true.');
+      }
+      if (!flags.bullet_named && seq >= 5 && Object.keys(npcRels).length > 0) {
+        foundationGateDirectives.push('NAMING SCENE — Bullet has NOT been named yet. This MUST happen now before ANY camp freeplay. Shard confronts the stranger, asks his name, he says he does not know, Shard sees the circular scar over his heart, and names him "Bullet." Set bullet_named = true. Before this moment, NEVER use the name "Bullet" in narration.');
+      }
+      if ((flags.pipe_state || 'unfound') === 'unfound' && seq >= 6) {
+        foundationGateDirectives.push('PIPE ACQUISITION — Bullet has NO weapon. Shard tosses him a battered metal pipe before the dangerous task: "You\'re going into the ruins? Take something heavier than good intentions." Set pipe_state to "battered_metal_pipe" and add "Battered Metal Pipe" via item_changes.');
+      }
+
+      if (foundationGateDirectives.length > 0) {
+        console.warn(`[PullGM] Foundation gate: ${foundationGateDirectives.length} missing beat(s) — routing to required beats before freeplay`);
+      }
+    }
+
     // ─── Chapter Module System: Load previous chapter handoff ───
     // When starting a new chapter, the AI receives ONLY the handoff from the previous
     // chapter — not the full detailed state. This prevents memory failures and spoiler leaks.
@@ -1266,6 +1327,7 @@ Deno.serve(async (req) => {
       chapter1Stage: flags.chapter1_stage || CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0],
       previousHandoff,
       chapter1Replay: flags.chapter1_replay || null,
+      foundationGate: foundationGateDirectives,
       mechanicalBirdScanned: !!(flags.unlock_flags || {}).mechanical_bird_scanned || (flags.codex_unlocks || []).includes('mechanical_bird') || (flags.codex_unlocks || []).includes('watcher'),
       birdGlimpseCount: flags.bird_glimpse_count || 0,
       responsesSinceBirdMention: (flags.responses_since_bird_mention || 0) + 1,
@@ -1315,6 +1377,11 @@ Deno.serve(async (req) => {
 
     // Mechanical bird repeat-scan firewall — replaces any repeat scan with a distant glimpse
     narration = sanitizeRepeatBirdScan(narration, !!(flags.unlock_flags || {}).mechanical_bird_scanned || codexUnlocks.includes('mechanical_bird') || codexUnlocks.includes('watcher')).narration;
+
+    // Pull narration / meter mismatch firewall — if Pull intensity is low (0-1),
+    // replace intense Pull language ("screams," "commands," "forces onward")
+    // with calm language matching the meter.
+    narration = sanitizePullNarration(narration, flags.pull_intensity ?? 1).narration;
 
     // Interlude — player-only cutscene, saved BEFORE the narration so it leads
     // the feed. Shown to the player, NOT Bullet. Does not update any state.
@@ -2221,6 +2288,15 @@ Deno.serve(async (req) => {
     // Etched Shard — starting item, always in inventory from turn 1
     if (!updatedEquipment.some(e => /etched.*shard/i.test(e.name))) {
       updatedEquipment.push({ name: 'Etched Shard', qty: 1, notes: 'A shard of metal or glass, warm to the touch. Etched with a circle bisected by a jagged line.' });
+    }
+    // Pipe — auto-grant when task is assigned (foundation beat). Bullet must
+    // have a weapon before any danger/combat route. Shard gives it before the
+    // ruins task. One-time only.
+    if ((updatedFlags.pipe_state || 'unfound') === 'unfound' && (updatedFlags.chapter1_sequence || 1) >= 6 && !updatedEquipment.some(e => /metal pipe|battered.*pipe/i.test(e.name))) {
+      updatedEquipment.push({ name: 'Battered Metal Pipe', qty: 1, notes: 'A length of rust-dark pipe. Shard gave it before the ruins.' });
+      updatedFlags.pipe_state = 'battered_metal_pipe';
+      if (!updatedFlags.equipped_weapon) updatedFlags.equipped_weapon = 'metal pipe';
+      console.log('[PullGM] Foundation pipe auto-grant: added Battered Metal Pipe (seq >= 6)');
     }
     if (updatedFlags.patch_cloak && !updatedEquipment.some(e => /patch.*cloak/i.test(e.name))) {
       updatedEquipment.push({ name: "Patch's Cloak", qty: 1, notes: "A healer's cloak. Proof someone once cared whether Bullet survived." });
