@@ -412,6 +412,124 @@ function forbiddenAtStage(seq) {
   return items.map(f => `- ${f}`).join('\n');
 }
 
+// ─── Chapter 1 Completion Gate ───
+// HARD GATE: Chapter 1 cannot complete until ALL required prerequisites are met.
+// This is the authoritative check — no story beat can be skipped, regardless of
+// what the LLM returns. The spine is mandatory; only variable outcomes (task
+// variant, raid complication, NPC fates) can differ between runs.
+function canCompleteChapter1(flags) {
+  const uf = flags.unlock_flags || {};
+  const npcRels = flags.npc_relationships || {};
+  const knownThreats = flags.known_threats || [];
+  const seq = flags.chapter1_sequence || 1;
+
+  // Foundation prerequisites (seq 1-3)
+  const wokeInSand = seq >= 2;
+  const scarDiscovered = seq >= 2;
+  const etchedShardDiscovered = seq >= 2;
+  const pullDiscovered = seq >= 2;
+  const mechanicalBirdScanned = !!uf.mechanical_bird_scanned;
+  const watcherAddedToKnownThreats = knownThreats.some(t => t.id === 'threat_618_mechanical_watcher');
+  const reachedCamp = Object.keys(npcRels).length > 0;
+
+  // Camp identity prerequisites (seq 4-5)
+  const shardMet = !!(npcRels.shard && npcRels.shard.first_met);
+  const bulletNamed = !!flags.bullet_named;
+  const receivedWater = bulletNamed; // water received in same beat as naming (seq 5)
+
+  // Equipment prerequisites
+  const pipeAcquired = (flags.pipe_state || 'unfound') !== 'unfound';
+
+  // Camp task prerequisites (seq 6-8)
+  const taskAssigned = !!uf.task_assigned;
+  const taskCompleted = !!uf.task_complete;
+  const returnedToCamp = seq >= 8;
+
+  // Camp community prerequisites (seq 8)
+  const sparkDiscovered = !!(npcRels.spark && npcRels.spark.first_met);
+  const patchDiscovered = !!(npcRels.patch && npcRels.patch.first_met);
+  const maulDiscovered = !!(npcRels.maul && npcRels.maul.first_met);
+
+  // Major camp danger prerequisite (seq 9-10)
+  const majorCampDangerResolved = !!uf.raiders_defeated;
+
+  // Departure prerequisites (seq 11-13)
+  const sparkShardReceived = !!flags.spark_shard;
+  const breathingApparatusReceived = !!flags.breathing_gear;
+  const leftCampForGood = !!flags.camp_arc_complete;
+
+  // Province 1 interlude prerequisite (seq 14)
+  const province1InterludeShown = !!uf.province1_interlude_shown;
+
+  // Ending prerequisite (seq 15)
+  const reachedWaterWall = !!uf.water_wall_reached;
+
+  // Required alive — Shard and Spark cannot be dead
+  const shardAlive = !npcRels.shard || (npcRels.shard.status || 'Alive').toLowerCase() !== 'dead';
+  const sparkAlive = !npcRels.spark || (npcRels.spark.status || 'Alive').toLowerCase() !== 'dead';
+
+  return (
+    wokeInSand &&
+    scarDiscovered &&
+    etchedShardDiscovered &&
+    pullDiscovered &&
+    mechanicalBirdScanned &&
+    watcherAddedToKnownThreats &&
+    reachedCamp &&
+    shardMet &&
+    bulletNamed &&
+    receivedWater &&
+    pipeAcquired &&
+    taskAssigned &&
+    taskCompleted &&
+    returnedToCamp &&
+    sparkDiscovered &&
+    patchDiscovered &&
+    maulDiscovered &&
+    majorCampDangerResolved &&
+    sparkShardReceived &&
+    breathingApparatusReceived &&
+    leftCampForGood &&
+    province1InterludeShown &&
+    reachedWaterWall &&
+    shardAlive &&
+    sparkAlive
+  );
+}
+
+// Returns the list of missing prerequisites for debug logging
+function getMissingChapter1Prerequisites(flags) {
+  const uf = flags.unlock_flags || {};
+  const npcRels = flags.npc_relationships || {};
+  const knownThreats = flags.known_threats || [];
+  const seq = flags.chapter1_sequence || 1;
+  const missing = [];
+
+  if (seq < 2) missing.push('wokeInSand/scarDiscovered/etchedShardDiscovered/pullDiscovered');
+  if (!uf.mechanical_bird_scanned) missing.push('mechanicalBirdScanned');
+  if (!knownThreats.some(t => t.id === 'threat_618_mechanical_watcher')) missing.push('watcherAddedToKnownThreats');
+  if (Object.keys(npcRels).length === 0) missing.push('reachedCamp');
+  if (!(npcRels.shard && npcRels.shard.first_met)) missing.push('shardMet');
+  if (!flags.bullet_named) missing.push('bulletNamed/receivedWater');
+  if ((flags.pipe_state || 'unfound') === 'unfound') missing.push('pipeAcquired');
+  if (!uf.task_assigned) missing.push('taskAssigned');
+  if (!uf.task_complete) missing.push('taskCompleted');
+  if (seq < 8) missing.push('returnedToCamp');
+  if (!(npcRels.spark && npcRels.spark.first_met)) missing.push('sparkDiscovered');
+  if (!(npcRels.patch && npcRels.patch.first_met)) missing.push('patchDiscovered');
+  if (!(npcRels.maul && npcRels.maul.first_met)) missing.push('maulDiscovered');
+  if (!uf.raiders_defeated) missing.push('majorCampDangerResolved');
+  if (!flags.spark_shard) missing.push('sparkShardReceived');
+  if (!flags.breathing_gear) missing.push('breathingApparatusReceived');
+  if (!flags.camp_arc_complete) missing.push('leftCampForGood');
+  if (!uf.province1_interlude_shown) missing.push('province1InterludeShown');
+  if (!uf.water_wall_reached) missing.push('reachedWaterWall');
+  if (npcRels.shard && (npcRels.shard.status || 'Alive').toLowerCase() === 'dead') missing.push('shardAlive');
+  if (npcRels.spark && (npcRels.spark.status || 'Alive').toLowerCase() === 'dead') missing.push('sparkAlive');
+
+  return missing;
+}
+
 // ─── Player Intent Detection ───
 // Lightweight keyword-based intent detection that adds hints to the GM prompt.
 // This guides the LLM to respond with direct NPC dialogue and concrete scene
@@ -2086,22 +2204,21 @@ Deno.serve(async (req) => {
       // Allow: same province (sub-area transition) OR the next province in canonical order
       // Block departure to Province 472 until both farewell gifts are delivered
       const giftsPending = toProv === 472 && (!updatedFlags.spark_shard || !updatedFlags.breathing_gear);
-      // ─── Chapter 1 story gate (CRITICAL) ───
-      // The transition to 472 (end of Chapter 1) can ONLY fire when the story
-      // has reached sequence 15 (wall of water) AND all required story beats
-      // are complete: task done, raiders defeated, Spark's shard given, breathing
-      // gear given, Province 1 interlude shown. This prevents the chapter from
-      // ending early just because the LLM set gift flags or returned a transition.
-      const uf = updatedFlags.unlock_flags || {};
-      const seq = updatedFlags.chapter1_sequence || 1;
+      // ─── Chapter 1 Completion Gate (CRITICAL) ───
+      // HARD GATE: The transition to 472 (end of Chapter 1) can ONLY fire when
+      // ALL required prerequisites are met — identity, watcher scan, camp reached,
+      // named, water, pipe, task assigned+completed, community introduced, camp
+      // danger resolved, Spark's shard, breathing apparatus, Pull departure,
+      // Province 1 interlude, water wall reached. No beat can be skipped.
       const chapter1BeatsComplete = (currentProvince === 618 && toProv === 472)
-        ? (seq >= 15 && uf.task_complete && uf.raiders_defeated && uf.spark_shard_given && uf.breathing_gear_given && uf.province1_interlude_shown)
+        ? canCompleteChapter1(updatedFlags)
         : true;
       if (giftsPending) {
         console.warn(`Held transition to 472: farewell gifts pending (spark_shard=${!!updatedFlags.spark_shard}, breathing_gear=${!!updatedFlags.breathing_gear})`);
       }
       if (!chapter1BeatsComplete) {
-        console.warn(`Held transition to 472: story beats incomplete (seq=${seq}, task=${!!uf.task_complete}, raiders=${!!uf.raiders_defeated}, sparkShard=${!!uf.spark_shard_given}, breathingGear=${!!uf.breathing_gear_given}, interlude=${!!uf.province1_interlude_shown})`);
+        const missing = getMissingChapter1Prerequisites(updatedFlags);
+        console.warn(`Held transition to 472: Chapter 1 prerequisites incomplete. Missing: ${missing.join(', ')}`);
       }
       if (!giftsPending && chapter1BeatsComplete && (toProv === currentProvince || (currentIdx >= 0 && targetIdx === currentIdx + 1))) {
         validTransition = result.province_transition;
