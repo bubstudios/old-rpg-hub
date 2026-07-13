@@ -573,27 +573,20 @@ Deno.serve(async (req) => {
     const campaign = await admin.entities.Campaign.get(campaign_id);
     if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
 
-    // Load character
-    const characters = await admin.entities.Character.filter({ campaign_id, status: 'active' });
+    // Parallel-load characters, journal entries, chapter events, and NPCs.
+    // These are independent reads — running them concurrently saves several seconds
+    // of sequential wait time before the LLM call begins.
+    const currentChapterNum = campaign.current_chapter || 1;
+    const [characters, entries, recentEventsRaw, existingNpcs] = await Promise.all([
+      admin.entities.Character.filter({ campaign_id, status: 'active' }),
+      admin.entities.JournalEntry.filter({ campaign_id }, '-created_date', 8),
+      admin.entities.EventLog.filter({ campaign_id, chapter: currentChapterNum }, '-created_date', 20),
+      admin.entities.NPC.filter({ campaign_id })
+    ]);
     const bullet = characters.find(c => c.created_by_id === user.id) || characters[0];
     if (!bullet) return Response.json({ error: 'No character found' }, { status: 404 });
-
-    // Load recent journal entries
-    const entries = await admin.entities.JournalEntry.filter({ campaign_id }, '-created_date', 8);
-
-    // Load recent canonical events — CHAPTER-FILTERED: only events from the current chapter.
-    // This is the chapter module system: each chapter is self-contained. The handoff from
-    // the previous chapter provides the summary of what happened before, not the raw events.
-    const currentChapterNum = campaign.current_chapter || 1;
-    let recentEventsRaw = await admin.entities.EventLog.filter({ campaign_id, chapter: currentChapterNum }, '-created_date', 20);
-    // Fallback: if no events for this chapter yet (first turn of a new chapter), use empty list
-    if (!recentEventsRaw || recentEventsRaw.length === 0) {
-      recentEventsRaw = [];
-    }
-    const recentEvents = recentEventsRaw.reverse();
-
-    // Pre-load all campaign NPCs once (avoids per-NPC filter calls during upsert)
-    const existingNpcs = await admin.entities.NPC.filter({ campaign_id });
+    // Chapter-filtered events: empty list if first turn of a new chapter
+    const recentEvents = (recentEventsRaw || []).reverse();
 
     // Build game state
     const ws = campaign.world_state || {};
