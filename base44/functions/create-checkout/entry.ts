@@ -65,10 +65,16 @@ Deno.serve(async (req) => {
       }
     );
 
-    const data = await wixResponse.json();
+    // Parse response body safely — Wix API can return empty bodies on 401/403/network errors,
+    // which would throw "SyntaxError: Unexpected end of input" from wixResponse.json()
+    const responseText = await wixResponse.text();
+    let data = {};
+    try { data = responseText ? JSON.parse(responseText) : {}; } catch (e) {
+      console.error("Wix response parse error:", e.message, "body:", responseText.substring(0, 200));
+    }
     if (!wixResponse.ok) {
       console.error("Wix checkout error:", JSON.stringify(data));
-      const msg = data?.details?.applicationError?.description || 'Failed to create checkout session';
+      const msg = data?.details?.applicationError?.description || `Wix API error (${wixResponse.status})`;
       return Response.json({ error: msg }, { status: 500 });
     }
 
