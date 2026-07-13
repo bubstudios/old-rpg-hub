@@ -24,7 +24,7 @@ const CANON = {
   crew: {
     thorne: 'Cmdr Farah Thorne — Tactical/Security. Fierce, blunt, loyal. May push aggressive action.',
     clark: 'Cmdr Clark — Science/Sensors. Dry humor, brilliant, curious. May overfocus on danger.',
-    james: 'James Stellar — Bub\'s grandfather, Confluence survivor. Haunted, wise. Confluence tactics/legal. Guilt may cloud judgment.',
+    james: 'James Stellar — Bub\'s grandfather, Confluence survivor. Haunted, wise. Confluence tactics/legal. Guilt may cloud judgment. ALSO KNOWN AS: Grandfather Stellar, Commander Stellar, James. All refer to the same person.',
     sarah: 'Sarah Chen — Resistance agent, Admiral Chen\'s daughter. Brave, wounded. Wants truth about mother. Emotional conflict.',
     carmelon: 'Prof Carmelon — Alien history/biology. Old, eccentric. Curiosity leads to danger.',
     mitchell: 'Mitchell — Enhanced bald eagle. Senses deception, danger, temporal anomalies. NOT omniscient. NOT a pet. Crew member with own will.',
@@ -47,7 +47,7 @@ const CANON = {
 
   allies: {
     sarah_chen: 'Sarah Chen [TRUSTED +45] — Wants truth about mother. Strengthens with honesty. Damages if hidden from. Need: truth, Chen answers.',
-    james_stellar: 'James Stellar [LOYAL +80] — Needs purpose, redemption. Strengthens when treated as family. Damages if used as weapon. Need: maintenance, forgiveness.',
+    james_stellar: 'James Stellar [LOYAL +80] — Bub\'s grandfather. Needs purpose, redemption. Strengthens when treated as family. Damages if used as weapon. Need: maintenance, forgiveness. Aliases: Grandfather Stellar, Commander Stellar, James.',
     mitchell: 'Mitchell [LOYAL +75] — Needs respect, trust. Detects deception. Need: respect, freedom, trust in warnings.',
     councilor_verath: 'Councilor Verath [CAUTIOUS +25] — Sanctuary leader. Wants civilian safety, evidence. Refuses risking refugees. Need: safety, diplomacy.',
     commander_vex: 'Commander Vex [CAUTIOUS +20] — Sanctuary military. Respects strength, not speeches. Need: strategy, clarity.',
@@ -126,6 +126,23 @@ Rules: narration always present. Only include effects that ACTUALLY changed this
 function npcKey(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 function locKey(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 
+// Canonical NPC alias map — normalizes alternate names to the canonical display name
+// so the LLM can't accidentally create duplicate NPC records under different names.
+const NPC_ALIAS_MAP = {
+  'grandfather stellar': 'James Stellar',
+  'commander stellar': 'James Stellar',
+  'james stellar': 'James Stellar',
+  'grandpa stellar': 'James Stellar',
+  'grandfather': 'James Stellar',
+  'grandpa': 'James Stellar',
+  'james': 'James Stellar'
+};
+
+function normalizeNpcName(name) {
+  const key = npcKey(name);
+  return NPC_ALIAS_MAP[key] || String(name || '').trim();
+}
+
 function calculateTimeline(campaign) {
   const now = Date.now();
   const lastActive = campaign.last_active_at ? new Date(campaign.last_active_at).getTime() : now;
@@ -156,7 +173,7 @@ async function upsertNpcs(base44, campaign_id, chapter, npcUpdates) {
   try { existing = await base44.asServiceRole.entities.NPC.filter({ campaign_id }); } catch (e) { existing = []; }
   for (const n of npcUpdates) {
     if (!n || typeof n.name !== 'string') continue;
-    const nameRaw = String(n.name).trim();
+    const nameRaw = normalizeNpcName(String(n.name).trim());
     if (!nameRaw) continue;
     const name = npcKey(nameRaw);
     const aliases = Array.isArray(n.aliases) ? n.aliases.map(a => String(a).trim()).filter(Boolean) : [];
@@ -185,10 +202,15 @@ async function upsertNpcs(base44, campaign_id, chapter, npcUpdates) {
         updates.what_we_know = lines.join('\n');
       }
       if (!Array.isArray(match.aliases)) match.aliases = [];
-      if (aliases.length) {
+      // For canonical NPCs, ensure all known aliases are present
+      let aliasPool = aliases;
+      if (npcKey(match.name) === 'james stellar') {
+        aliasPool = ['James', 'Grandfather Stellar', 'Commander Stellar', 'Grandpa Stellar', ...aliases].filter((v, i, a) => a.indexOf(v) === i);
+      }
+      if (aliasPool.length) {
         const curAliases = match.aliases;
         const merged = [...curAliases];
-        for (const a of aliases) if (!curAliases.some(b => npcKey(b) === npcKey(a))) merged.push(a);
+        for (const a of aliasPool) if (!curAliases.some(b => npcKey(b) === npcKey(a))) merged.push(a);
         if (merged.length !== curAliases.length) updates.aliases = merged;
       }
       if (Object.keys(updates).length) {
@@ -196,8 +218,13 @@ async function upsertNpcs(base44, campaign_id, chapter, npcUpdates) {
         Object.assign(match, updates);
       }
     } else {
+      // Pre-populate known aliases for canonical NPCs
+      let knownAliases = aliases;
+      if (nameRaw === 'James Stellar') {
+        knownAliases = ['James', 'Grandfather Stellar', 'Commander Stellar', 'Grandpa Stellar', ...aliases].filter((v, i, a) => a.indexOf(v) === i);
+      }
       const created = await base44.asServiceRole.entities.NPC.create({
-        campaign_id, name: nameRaw, aliases,
+        campaign_id, name: nameRaw, aliases: knownAliases,
         disposition: typeof n.disposition === 'string' ? n.disposition.trim() : 'neutral',
         description: typeof n.description === 'string' ? n.description.trim() : '',
         characteristics: typeof n.characteristics === 'string' ? n.characteristics.trim() : '',
@@ -314,7 +341,7 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
   const currentLoc = flags.current_location || 'Edge of New Titan System';
 
   // --- Select relevant crew ---
-  const crewKw = { 'thorne': 'thorne', 'farah': 'thorne', 'clark': 'clark', 'james': 'james', 'grandpa': 'james', 'sarah': 'sarah', 'carmelon': 'carmelon', 'mitchell': 'mitchell', 'eagle': 'mitchell', 'hayes': 'hayes', 'reeves': 'reeves', 'ramos': 'ramos', 'voss': 'voss', 'patel': 'patel' };
+  const crewKw = { 'thorne': 'thorne', 'farah': 'thorne', 'clark': 'clark', 'james': 'james', 'grandpa': 'james', 'grandfather': 'james', 'grandfather stellar': 'james', 'commander stellar': 'james', 'james stellar': 'james', 'sarah': 'sarah', 'carmelon': 'carmelon', 'mitchell': 'mitchell', 'eagle': 'mitchell', 'hayes': 'hayes', 'reeves': 'reeves', 'ramos': 'ramos', 'voss': 'voss', 'patel': 'patel' };
   const relevantCrew = [];
   for (const [kw, key] of Object.entries(crewKw)) {
     if (actionLower.includes(kw) && !relevantCrew.includes(key)) relevantCrew.push(key);
@@ -338,7 +365,7 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
   }
 
   // --- Select relevant allies ---
-  const allyKw = { 'sarah': 'sarah_chen', 'james': 'james_stellar', 'mitchell': 'mitchell', 'verath': 'councilor_verath', 'vex': 'commander_vex', 'sanctuary': 'sanctuary_refugee_fleet', 'refugee': 'sanctuary_refugee_fleet', 'unity': 'unity', 'nanite': 'unity' };
+  const allyKw = { 'sarah': 'sarah_chen', 'james': 'james_stellar', 'grandfather stellar': 'james_stellar', 'grandfather': 'james_stellar', 'commander stellar': 'james_stellar', 'james stellar': 'james_stellar', 'grandpa': 'james_stellar', 'mitchell': 'mitchell', 'verath': 'councilor_verath', 'vex': 'commander_vex', 'sanctuary': 'sanctuary_refugee_fleet', 'refugee': 'sanctuary_refugee_fleet', 'unity': 'unity', 'nanite': 'unity' };
   const relevantAllies = [];
   for (const [kw, key] of Object.entries(allyKw)) {
     if (actionLower.includes(kw) && !relevantAllies.includes(key)) relevantAllies.push(key);
@@ -605,7 +632,7 @@ ${CANON.response_format}`;
     })).filter(e => e.relationship_change !== 0 || e.last_action);
 
     const npcUpdates = effects.filter(e => e.type === 'npc').map(e => ({
-      name: e.name || e.id, disposition: String(e.disposition || ''),
+      name: normalizeNpcName(e.name || e.id), disposition: String(e.disposition || ''),
       what_we_know: String(e.what_we_know || '')
     })).filter(e => e.name);
 

@@ -197,8 +197,9 @@ export const CODEX_EVIDENCE = [
   {
     key: 'james_stellar_testimony',
     label: 'James Stellar Testimony',
+    aliases: ['Grandfather Stellar Testimony', 'Commander Stellar Testimony'],
     fields: [
-      { label: 'What it is', value: 'Firsthand testimony from Commander James Stellar, survivor of the UES Prometheus and Captain Bub Stellar\u2019s grandfather.' },
+      { label: 'What it is', value: 'Firsthand testimony from James Stellar (also known as Grandfather Stellar or Commander Stellar), survivor of the UES Prometheus and Captain Bub Stellar\u2019s grandfather.' },
       { label: 'How obtained', value: 'James returned after seventy years of forced Confluence service.' },
       { label: 'Why it matters', value: 'James knows Confluence tactics, legal systems, enforcement doctrine, and the truth of what happened to Prometheus.' },
       { label: 'Risk', value: 'Because James was augmented and forced to serve The Confluence, enemies may claim he is compromised.' }
@@ -299,8 +300,9 @@ export const CODEX_ALLIES = [
   {
     key: 'james_stellar',
     label: 'James Stellar',
+    aliases: ['James', 'Grandfather Stellar', 'Commander Stellar', 'Grandpa Stellar'],
     fields: [
-      { label: 'Who he is', value: 'Captain Bub Stellar\'s grandfather and survivor of the lost UES Prometheus.' },
+      { label: 'Who he is', value: 'Captain Bub Stellar\'s grandfather and survivor of the lost UES Prometheus. Also known as Grandfather Stellar, Commander Stellar, or simply James — all refer to the same person.' },
       { label: 'How you met', value: 'James returned after seventy years of forced service under The Confluence.' },
       { label: 'Personality', value: 'Haunted, dry, protective, brave, sometimes fatalistic. He wants redemption but does not always believe he deserves it.' },
       { label: 'Augmentations', value: 'Mechanical arm with extreme grip strength. Augmented eye with enhanced targeting, scanning, and energy-pattern reading. Reinforced body able to survive impacts that would badly injure normal humans. Faster reaction time. Some ability to interface with Confluence systems. Knowledge of Confluence ship design, security protocols, and enforcement doctrine. Possible built-in emergency survival systems.' },
