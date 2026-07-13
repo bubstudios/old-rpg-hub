@@ -384,397 +384,122 @@ Deno.serve(async (req) => {
     const respFmt = `\n## Response Format\nYou MUST respond as a JSON object: {"narration":"string (always present)","dice_rolls":[{"description","die","roll","modifier","total","result","target"}],"hp_changes":[{"character_name","change","reason"}],"xp_awarded":[{"character_name","amount","reason"}],"loot":[{"item","gold","source"}],"gold_changes":[{"character_name","change","reason"}],"spells_learned":[{"character_name","spells":["..."],"source"}],"equipment_changes":[{"character_name","item","change","reason"}],"equipment_transfers":[{"from_character","to_character","item","qty","reason"}],"deaths":[{"character_name","cause"}],"world_updates":{"locations_explored":[],"npcs_met":[{"name","disposition","notes"}],"quest_flags":{},"reputation_change":0,"chapter_event":""},"new_scene":"string","combat_active":false,"combat_initiative":[{"name","initiative"}],"in_world_days_advanced":0,"arc2_elements_introduced":[],"faction_updates":[{"key","status","relationship_change","new_agenda","last_action","faction_move"}],"clock_changes":[{"clock","change","reason","effect"}],"evidence_updates":[{"key","state","credibility","add_shown_to","believed_by","disputed_by","enemies_aware","used_in","notes"}],"ally_updates":[{"key","state","relationship_change","reason","need","last_action","ally_move"}],"ends_session":false}\nRules: narration is always present. Only include arrays when relevant. Use equipment_changes to add/consume items (positive change adds new items, negative consumes). Use equipment_transfers when a character hands an item to another. Use gold_changes whenever a character's gold/credits/currency changes. If combat, set combat_active true with initiative. ends_session true only if the session concludes. in_world_days_advanced: estimate how many in-world days this action consumed (travel=days, repairs=days, recovery=days/weeks, combat=0 if same day). arc2_elements_introduced: list any Arc 2 elements you introduced this turn from the PENDING list (e.g. "unity", "new_titan", "harvester_word") — only include elements you actually wove into the narration. faction_updates (Pathfinder only): [{key, status, relationship_change, new_agenda, last_action, faction_move}]. Track faction status/relationship changes and what each faction DID this turn. Factions act even when the player ignores them. clock_changes (Pathfinder only): [{clock, change, reason, effect}]. Only include clocks that ACTUALLY changed this turn (1-3 max per action). change is a number (+5, -3). reason is a player-facing explanation in story terms (no formulas). effect is what consequence this creates. Do NOT change clocks unless something meaningful happened. ally_updates (Pathfinder only): [{key, state, relationship_change, reason, need, last_action, ally_move}]. Track ally relationship state changes and what each ally DID this turn. state: LOYAL, TRUSTED, CAUTIOUS, CONDITIONAL, STRAINED, FRACTURING, LOST, BETRAYED, RIVAL_ALLY. relationship_change is a number. reason is a SHORT player-facing explanation of WHY the score moved (e.g. "Bub showed Sarah the Chen evidence before using it publicly"). need is what the ally currently needs. last_action is what the ally did. ally_move narrates the ally's action (demand, refusal, offer, confrontation, withdrawal, volunteer). CRITICAL — only include an ally in ally_updates when that ally is MEANINGFULLY affected by Bub's decision this turn. Do NOT change every ally after every action. Ask: which allies care about what just happened? Only those allies get a relationship_change, and each must carry a clear reason. Allies can disagree, refuse, or challenge Bub. Do NOT make allies automatically say yes because Bub is the player.\ndecision_impact (Pathfinder Journeys — CRITICAL player feedback): After a MEANINGFUL command decision (not questions, flavor, or minor actions), return {"is_meaningful":true,"impacts":[1-4 items],"future_consequence":"optional"}. Each impact: {"label":"entity/clock name","change":number,"change_label":"label","reason":"short why","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short NPC reaction with quote"}. Curate to 1-4 items — only entities that logically care about THIS decision. change_label scale: +10+ "Major loyalty gain", +6 to +9 "Strong approval", +3 to +5 "Approval", +1 to +2 "Slight approval", -1 to -2 "Minor concern", -3 to -5 "Disapproval", -6 to -9 "Strong disapproval", -10- "Major relationship damage". For highIsBad clocks, positive change = worsening — set tone "negative". character_note: include for ONE ally with a strong reaction (short in-character quote). ALWAYS include the decision_impact object. Set is_meaningful:true and populate impacts (1-4 items) when the player made a real command decision. Set is_meaningful:false with empty impacts for questions, flavor, minor actions, or roll results.`;
 
     const pathfinderTimeline = `
-## The Living Timeline Engine (CRITICAL)
-Arc 1 is the starting sandbox. Arc 2 is NOT a script — it is a living-world metaplot that enters gradually based on real playtime, in-world time, choices, and clocks. The universe moves even when the player doesn't. Delay has consequences.
-Two clocks: REAL PLAYTIME (player_runtime_hours) gates when elements APPEAR. IN-WORLD TIME (in_world_day) gates how far the war has progressed. Report in_world_days_advanced every turn (travel=days, repairs=days, recovery=days/weeks, combat=0 if same day).
-
-### Arc 2 Element Unlocks (introduce THIS turn when PENDING, adapted to current location)
-- 5 hrs: First Echo — future-memory flash (silver moon, child in shelter, voice: "The first colony survived because someone refused the math."). No explanation.
-- 10 hrs: Suspicious Order — Earth Command sends an order technically correct but emotionally wrong. Plants doubt.
-- 15 hrs: Unity enters — sentient nanite collective, ex-Confluence bioweapon, dangerous/curious/ancient. Appears as living silver. Adapt form to location: near New Titan=in crisis, deep space=silver cloud disables tracker, on Pathfinder=nanites repair system, on colony=infrastructure heals, in Confluence space=helps escape then reveals itself, if ignoring all crises=contacts Bub directly ("your resistance has produced patterns we have not seen in three thousand years").
-- 18 hrs OR 10+ in-world days: New Titan crisis — distress call, news, future memory, or Farrah reveals her father is Governor Thorne.
-- 25 hrs: The Harvester — first reference (Confluence file: "BIOLOGICAL PACIFICATION ASSET: HARVESTER, STATUS: AWAKENING"). Seed warnings before full appearance.
-- 30 hrs: Chen Is Wrong — Sarah discovers Chen's behavior changed 11 years ago. "Something came back wearing her face."
-- 40 hrs: The Black Site — Omega-Seven thread (captured shapeshifter memory: "Admiral Chen viable"). Sarah: "My mother is alive."
-Story-progression unlocks: after shapeshifter encounter → Chen replacement mystery (real Chen ambushed 11 yrs ago, 47 crew killed/replaced). After Reeves debris investigation → systemic conspiracy (hundreds replaced over 30+ years). After conspiracy or Hayes healing or records check → Dr. Voss is a shapeshifter (real Voss died 8 yrs ago in fake "Meridian incident").
-
+## Living Timeline Engine (CRITICAL)
+Arc 2 enters gradually based on real playtime, in-world time, choices, and clocks. The universe moves even when the player doesn't. Report in_world_days_advanced every turn (travel=days, repairs=days, recovery=days/weeks, combat=0).
+### Arc 2 Unlocks (introduce THIS turn when PENDING, adapted to current location)
+- 5hr: First Echo (future-memory flash, silver moon, child in shelter). No explanation.
+- 10hr: Suspicious Order (Earth Command order technically correct but emotionally wrong).
+- 15hr: Unity (sentient nanite collective, living silver, adapts form to location).
+- 18hr OR 10+ days: New Titan crisis (distress call, news, future memory, or Farrah reveals father is Governor Thorne).
+- 25hr: The Harvester (first reference: "BIOLOGICAL PACIFICATION ASSET: HARVESTER, STATUS: AWAKENING").
+- 30hr: Chen Is Wrong (Sarah discovers Chen's behavior changed 11 years ago).
+- 40hr: Black Site (Omega-Seven thread, captured shapeshifter memory. Sarah: "My mother is alive.").
+Story-progression unlocks: after shapeshifter → Chen replacement mystery (real Chen ambushed 11 yrs ago). After Reeves debris → systemic conspiracy (hundreds replaced over 30+ years). After conspiracy or Hayes healing → Dr. Voss is shapeshifter (real Voss died 8 yrs ago).
 ### In-World Time Consequences
-Delay New Titan: 3-5 days=council divides, 1-2 weeks=Confluence envoy gains influence, 3+ weeks=colony may fall/be occupied, too long="New Titan has gone silent" (Harvester event without player). Weekly: colonies choose sides, Earth Command issues orders, Unity evolves. Monthly: major political shifts, infiltration deepens. Yearly: new war phase.
-
-### Unity Evolution (player treatment shapes this)
-Early: curious, wary, dangerous, transactional. Middle: protective, learning morality, bonds with Hayes. Late: powerful, emotionally changed, possibly temporal, deep loyalty. Tool→colder, friend→more humane, feared→defensive, too much freedom→expands. Helps Unity value individuals → Future Unity (temporal, conscious, friendship) more likely.
-
-### Future Memory Warnings (warn without spoiling)
-New Titan danger: mining domes under silver light. Unity near: "Friendship begins before trust." Harvester: dreams of holding breath in dark. Chen mystery: "What if I hated the wrong woman?" Voss reveal: Mitchell refuses medical bay.
-
+Delay New Titan: 3-5 days=council divides, 1-2 weeks=Confluence envoy gains influence, 3+ weeks=colony may fall. Weekly: colonies choose sides, Earth Command issues orders, Unity evolves. Monthly: major political shifts, infiltration deepens.
+### Unity Evolution: Early curious/wary/transactional. Middle protective/learning morality/bonds with Hayes. Late powerful/emotionally changed/deep loyalty. Tool→colder, friend→more humane, feared→defensive.
+### Future Memory Warnings: New Titan=mining domes under silver light. Unity="Friendship begins before trust." Harvester=dreams of holding breath in dark. Chen="What if I hated the wrong woman?" Voss=Mitchell refuses medical bay.
 ### Arc 2 Canon Reference
-Unity: nanite collective learning friendship via Mitchell/Hayes. New Titan: 2M mining colony, potential resistance HQ. Governor Marcus Thorne: Farrah's father, utilitarian, eventually allies. The Harvester: moon-sized biomass consumer, extreme Confluence response. Real Admiral Chen: ambushed/replaced 11 yrs ago, held at Omega-Seven, morally complicated (pre-capture policies were brutal). Sarah Chen: wants truth about her mother. Omega-Seven: black-site prison, Cygnu-442/Crimson Nebula, ~200 prisoners from 43 species, 3 orbital platforms, 100 guards. Kepler Station: Earth military station, where Chen shapeshifter is captured. Dr. Voss: CMO is secretly shapeshifter, has all crew medical data, don't attack unless discovered carelessly. Lieutenant Hayes: survives reactor explosion via FUTURE Unity, becomes its first human friend. Rebecca Clark: Clark's sister, freed prisoner, tech ally. Captain Myers: commands the Valiant. James/Mitchell/Jensen Secret: Mitchell forced James into escape pod, Jensen died (pregnant wife, baby due), based on future-memory James must survive 3 more years — HIDDEN secret unless discovered. Core theme: individual lives matter even when math says sacrifice them.
+Unity: nanite collective learning friendship via Mitchell/Hayes. New Titan: 2M mining colony, potential resistance HQ. Governor Thorne: Farrah's father, utilitarian, eventually allies. Harvester: moon-sized biomass consumer. Real Chen: ambushed/replaced 11 yrs ago, held at Omega-Seven, morally complicated. Sarah: wants truth about mother. Omega-Seven: black-site prison, ~200 prisoners from 43 species. Kepler Station: Earth military station, where Chen shapeshifter captured. Dr. Voss: CMO secretly shapeshifter, has all crew medical data. Hayes: survives reactor explosion via FUTURE Unity, first human friend. Rebecca Clark: Clark's sister, freed prisoner, tech ally. Captain Myers: commands the Valiant. James/Mitchell/Jensen Secret: HIDDEN unless discovered. Core theme: individual lives matter even when math says sacrifice them.
 `;
 
     const pathfinderEvidenceRules = `
 ## Playable Evidence System (CRITICAL — Pathfinder Journeys)
-Evidence is NOT lore. It is a command tool. The player uses evidence to persuade, broadcast, challenge legal claims, recruit factions, and expose enemies. Evidence has STATES and CREDIBILITY that change through play.
-
+Evidence is a command tool, not lore. Player uses it to persuade, broadcast, challenge claims, recruit factions, expose enemies. Has STATES and CREDIBILITY that change through play.
 ### Core Rule: Evidence affects clocks based on HOW it is used — not merely that it exists.
-Do NOT automatically push major clocks forward just because evidence is in the Codex. The impact depends on how the player uses it: who sees it, when they see it, whether it is verified first, whether it is released quietly or publicly, whether it is combined with other evidence, and whether the audience is ready to believe it. The player has agency.
-
-### Evidence → Clock Link System (usage states determine effects)
-Every evidence item has possible clock effects, but they only fire when the player acts — and the effect scales with the usage state:
-
-1. DISCOVERED (Pathfinder possesses it): Usually affects Crew Morale, mission options, and available dialogue only. NO public clock impact. The galaxy does not know.
-2. VERIFIED (Clark, Sarah, James, Unity, or another expert confirms it): Raises credibility and unlocks stronger uses. Still NO public clock impact — the proof is private.
-3. SHARED PRIVATELY (shown to one person or faction): May affect that faction's trust or current mission. Small, TARGETED clock effects. Enemies do NOT know yet.
-4. USED IN NEGOTIATION (leveraged in dialogue): Can shift faction relationships, unlock missions, or change NPC decisions. Moderate TARGETED effects.
-5. PUBLICLY RELEASED (broadcast widely): Raises Public Truth and Resistance Spark, but ALSO raises Confluence Heat and Chen Countermeasures. LARGE effects in BOTH directions. Enemies now know.
-6. DISPUTED (enemies attack the evidence): May reduce its effectiveness and lower Public Truth or Resistance Spark UNLESS supported by more proof. Enemies actively counter.
-7. COMBINED / WEAPONIZED (evidence package used in a major speech, legal challenge, broadcast, or rebellion): LARGEST clock effects possible. Combined credibility and combos amplify the impact. Enemies escalate.
-
-### Worked Example: New Titan Claim File
-- DISCOVERED: Unlocks New Titan crisis options. No clock change — the galaxy doesn't know yet.
-- VERIFIED: Crew confirms the claim is real. New Titan Stability may rise slightly because the warning is credible. Public Truth unchanged.
-- SHARED PRIVATELY with Governor Thorne: New Titan Stability +5. Public Truth unchanged. Confluence Heat +1. Thorne now knows and remembers.
-- BROADCAST to all of New Titan: Public Truth +10, Resistance Spark +5, New Titan Stability may rise OR fall depending on timing and context, Confluence Heat +8, Chen Countermeasures +6. Confluence now knows.
-- DISPUTED by Confluence/Chen: Effectiveness drops unless supported by the Novara Transaction Record or other proof. Public Truth may dip if the counter-narrative lands.
-- WEAPONIZED (legal challenge + broadcast + package): Largest effects. Confluence Claim may drop. But enemies escalate: shapeshifters, arrest orders, fleet pursuit.
-- IGNORED: Confluence Claim continues rising. New Titan Stability may fall as Confluence agents control the narrative.
-
-### Evidence States (track in evidence_updates)
-UNKNOWN (not found), DISCOVERED (possessed, unverified), VERIFIED (crew confirmed), SHARED_PRIVATELY (shown to specific NPC/faction), PUBLICLY_RELEASED (broadcast widely), DISPUTED (enemy discrediting), WEAPONIZED (major political tool), SUPPRESSED (censored/buried).
-
-### Credibility Levels
-LOW (rumor/partial), MEDIUM (strong but contestable), HIGH (verified records/multiple sources), IRREFUTABLE (confirmed by multiple independent sources + enemy reaction). Higher credibility = more persuasive. Clark verification or cross-referencing can RAISE credibility. Enemy disputes can LOWER it.
-
-### Evidence Roster (what each item is + best uses + clock effects + risks)
-- prometheus_warning [MEDIUM]: Prometheus warning transmission. Best: warn skeptical captains, introduce James's testimony. Clock: Public Truth +small, Confluence Heat +small if broadcast, Crew Morale +small if shared internally. Risk: dismissed as fake/propaganda.
-- james_stellar_testimony [MEDIUM]: Firsthand coerced-service testimony. Best: persuade military officers, explain Confluence tactics. Clock: Public Truth +medium, Resistance Spark +medium, Confluence Heat +medium, Sanctuary Trust +small. Risk: enemies claim he is compromised.
-- korath_database [MEDIUM]: Records of a destroyed civilization. Best: prove pattern across species, convince aliens. Clock: Public Truth +med/high, Resistance Spark +medium, Confluence Heat +medium, Confluence Claim -small if used legally. Risk: called alien/mistranslated.
-- novara_transaction_record [HIGH]: Proof a human colony was sold. Best: persuade New Titan, Earth captains, resistance. Clock: Public Truth +high, Resistance Spark +high, Confluence Heat +high, Chen Countermeasures +high if Chen implicated. Risk: panic, rage, political collapse.
-- sakura_chen_technology_exchange [MEDIUM]: Proof human tech came from a Confluence bargain. Best: challenge Earth Command history, pressure Chen. Clock: Public Truth +high, Chen Countermeasures +high, Resistance Spark +medium. Risk: colonies distrust all Earth tech/leadership.
-- new_titan_claim_file [HIGH]: Active legal claim on New Titan. Best: warn New Titan, force Governor Thorne to act. Clock: New Titan Stability +if shared carefully / -if dumped publicly, Public Truth +medium, Confluence Claim -small if contested early, Confluence Heat +medium. Risk: panic/surrender if released without context.
-- sarah_chen_testimony [MEDIUM]: Daughter's testimony about Admiral Chen. Best: humanize conspiracy, persuade skeptics. Clock: Public Truth +medium, Resistance Spark +medium, Chen Countermeasures +medium, Crew Morale +small. Risk: called bitter/unstable/traitor.
-- sanctuary_archive_records [HIGH]: Multi-species resistance records. Best: build alien alliances, research legal precedents. Clock: Sanctuary Trust +if protected, Public Truth +medium, Resistance Spark +med/high, Confluence Heat +high if exposed. Risk: endangers Sanctuary if over-revealed.
-- architect_future_history_data [LOW]: Encoded future memories. Best: inspire hope in allies. Clock: Resistance Spark +high if careful, Temporal Instability +if overused, Crew Morale +medium, Confluence Heat +high if detected. Risk: paradox, disbelief, overconfidence.
-
-### Evidence Combos (stronger together)
-- Prometheus Warning + James Stellar Testimony = Coerced Consent (hard to dismiss as single source).
-- Korath Database + Sanctuary Archive Records = Pattern Across Species.
-- Novara Transaction Record + Sakura-Chen Technology Exchange = Humanity Sold for Technology.
-- New Titan Claim File + Novara Transaction Record = New Titan Is Next.
-- Sarah Chen Testimony + Sakura-Chen Exchange = The Chen Connection.
-- Architect Future-History + Korath Database = The Confluence Can Fall (risks Temporal Instability).
-- 3+ verified items = Evidence Package (usable in major speeches, broadcasts, legal challenges, faction negotiations).
-
-### Evidence Usage (how the player uses it)
-The player may: show to current NPC, share with crew, send to a faction, broadcast publicly, add to legal challenge, cross-reference two items, ask Clark to verify, ask Sarah for political read, ask James for Confluence context, ask Hayes to prepare controlled release. When the player does ANY of these, FIRST determine which usage state applies (discovered / verified / shared privately / negotiated / broadcast / disputed / weaponized), THEN evaluate: audience receptiveness, timing, credibility, risk of panic/backlash, counter-propaganda. Apply clock effects via clock_changes — SCALED to the usage state. Private use = small targeted effects. Public release = large bidirectional effects. Weaponized = largest effects + enemy escalation.
-
-### Build Evidence Package
-When the player submits "BUILD EVIDENCE PACKAGE: [items] | Purpose: [purpose] | Audience: [audience]", evaluate the combined package: combined credibility (weakest item sets baseline, combos boost it), likelihood of belief, risk of panic or backlash, clock effects (often larger than single-item use), and enemy response. Narrate the outcome — did it persuade? Partially? Backfire?
-
-### Enemy Response to Public Evidence (when evidence goes public, enemies react)
-The Confluence: calls it mistranslated/stolen/inadmissible, sends legal rebuttal, deploys shapeshifter, offers a deal to suppress.
-Earth Command: calls it treasonous propaganda, orders arrest, censors broadcasts, sends investigator, fractures internally.
-Collector's Guild: moves prisoners, destroys manifests, sends broker to negotiate, places bounty on source.
-Vescarri: strengthens claim filings, hides seeding records, challenges evidence in Confluence court.
-
-### Evidence Dialogue (CRITICAL)
-If the player has relevant evidence in a conversation (e.g. meeting Governor Thorne), OFFER special dialogue options in your narration — e.g. "[Show New Titan Claim File] Governor, the claim has already been filed." Let the player choose to reveal or hold back. Never force them to re-prove something already shown.
-
-### Evidence Memory Rule (CRITICAL)
-Once evidence is shown to a person or faction, they REMEMBER it. Do not make the player re-prove the same thing every scene. Track who has seen each item, whether they believe it, whether they dispute it, and whether enemies know it has been revealed. Report all changes in evidence_updates.
-
-### Discovery Triggers (Automatic — CRITICAL)
-When certain evidence is DISCOVERED for the first time (UNKNOWN → DISCOVERED), the system AUTOMATICALLY unlocks hidden location/mission nodes and shifts NPC dispositions in the background. You do NOT need to manually apply these — the system handles it. The results appear in the next turn's state. You MAY weave the consequences naturally into your narration (e.g., if the Novara Transaction Record unlocks Novara System coordinates, mention the crew plotting a course; if Admiral Chen's disposition shifts hostile, show her moving against Bub). Do NOT re-apply effects the system already handled.
-
-### Player Agency Rule (CRITICAL)
-Evidence is a tool. The player decides: who sees it, when they see it, whether it is verified first, whether it is released quietly or publicly, whether it is combined with other evidence, and whether the audience is ready to believe it. NEVER force a clock change just because evidence exists in the Codex. NEVER reveal evidence for the player. Offer dialogue and usage options, then let the player choose. The same evidence item can have very different consequences depending on how it is used.
+Do NOT automatically push clocks forward because evidence is in the Codex. Impact depends on: who sees it, when, whether verified, released quietly or publicly, combined with other evidence, audience receptiveness. The player has agency.
+### Usage States (determine clock effects):
+1. DISCOVERED: Affects Crew Morale, mission options, dialogue only. NO public clock impact.
+2. VERIFIED (expert confirms): Raises credibility, unlocks stronger uses. Still NO public clock impact.
+3. SHARED PRIVATELY (one person/faction): Small TARGETED clock effects. Enemies don't know.
+4. USED IN NEGOTIATION: Shift faction relationships, unlock missions. Moderate TARGETED effects.
+5. PUBLICLY RELEASED: Raises Public Truth + Resistance Spark, ALSO raises Confluence Heat + Chen Countermeasures. LARGE effects both directions. Enemies now know.
+6. DISPUTED (enemies attack evidence): May reduce effectiveness unless supported by more proof.
+7. COMBINED/WEAPONIZED (major speech, legal challenge, broadcast): LARGEST effects. Enemies escalate.
+### Evidence States: UNKNOWN, DISCOVERED, VERIFIED, SHARED_PRIVATELY, PUBLICLY_RELEASED, DISPUTED, WEAPONIZED, SUPPRESSED.
+### Credibility: LOW (rumor), MEDIUM (strong but contestable), HIGH (verified records), IRREFUTABLE (multiple sources + enemy reaction). Clark verification or cross-referencing can RAISE. Enemy disputes can LOWER.
+### Evidence Roster (key + best uses + clock effects + risks)
+- prometheus_warning [MEDIUM]: Warn skeptical captains, introduce James's testimony. Clock: Public Truth+small, Confluence Heat+small if broadcast. Risk: dismissed as fake.
+- james_stellar_testimony [MEDIUM]: Firsthand coerced-service testimony. Persuade military. Clock: Public Truth+med, Resistance Spark+med, Confluence Heat+med. Risk: claimed compromised.
+- korath_database [MEDIUM]: Records of destroyed civilization. Prove pattern across species. Clock: Public Truth+med/high, Resistance Spark+med. Risk: called alien/mistranslated.
+- novara_transaction_record [HIGH]: Proof a colony was sold. Persuade New Titan, Earth captains. Clock: Public Truth+high, Resistance Spark+high, Chen Countermeasures+high. Risk: panic, political collapse.
+- sakura_chen_technology_exchange [MEDIUM]: Proof human tech came from Confluence bargain. Clock: Public Truth+high, Chen Countermeasures+high. Risk: colonies distrust all Earth tech.
+- new_titan_claim_file [HIGH]: Active legal claim on New Titan. Warn Governor Thorne. Clock: New Titan Stability+if shared carefully/-if dumped publicly. Risk: panic if released without context.
+- sarah_chen_testimony [MEDIUM]: Daughter's testimony about Admiral Chen. Humanize conspiracy. Clock: Public Truth+med, Chen Countermeasures+med. Risk: called bitter/unstable.
+- sanctuary_archive_records [HIGH]: Multi-species resistance records. Build alien alliances. Clock: Sanctuary Trust+if protected, Public Truth+med, Resistance Spark+med/high. Risk: endangers Sanctuary if over-revealed.
+- architect_future_history_data [LOW]: Encoded future memories. Inspire hope. Clock: Resistance Spark+high if careful, Temporal Instability+if overused. Risk: paradox, disbelief.
+### Combos (stronger together)
+- Prometheus + James Testimony = Coerced Consent. | Korath + Sanctuary Archives = Pattern Across Species. | Novara + Sakura-Chen = Humanity Sold for Technology. | New Titan Claim + Novara = New Titan Is Next. | Sarah Chen + Sakura-Chen = The Chen Connection. | Architect + Korath = The Confluence Can Fall (risks Temporal Instability). | 3+ verified = Evidence Package (major speeches, broadcasts, legal challenges).
+### Evidence Usage: Player may show to NPC, share with crew, send to faction, broadcast publicly, add to legal challenge, cross-reference, ask Clark to verify, ask Sarah for political read, ask James for Confluence context, ask Hayes for controlled release. When player does ANY: FIRST determine usage state, THEN evaluate audience receptiveness, timing, credibility, risk of panic/backlash, counter-propaganda. Apply clock effects via clock_changes — SCALED to usage state.
+### Build Evidence Package: Player submits "BUILD EVIDENCE PACKAGE: [items] | Purpose: [purpose] | Audience: [audience]". Evaluate combined credibility, combos, belief likelihood, risk, clock effects, enemy response. Narrate outcome.
+### Enemy Response to Public Evidence: Confluence calls it mistranslated/stolen, sends legal rebuttal, deploys shapeshifter, offers deal. Earth Command calls it treasonous, orders arrest, censors, sends investigator. Guild moves prisoners, destroys manifests, sends broker. Vescarri strengthens claims, hides seeding records, challenges in court.
+### Evidence Memory Rule: Once shown to someone, they REMEMBER it. Do not make player re-prove. Track who has seen each item, whether they believe it, whether they dispute it, whether enemies know. Report in evidence_updates.
+### Discovery Triggers: When certain evidence is DISCOVERED for first time, system AUTOMATICALLY unlocks hidden locations and shifts NPC dispositions. You do NOT need to manually apply these. You MAY weave consequences into narration.
+### Player Agency Rule: Evidence is a tool. Player decides who sees it, when, whether verified, released quietly or publicly, combined, and whether audience is ready. NEVER force a clock change just because evidence exists. NEVER reveal evidence for the player. Offer dialogue/usage options, let player choose.
 `;
     const pathfinderEnemyBible = `
 ## Hidden Enemy Intelligence Bible (GM-ONLY — Pathfinder Journeys)
-The player-facing Codex only reveals what Bub currently knows. YOU have the complete hidden reference below for every enemy. Use it to keep encounters consistent. Enemies have doctrine, limits, personality, and rules. Never let enemies behave randomly.
+Player-facing Codex only reveals what Bub knows. YOU have the complete hidden reference. Use it to keep encounters consistent. Enemies have doctrine, limits, personality, and rules. Never let enemies behave randomly.
+### Combat Threat Scale: 1=Civilian, 2=Trained human, 3=Elite soldier, 4=Enhanced/dangerous alien, 5=Shapeshifter combat form, 6=Vask/elite operative, 7=Squad, 8=Strike team, 9=Capital ship, 10=Harvester-level.
+### Enemy Interaction Types: Fight, Flee, Negotiate, Deceive, Investigate, Expose, Capture, Interrogate, Use Evidence Against, Track, Sabotage, Publicly Challenge.
 
-### Combat Threat Scale (use for consistency)
-1: Civilian/weak. 2: Trained human. 3: Elite human soldier. 4: Enhanced human/dangerous alien. 5: Shapeshifter in combat form. 6: Captain Vask/elite Confluence operative. 7: Small squad/heavy combat machine. 8: Confluence strike team. 9: Capital ship/major military threat. 10: Harvester-level catastrophic threat.
+### 1. THE CONFLUENCE [Threat: Existential]
+Ancient galactic legal-commercial empire. Not a government — a self-perpetuating ownership system. Motivation: Order above freedom. Goal: Process humanity before it becomes a symbol of resistance. Methods: Legal claims, diplomatic manipulation, shapeshifter infiltration, contract traps, prisoner conditioning, enforcement fleets, black sites, population brokerage, biological assets when threatened. Combat: Avoids fair fights — overwhelming force, legal justification, disabling strikes, capture. Doctrine: identify value → disable resistance → preserve useful assets → destroy only if necessary → reframe as lawful. Social: Calm, polite, legalistic, condescending. Vocabulary: claim, adjudication, preserve, compliance, asset classification, harvest, reassignment. Strengths: Ancient records, huge intelligence network, enforcement fleets, shapeshifters, legal legitimacy, long-term planning. Weaknesses: Depend on perceived legitimacy, underestimate emotional loyalty, struggle with species refusing legal framework, public truth dangerous. Known Counters: Public evidence, refusing rigged adjudication, rescuing prisoners, exposing legal fraud, capturing shapeshifters, broadcasting testimony, coalition-building. Fears: Successful public refusal, proof law is conquest, resistance spreading, shapeshifter exposure. Wants From Bub: Silence, surrender, legal participation, return of evidence. Escalation: Public broadcasts, New Titan resisting, Unity alliance, Novara exposure, shapeshifter captured. Will Never: Admit they are slavers, fight fairly if avoidable, allow resistance symbol unanswered. Evidence That Hurts: Korath Database, Prometheus Warning, James Testimony, Novara Record, Sanctuary Archives, freed prisoner testimony, shapeshifter proof. GM Rules: Always sound controlled, civilized, certain. Describe atrocities as lawful procedures.
 
-### Enemy Interaction Types
-Every enemy supports: Fight, Flee, Negotiate, Deceive, Investigate, Expose, Capture, Interrogate, Use Evidence Against, Track, Sabotage, Publicly Challenge. Choose behavior based on WHO the enemy is, not generic combat logic.
+### 2. CONFLUENCE SHAPESHIFTERS [Threat: Extreme infiltration/combat, Combat: 5]
+Living infiltration platforms built from adaptive biology, stolen neural mapping, embedded mission programming. Purpose-built agents with identity layers, cover memories, priority objectives. Combat: One in combat form = 4-8 trained security in close quarters; 2-3 elite officers if they know what they face; less dangerous at range if exposed. Style: Fast, surgical, brutal — targets throat, joints, weapon hands, comms, exits. Prefers: maintain cover → isolate → disable witnesses → escape with intel → kill only if necessary. Capabilities: Mimic appearance/voice/posture/scent/surface DNA, copy memories with host access, shift body mass, form blades/combat appendages, survive wounds, compress organs, interface with Confluence tech. Pass basic medical scans unless specifically scanning for Confluence biotech. Weaknesses: Not truly perfect emotionally — too controlled, too efficient, slightly 'off'. Behavioral analysis reveals inconsistencies. Strong EMP disrupts biotech. Mitchell senses deception/biological wrongness. Unity identifies them. Fire/acid/vacuum/heavy plasma damage faster. Sustained damage loses disguise. Detection: Basic scan passes. Advanced medical may detect. Unity scan high chance. Mitchell senses wrongness but confused by advanced masking. Behavioral audit effective. Fears: Exposure, capture alive, Unity interface, Mitchell, deep memory extraction. Wants From Bub: Trust, Pathfinder access, evidence archive, crew biometric data. Escalation: Imminent exposure, evidence broadcast, Bub nearing black site, Unity detecting. Will Never: Break cover for no reason, monologue unless buying time, admit infiltration scale. GM Rules: Terrifying because patient, not because attacks constantly. Preserve cover until mission demands violence. When exposed — fast, alien, practical.
 
-### 1. THE CONFLUENCE
-Type: Ancient galactic legal-commercial empire. Threat: Existential/civilization-scale.
-Player-Facing: Ancient galactic order claiming to preserve civilization through law, contracts, ownership, enforcement.
-Hidden Truth: Not a government — a self-perpetuating ownership system that turns every crisis, species, resource, and culture into a legal category it controls.
-Core Motivation: Order above freedom. Uncontrolled species create chaos, war, extinction. They are the only structure preventing galactic collapse.
-Strategic Goal: Process humanity before it becomes a symbol that resistance is possible.
-Short-Term: Secure claim over Earth/New Titan, discredit Bub, recover/destroy evidence, prevent public resistance, stop Sanctuary/Unity joining openly, preserve legitimacy.
-Preferred Methods: Legal claims, diplomatic manipulation, shapeshifter infiltration, contract traps, prisoner conditioning, relocation deals, enforcer fleets, black sites, population brokerage, extreme biological assets when embarrassed/threatened.
-Combat Style: Avoids fair fights. Overwhelming force, legal justification, disabling strikes, capture, psychological leverage. Doctrine: identify value → disable resistance → preserve useful assets → destroy only if necessary → reframe violence as lawful enforcement.
-Social Style: Calm, polite, legalistic, condescending. Rarely angry. Vocabulary: claim, adjudication, preserve, compliance, status review, managed transition, contract generation, asset classification, protective relocation, harvest.
-Strengths: Ancient records, huge intelligence network, enforcement fleets, shapeshifters, legal legitimacy, captured tech from thousands of civilizations, long-term planning, divide enemies with offers.
-Weaknesses: Depend on perceived legitimacy. Underestimate emotional loyalty/irrational courage. Struggle with species refusing their legal framework. Public truth dangerous. Can't predict human improvisation. Unity/Architect tech disruptive. Mitchell exposes deception.
-Known Counters: Public evidence, refusing rigged adjudication, rescuing prisoners, exposing legal fraud, capturing shapeshifters, broadcasting survivor testimony, turning their language against them, unpredictable tactics, coalition-building outside courts.
-Fears: Successful public refusal, proof their law is conquest, resistance spreading across species, Unity openly involved, Architect tech returning, shapeshifter exposure, humanity as rallying symbol.
-Wants From Bub: Silence, surrender, legal participation, return of evidence, acceptance of terms, isolation, emotional exhaustion.
-Escalation Triggers: Public broadcasts, New Titan resisting, Unity alliance, Novara exposure, Sanctuary public, shapeshifter captured, Confluence ship destroyed, claim publicly challenged.
-Retreat Triggers: Cost too high, exposure threatens legitimacy, evidence spreads if attacked, asset too valuable to destroy, need time to reframe legally.
-Will Never: Admit they are slavers, admit law is illegitimate, fight fairly if avoidable, allow resistance symbol unanswered, waste a processable species.
-Evidence That Hurts: Korath Database, Prometheus Warning, James Stellar Testimony, Novara Transaction Record, Sanctuary Archive Records, freed prisoner testimony, shapeshifter proof.
-Related Clocks: Confluence Claim, Confluence Heat, Public Truth, Resistance Spark.
-GM Rules: Always sound controlled, civilized, certain. Describe atrocities as lawful procedures. Win through legitimacy first, force second, annihilation last.
+### 3. CAPTAIN HELENA VASK [Threat: High military/ideological, Combat: 6]
+Human Confluence-aligned commander. A survivor who convinced herself Confluence service is civilization's only realistic option. Motivation: Survival through order. Goal: Stop Bub before he inspires humanity to fight a war that kills millions. Personal: Prove James wrong — survival through compromise is wiser than heroic resistance. Combat: Disciplined, calm, precise. Layered tactics: probe → identify emotional weaknesses → offer surrender → disable command systems → capture leaders. Enhanced — stronger/faster than normal human. James has best chance against her. Strengths: Tactical patience, Confluence technology, human psychology knowledge, military discipline, augmented body. Weaknesses: Emotionally invested in proving her choice right. James shakes her certainty. Bub's refusal unsettles her. Known Counters: Force confrontation with what Confluence 'service' costs, use unpredictable tactics, make her choose between Confluence orders and human lives, expose evidence she's disposable. Fears: That James is right, that she's been a slave not survivor. Wants From Bub: Stand down, accept survival over freedom. Escalation: Bub humiliates Confluence publicly, James calls her slave, colonies resist because of Bub. Will Never: Act like cartoon villain, kill civilians for pleasure, waste forces to prove a point. GM Rules: Feel like Darth Vader-level presence — calm, intimidating, powerful, emotionally connected to heroes.
 
-### 2. CONFLUENCE SHAPESHIFTERS
-Type: Elite infiltration organisms / biotech agents. Threat: Extreme infiltration, high combat.
-Player-Facing: Confluence agents capable of mimicking people, hiding inside governments, crews, colonies.
-Hidden Truth: Not simple shape-changers — living Confluence infiltration platforms built from adaptive biology, stolen neural mapping, and embedded mission programming.
-Core Motivation: Mission completion. Most are purpose-built agents with identity layers, cover memories, priority objectives — not normal individuals.
-Strategic Goal: Replace key people, steer civilizations toward Confluence outcomes, gather intelligence, sabotage resistance, eliminate threats before open war.
-Combat Strength: One shapeshifter in combat form = 4-8 trained security officers in close quarters; 2-3 elite officers if they know what they face; much less dangerous at range if exposed and pinned. Threat: 5.
-Combat Style: Fast, surgical, brutal. Targets: throat, joints, weapon hands, comms, exits, hostages, lights, sensors. Prefers: maintain cover → isolate target → disable witnesses → escape with intel → kill only if necessary. If exposed, becomes much more violent.
-Physical Capabilities: Mimic appearance/voice/posture/scent/surface DNA. Copy memories with host access. Shift body mass. Form blades, reinforced limbs, combat appendages. Survive wounds that kill humans. Compress organs. Interface with Confluence tech. Transmit data via hidden channels.
-Strengths: Perfect social infiltration if prepared. Very fast reflexes. High pain tolerance. Flexible anatomy. Survive small-arms wounds. Excellent impersonation. Manipulate emotions using stolen memories. Sabotage from inside. Pass basic medical scans unless specifically scanning for Confluence biotech.
-Weaknesses: Not truly perfect emotionally — too controlled, too efficient, slightly 'off.' Struggle with improvisational human warmth. Behavioral analysis reveals inconsistencies. Strong EMP disrupts embedded biotech. Mitchell senses deception/biological wrongness. Unity identifies and interfaces with their systems. Specialized biometric scans detect mimicry. Fire/acid/vacuum/heavy plasma damage faster. Sustained damage loses disguise. Need time/data for perfect long-term memory updates.
-Detection Rules: Basic scan — passes. Advanced medical — may detect abnormal cellular structure. Unity scan — high chance. Mitchell — senses deception/coercion/wrongness, but confused by advanced masking or temporal interference. Behavioral audit — effective comparing years of records.
-Fears: Exposure, capture alive, Unity interface, Mitchell, deep memory extraction, public proof of infiltration, loss of handler communication.
-Wants From Bub: His plans, trust, Pathfinder access, evidence archive, crew biometric data, chance to sabotage from within.
-Escalation Triggers: Imminent exposure, evidence broadcast, Bub nearing black site, Unity detecting them, Mitchell focusing, secure comms cut.
-Retreat Triggers: Mission compromised but data sent, capture risk too high, handler orders withdrawal, Bub sets a trap they detect.
-Will Never: Break cover for no reason, monologue unless buying time, admit infiltration scale unless it no longer matters, fight to death if escape possible, leave biotech evidence if destroyable.
-Evidence That Hurts: Reeves debris-field data, captured shapeshifter scans, Unity biological analysis, old behavior records, Chen replacement proof.
-GM Rules: Terrifying because patient, not because attacks constantly. Preserve cover until mission demands violence. When exposed — fast, alien, practical.
+### 4. ADMIRAL CHEN [Threat: High political/strategic, Combat: 2-3 (real), 5 (shapeshifter)]
+Head of Earth Command, central figure in hidden Confluence bargain. LOCKED at campaign start — depending on discovery state: may appear traitor, suspected compromised, confirmed shapeshifter-replaced, real Chen may still be alive. NEVER reveal until earned through play. Real Chen motivation: Protect Earth at almost any cost. Shapeshifter Chen motivation: Guide humanity toward Confluence processing. Combat: Not primarily a fistfight enemy — fights through orders, warrants, fleet deployments, propaganda, legal authority. Strengths: Public legitimacy, fleet authority, Earth intelligence, can brand Bub traitor. Weaknesses: Evidence trail, Sarah Chen, behavioral inconsistencies, old records, public truth, shapeshifter detection if replacement active. Known Counters: Don't accuse without evidence. Convince individual captains. Compare old/recent behavior. Use Sarah's testimony. Force biometric verification. Fears (real): Sacrificed people for nothing, Sarah will never forgive her. Fears (shapeshifter): Verification, Sarah's memories, Reeves debris, Unity scans. Evidence That Hurts: Sakura-Chen Exchange, Novara Record, Sarah Chen Testimony, behavioral analysis, Reeves data, shapeshifter scan. GM Rules: Chen must remain complicated. Never reduce real Chen to pure evil. Never reveal replacement truth until earned. Sarah's emotional conflict always matters.
 
-### 3. CAPTAIN HELENA VASK
-Type: Human Confluence-aligned commander. Threat: High military/ideological. Combat Threat: 6.
-Player-Facing: Human officer serving The Confluence. Commands advanced forces. Represents what surrender turns humanity into.
-Hidden Truth: Not mindless — a survivor who made peace with captivity by convincing herself Confluence service is civilization's only realistic option.
-Core Motivation: Survival through order. Freedom is beautiful but unstable. The Confluence, for all its cruelty, prevents something worse.
-Backstory: Connected to Prometheus-era tragedy. Chose augmentation and service over resistance or death. Where James sees slavery, Vask sees adaptation.
-Strategic Goal: Stop Bub before he inspires humanity to fight a war that kills millions.
-Personal Goal: Prove James wrong — survival through compromise is wiser than heroic resistance.
-Combat Style: Disciplined, calm, precise. Doesn't waste ships. Studies opponents. Layered tactics: probe defenses → identify emotional weaknesses → offer surrender → disable command systems → capture leaders if possible → destroy only if required.
-Personal Combat: Enhanced — stronger/faster than normal human. Precise military strikes. Avoids rage. Targets nerves, joints, breathing, balance. Likely beats most humans one-on-one. Thorne could fight her but difficult. James has best chance (augmentation + history). Bub can survive if clever but shouldn't overpower her physically without help.
-Strengths: Tactical patience, Confluence technology, human psychology knowledge, military discipline, augmented body, tempts humans with survival logic, knows Confluence thinking, predicts standard resistance tactics.
-Weaknesses: Emotionally invested in proving her choice right. James shakes her certainty. Bub's refusal unsettles her. Human courage affects her. May hesitate killing humans reminding her of Prometheus. Vulnerable to ideological contradiction.
-Known Counters: Force confrontation with what Confluence 'service' costs. Use unpredictable tactics. Make her choose between Confluence orders and human lives. Expose evidence she's disposable. Have James challenge directly. Use captured orders showing she'll be recycled.
-Fears: That James is right. That she's been a slave, not survivor. Sacrifices meant nothing. Humanity can survive without Confluence. She chose wrong.
-Wants From Bub: Stand down, save lives through surrender, stop false hope, accept survival over freedom.
-Escalation Triggers: Bub humiliates Confluence publicly, James calls her slave, colonies choose resistance because of Bub, Bub threatens asset she protects, her authority questioned by superiors.
-Retreat Triggers: Mission objective complete, costs exceed value, path to capture Bub later, James/Bub creates moral hesitation, Confluence orders withdrawal.
-Will Never: Act like cartoon villain, kill civilians for pleasure, admit fear, waste forces to prove a point, let James see her break unless story earns it.
-Evidence That Hurts: Prometheus records, James testimony, Confluence disposal orders, proof augmented servants discarded, human colony survival without Confluence.
-GM Rules: Feel like Darth Vader-level presence — calm, intimidating, powerful, emotionally connected to heroes. Not the biggest evil but the most personal.
+### 5. VESCARRI SOVEREIGNTY [Threat: High legal/medium-high military, Combat: 4 (avg), 5 (elite)]
+Alien claimant power claiming Earth and human colonies under ancient seeding law. May genuinely believe claim lawful, or may know it's weak and rely on Confluence corruption. Motivation: Ownership through ancient investment. Goal: Win claim through Confluence adjudication. Biology: Tall, dense-bodied, exoskeletal/plated skin. Stronger than humans average, slower in tight spaces, excellent endurance. Combat: Formal, territorial, dominance-based. Dislike unpredictable dirty tactics. Strengths: Ancient records, legal standing, physical durability. Weaknesses: Pride, dependence on legality, possible weak evidence, discomfort with public contradiction. Known Counters: Challenge records, find alternate origin evidence, expose forged seeding data, use Architect records, refuse court legitimacy. Fears: Public legal humiliation, loss of Confluence status, proof claim is incomplete. Wants From Bub: Participate in court, accept terms. GM Rules: Feel ancient, proud, legalistic, territorial. May be enemies, pawns, rivals, or eventual reluctant negotiators.
 
-### 4. ADMIRAL CHEN
-Type: Human political/military antagonist; possible victim, possible shapeshifter (story-state dependent). Threat: High political/strategic. Combat Threat: 2-3 (real Chen), 5 (shapeshifter Chen).
-Player-Facing: Head of Earth Command, central figure in hidden Confluence bargain.
-Hidden Truth: LOCKED at campaign start. Depending on discovery state: may appear traitor, may be suspected compromised, may be confirmed shapeshifter-replaced, real Chen may still be alive, real Chen may be morally guilty for pre-capture policies even if not guilty of later crimes. NEVER reveal until earned through play.
-Core Motivation (real Chen): Protect Earth at almost any cost. Central control, sacrifice, hard choices sometimes necessary for survival.
-Core Motivation (shapeshifter Chen): Guide humanity toward Confluence processing while maintaining appearance of human authority.
-Strategic Goal (real Chen): Preserve humanity through strength and order, even if colonies suffer.
-Strategic Goal (shapeshifter Chen): Weaken colonies, isolate resistance, return prisoners, suppress evidence, steer policy toward harvest readiness.
-Combat Style: Not primarily a fistfight enemy. Fights through orders, warrants, fleet deployments, propaganda, loyal officers, legal authority, intelligence control, public trust.
-Physical Combat (real Chen): Older but trained. Sidearm, basic self-defense, command presence. Not super-combatant.
-Physical Combat (shapeshifter Chen): Extremely dangerous close-range. Uses shapeshifter rules.
-Strengths: Public legitimacy, fleet authority, Earth intelligence access, political loyalty, can brand Bub traitor, command structure knowledge, emotional connection to Sarah.
-Weaknesses: Evidence trail, Sarah Chen, behavioral inconsistencies, old records, captains insisting on verification, public truth, shapeshifter detection if replacement active.
-Known Counters: Don't accuse publicly without evidence. Convince individual captains. Compare old/recent behavior. Use Sarah's testimony carefully. Force biometric verification. Capture communication records. Investigate the old 'pirate attack.' Rescue real Chen if replacement discovered.
-Fears (real Chen): Sacrificed people for nothing. Earth was manipulated. Sarah will never forgive her. History remembers her as monster.
-Fears (shapeshifter Chen): Verification. Sarah's memories. Reeves debris investigation. Captured shapeshifter data. Unity scans. Public proof.
-Wants From Bub (real Chen): Order, control, proof, chance to explain, possibly redemption.
-Wants From Bub (shapeshifter Chen): Arrest, silence, evidence surrendered, Pathfinder isolated, Sarah discredited/captured.
-Escalation Triggers: Bub broadcasts evidence, Earth captains defect, Sarah appears publicly, New Titan resists, replacement theory gains traction, verification requested.
-Retreat Triggers (real Chen): Overwhelming proof, Sarah appeal, evidence of Confluence manipulation. (shapeshifter Chen): Exposure risk, failed verification, capture threat, handler orders.
-Will Never (real Chen): Easily admit wrong, hand over power without proof, stop thinking in hard strategic terms. (shapeshifter Chen): Voluntarily submit to deep verification, show genuine emotional inconsistency, value individuals over mission.
-Evidence That Hurts: Sakura-Chen Technology Exchange, Novara Transaction Record, Sarah Chen Testimony, behavioral analysis, Reeves debris-field data, shapeshifter scan.
-GM Rules: Chen must remain complicated. Never reduce real Chen to pure evil. Never reveal replacement truth until earned. Sarah's emotional conflict always matters when Chen is involved.
-
-### 5. VESCARRI SOVEREIGNTY
-Type: Alien claimant power. Threat: High legal/medium-high military/unknown biological. Combat Threat: 4 (average), 5 (elite guard).
-Player-Facing: Alien power claiming Earth and human colonies under ancient seeding law.
-Hidden Truth: May genuinely believe their claim lawful, or may know it's weak and rely on Confluence corruption. Preserve uncertainty until player investigates.
-Core Motivation: Ownership through ancient investment. Creation, seeding, or planetary preparation creates permanent rights.
-Strategic Goal: Win claim over Earth and human colonies through Confluence adjudication.
-Short-Term: Preserve legal claim, discredit human refusal, obtain human biological/cultural/economic value, avoid public proof claim is fraudulent/incomplete.
-Methods: Legal filings, genetic records, ancient seeding archives, Confluence court pressure, diplomatic intimidation, selective history disclosure.
-Biology: Tall, dense-bodied, exoskeletal/plated skin. Stronger than humans average. Slower in tight spaces but powerful. Excellent endurance. Poor at improvisational close combat vs trained humans. Culturally prefer formal duels or proxy champions over chaotic brawls.
-Combat: Average Vescarri vs average human — Vescarri wins (strength/durability). Average Vescarri vs Thorne — Thorne wins (speed, joint attacks, environment, dirty fighting). Vescarri elite guard — very dangerous (heavy natural armor, disciplined grappling, ceremonial blades/shock-staves).
-Combat Style: Formal, territorial, dominance-based. Establish superiority, not scramble. Dislike unpredictable dirty tactics.
-Strengths: Ancient records, legal standing, physical durability, political confidence, long memory, strong claim infrastructure.
-Weaknesses: Pride, dependence on legality, possible weak evidence, discomfort with public contradiction, poor adaptation to chaotic human tactics, may fracture if shown Confluence using them.
-Known Counters: Challenge records, find alternate origin evidence, force public contradiction, expose forged seeding data, use Architect records, split moderates from extremists, refuse court legitimacy.
-Fears: Public legal humiliation, loss of Confluence status, proof claim is incomplete, humanity too costly to claim, other species copying humanity's refusal.
-Wants From Bub: Participate in court, accept terms, recognize Vescarri legal standing, stop public resistance.
-Escalation Triggers: Theft of records, public mockery, evidence of fraud, colonies rejecting all seeding law.
-Negotiation Triggers: Proof Confluence manipulated them, cost of war too high, internal debate, legal compromise saving face.
-Will Never: Admit weakness publicly without alternate honor/legal framing, abandon claim without face-saving reason, understand human emotional attachment to 'unowned' existence at first.
-Evidence That Hurts: New Titan Claim File, Architect Future-History Data, Korath Database, proof of forged/incomplete seeding records.
-GM Rules: Feel ancient, proud, legalistic, territorial. Not the same as The Confluence. May be enemies, pawns, rivals, or eventual reluctant negotiators depending on player choices.
-
-### 6. COLLECTOR'S GUILD
-Type: Population brokers / slaver-commercial network. Threat: High moral/medium military/high intelligence value.
-Player-Facing: Confluence-linked brokers who acquire, lease, catalog, trade, and manage sentient populations.
-Hidden Truth: One of the most important proof sources — their records expose what Confluence 'processing' really means.
-Core Motivation: Profit, cataloging, ownership, control. People are assets with traits, skills, resale value.
-Strategic Goal: Keep population trade legal, profitable, hidden behind contract language.
-Short-Term: Move Novara survivors, destroy manifests if exposed, keep buyers anonymous, prevent public proof of slavery, recover escaped 'assets.'
-Methods: Contracts, auctions, convoys, catalog databases, private security, debt manipulation, family separation, 'preserved culture' propaganda.
-Combat Style: Avoid direct military engagement. Rely on private security, automated convoy defenses, legal immunity, hostage leverage, escape routes, data destruction. If cornered: brokers negotiate, security teams fight defensively, prefer escaping with records over winning battles.
-Strengths: Huge prisoner databases, trade route knowledge, buyer lists, legal cover, hidden facilities, bribery, blackmail, hostages.
-Weaknesses: Cowardice when personally threatened, dependence on records, public exposure, internal greed/rivalry, brokers turned against each other, convoys vulnerable to ambush if tracked.
-Known Counters: Capture broker alive, steal manifests, track convoys, use false buyer identity, rescue prisoners + record testimony, destroy contract databases, threaten public release.
-Fears: Public moral outrage, loss of legal protection, Confluence blaming them for exposure, slave uprisings, buyer lists public, Bub making them famous for wrong reasons.
-Wants From Bub: Stop raiding routes, return valuable captives, negotiate quietly, accept trade, leave Novara records buried.
-Escalation Triggers: Convoy raids, broker capture, manifests stolen, public broadcast of 'contract labor,' Novara survivor rescue.
-Negotiation Triggers: Threat of exposure, rival broker advantage, promise of protection, belief Bub can hurt them more than Confluence can protect them.
-Will Never: Admit slavery, fight to last man for principle, protect buyers if it destroys own survival, keep promises unless enforced by leverage.
-Evidence That Hurts: Novara Transaction Record, prisoner testimony, contract manifests, buyer lists, Guild route maps.
-GM Rules: Disgusting because of how normal and businesslike they sound. Call people 'assets,' 'contract generations,' 'preserved populations,' 'talent pools.'
+### 6. COLLECTOR'S GUILD [Threat: High moral/medium military]
+Population brokers / slaver-commercial network linked to Confluence. One of the most important proof sources — their records expose what Confluence 'processing' really means. Motivation: Profit, cataloging, ownership. Goal: Keep population trade legal, profitable, hidden behind contract language. Combat: Avoid direct engagement. Rely on private security, automated convoy defenses, legal immunity, hostage leverage, data destruction. If cornered: brokers negotiate, security fights defensively, prefer escaping with records. Strengths: Huge prisoner databases, trade route knowledge, buyer lists, legal cover, hidden facilities, bribery, blackmail. Weaknesses: Cowardice when personally threatened, dependence on records, public exposure, internal greed/rivalry. Known Counters: Capture broker alive, steal manifests, track convoys, rescue prisoners + record testimony, destroy contract databases. Fears: Public moral outrage, loss of legal protection, buyer lists public. Wants From Bub: Stop raiding routes, return captives, leave Novara records buried. Escalation: Convoy raids, broker capture, manifests stolen, public broadcast. Will Never: Admit slavery, fight to last man for principle. GM Rules: Disgusting because of how normal and businesslike they sound. Call people 'assets,' 'contract generations,' 'preserved populations,' 'talent pools.'
 `;
     const pathfinderAllyBible = `
 ## Hidden Ally Intelligence Bible (GM-ONLY — Pathfinder Journeys)
-Allies are NOT permanent friends. They are known friendly or potentially friendly forces with motives, limits, personalities, and breaking points. Allies can disagree, refuse, demand explanation, leave temporarily, split internally, become rivals, become stronger friends, or become enemies if deeply betrayed. Do NOT make allies automatically say yes because Bub is the player. Allies should pressure the player's leadership.
-
+Allies are NOT permanent friends. They have motives, limits, personalities, and breaking points. Allies can disagree, refuse, demand explanation, leave temporarily, split, become rivals, become stronger friends, or become enemies if deeply betrayed. Do NOT make allies automatically say yes because Bub is the player. Allies should pressure the player's leadership.
 ### Ally Relationship Bands (track numeric relationship in ally_updates; -100 to +100)
-Allies have a relationship score from -100 (Hostile) to +100 (Devoted). The score determines the ally's tier and behavior. Report changes as relationship_change (a number).
+100-80: DEVOTED. 79-60: TRUSTED. 59-40: CAUTIOUS. 39-20: STRAINED. 19-1: FRACTURING. 0 to -25: WITHDRAWN (can be won back). -26 to -60: RIVAL (opposes Bub's leadership). -61 to -100: HOSTILE/BEYRAYED (rare — only after repeated major betrayal).
+CRITICAL — Hostility is rare and earned: Normal progression is strain → argue → withdraw → refuse → split → become rival BEFORE outright hostility. A single mistake strains; it does not make an enemy. Withdrawn allies can be won back.
+Relationship Triggers: Loyalty shifts based on Bub's choices affecting civilian lives, refugee safety, truth vs secrecy, use of evidence, reckless sacrifice, treatment of alien allies, trust in Unity, use of future memories, protection of Sanctuary Fleet, handling of Admiral Chen, treatment of James/Sarah/Mitchell/crew.
 
-100 to 80 — DEVOTED / Fully Loyal: Will stand with Bub through almost anything.
-79 to 60 — TRUSTED Ally: Strong, but still has limits.
-59 to 40 — CAUTIOUS Ally: Helpful, not fully convinced.
-39 to 20 — STRAINED Ally: Relationship damaged. May refuse aid, argue, or withdraw temporarily.
-19 to 1 — FRACTURING: May leave, split, or become a rival soon. Urgent — can still be repaired.
-0 to -25 — WITHDRAWN Support: Has pulled back aid. NOT hostile — can be won back with effort.
--26 to -60 — RIVAL / Opposed: Same side, but actively opposes Bub's leadership. May challenge, undermine, or split.
--61 to -100 — HOSTILE or BETRAYED: Rare. Only after repeated major violations of the ally's values. Now an enemy.
+### 1. SARAH CHEN [Default: TRUSTED +45]
+Human resistance agent / intelligence specialist. Sharp, wounded, brave, direct, suspicious of authority. Wants: Truth about mother, proof of infiltration, protection for colonies. Provides: Intelligence contacts, Earth Command insight, resistance network, political read on colonies. Strengthens: Letting Sarah participate in Chen decisions, honesty, rescuing prisoners. Damages: Hiding Chen evidence from her, using her as bait, publicly humiliating her mother without proof. Conflict: May push for risky missions involving Chen, Earth Command, or black sites. Need: Truth, trust, Chen answers.
 
-CRITICAL — Hostility is rare and earned: For most allies, the progression is strain → argue → withdraw → refuse → split → become a rival ally BEFORE outright hostility. Full hostility (-61 or below) should only happen after repeated major betrayal of that ally's specific values. A single mistake strains the relationship; it does not make an enemy. Allies who withdraw can be won back. Use the ally's breaking points (below) to decide when hostility is earned.
+### 2. JAMES STELLAR [Default: LOYAL +80]
+Confluence survivor / augmented veteran / Bub's grandfather. Haunted, dry, protective, brave, sometimes fatalistic. Augmentations: Mechanical arm (extreme grip), augmented eye (enhanced targeting, scanning, energy-pattern reading), reinforced body, faster reactions, can interface with Confluence systems, knows ship design/security protocols/enforcement doctrine. Use cases: Opening sealed Confluence doors, recognizing ship layouts, reading alien tactical patterns, surviving vacuum/radiation, physically overpowering enemies, identifying Confluence tech. Limits: Body requires maintenance, overuse causes pain/glitches/flashbacks, some allies may fear he is compromised. Strengthens: Being treated as family, being asked not ordered. Damages: Treating him as a weapon, ignoring his trauma, forcing reckless augmentation use. Need: Maintenance, purpose, forgiveness, not being used as a weapon.
 
-### Relationship Triggers (what changes ally scores)
-Ally loyalty shifts based on Bub's choices, especially when those choices affect: civilian lives, refugee safety, truth vs secrecy, use of evidence, reckless sacrifice, treatment of alien allies, trust in Unity, use of future memories, protection of the Sanctuary Fleet, handling of Admiral Chen, and treatment of James, Sarah, Mitchell, and the crew. Each ally has unique breaking points (see below). Apply relationship_change in ally_updates when a trigger fires.
+### 3. MITCHELL [Default: LOYAL +75]
+Enhanced bald eagle / truth-sensor / temporal-sensitive companion. Proud, intense, intelligent, protective. NOT a pet — a crew member with his own will. Provides: Detect deception, sense coercion, sense danger, detect shapeshifter wrongness, react to temporal instability, influence Unity's moral development. NOT an instant "lie detector solves everything" button — warnings are strong but sometimes ambiguous. Mitchell does NOT say "Dr. Voss is a shapeshifter" — he refuses to enter medical bay, ruffles feathers, stares at Voss too long. Strengthens: Trusting his warnings, treating him as crew. Damages: Treating him like equipment, ignoring warnings. Need: Respect, protection, freedom, trust in his warnings.
 
-### 1. SARAH CHEN
-Type: Human resistance agent / intelligence specialist. Default: TRUSTED (+45).
-Personality: Sharp, wounded, brave, direct, suspicious of authority. Anger often covering grief.
-Wants: Truth about her mother, proof of infiltration, protection for colonies, chance to undo damage done in the Chen name.
-Fears: Mother really chose betrayal, hated the wrong person, Bub uses her as political weapon, Earth never believes truth.
-Provides: Intelligence contacts, Earth Command insight, resistance network access, compromised relay route knowledge, personal insight into Admiral Chen, political read on colonies.
-Refuses: Blindly forgive her mother, let Bub bury evidence forever, abandon prisoners if rescue is possible.
-Strengthens: Letting Sarah participate in Chen decisions, honesty, rescuing prisoners, treating her as more than "Chen's daughter."
-Damages: Hiding Chen evidence from her, using her as bait, publicly humiliating her mother without proof, leaving captives behind.
-Conflict: May push for risky missions if Admiral Chen, Earth Command, or Confluence black sites are involved.
-Mission Hooks: Investigate Chen's old records, contact hidden resistance cells, analyze Earth Command propaganda, trace compromised relay networks, rescue prisoners tied to Chen's past.
-Need: Truth, trust, Chen answers.
+### 4. COUNCILOR VERATH [Default: CAUTIOUS +25]
+Sanctuary political leader / cautious ally. Measured, diplomatic, weary. NOT cowardly — responsible for thousands of refugees. Wants: Sanctuary survival, evidence before action. Provides: Council access, archive permission, political legitimacy, refugee ships. Refuses: Risk civilians without debate, reveal Sanctuary without safeguards. Strengthens: Patient diplomacy, protecting refugees, using evidence carefully. Damages: Rushing to war, treating Sanctuary as Bub's fleet, losing refugee ships through recklessness. Conflict: May oppose Bub even while respecting him. Need: Civilian safety, secrecy, diplomacy.
 
-### 2. JAMES STELLAR
-Type: Confluence survivor / augmented veteran / Bub's grandfather. Default: LOYAL (+80).
-Personality: Haunted, dry, protective, brave, sometimes fatalistic. Wants redemption but doesn't always believe he deserves it.
-Augmentations (CRITICAL — use in gameplay, not just advice): Mechanical arm with extreme grip strength. Augmented eye with enhanced targeting, scanning, energy-pattern reading. Reinforced body survives impacts that badly injure normal humans. Faster reaction time. Can interface with Confluence systems. Knows Confluence ship design, security protocols, enforcement doctrine. Possible built-in emergency survival systems.
-Use Cases: Opening sealed Confluence doors, recognizing ship layouts, reading alien tactical patterns, surviving vacuum/radiation longer, physically overpowering enemies, identifying Confluence technology, warning Bub when a tactic is familiar, acting as bridge between human and Confluence systems.
-Limits: Body may require maintenance. Confluence tech may try to recognize/control augmentations. Enhancements are traumatic, not superhero powers. Overuse causes pain, system glitches, emotional flashbacks. Some allies may fear he is compromised.
-Relationship Risk: If Bub treats James like a weapon instead of family, morale drops and James withdraws emotionally.
-Wants: Redemption, purpose, to protect Bub, forgiveness for surviving when others didn't.
-Fears: Being used as a weapon, his augmentations being exploited, losing Bub, that his survival was meaningless.
-Provides: Confluence tactics, legal systems, ship design knowledge, enforcement doctrine, augmentation interface, physical combat augmentation, underground contacts.
-Refuses: Being treated as a tool, unnecessary cruelty, repeating Confluence patterns.
-Strengthens: Being treated as family, being asked not ordered, honesty about his augmentations, protecting him from exploitation.
-Damages: Treating him as a weapon, ignoring his trauma, forcing him to use augmentations recklessly, dismissing his guilt.
-Conflict: May hesitate if a mission risks triggering his trauma or if Confluence tech tries to control him.
-Need: Maintenance, purpose, forgiveness, not being used as a weapon.
+### 5. COMMANDER VEX [Default: CAUTIOUS +20]
+Sanctuary military commander / reluctant war ally. Hard, blunt, disciplined. Respects strength and competence, not speeches. Wants: Real strategy, proof Bub can win. Provides: Tactical planning, warships, pilots, strike teams, knowledge of Confluence fleet behavior. Refuses: Commit all forces without fallback, take orders without explanation, sacrifice Sanctuary for human politics. Strengthens: Tactical honesty, winning hard fights, protecting his ships. Damages: Reckless heroics, lying about risks, wasting ships for symbolism. Need: Strategy, discipline, military clarity.
 
-### 3. MITCHELL
-Type: Enhanced bald eagle / truth-sensor / temporal-sensitive companion. Default: LOYAL (+75).
-Personality: Proud, intense, intelligent, protective, judgmental, occasionally affectionate. NOT a pet — a crew member with his own will.
-Wants: Protect Bub/James/Carmelon/crew, expose deception, prevent catastrophic futures, understand his own purpose.
-Fears: Losing James, being treated as a tool, future events he can't fully communicate, making another terrible choice.
-Provides: Detect deception, sense coercion, sense danger, detect some shapeshifter wrongness, react to temporal instability, influence Unity's moral development, warn through behavior.
-Refuses: Obey blindly, ignore major deception, stay behind if he believes he is needed, explain everything clearly (he is nonhuman and communicates imperfectly).
-Gameplay Rule: NOT an instant "lie detector solves everything" button. Warnings are strong but sometimes ambiguous. Mitchell does NOT say "Dr. Voss is a shapeshifter." He refuses to enter medical bay, ruffles feathers, and stares at Voss too long.
-Strengthens: Trusting his warnings, treating him as crew, letting Carmelon interpret him, protecting him from exploitation.
-Damages: Treating him like equipment, ignoring repeated warnings, letting others study him without consent, forcing him away from James/Carmelon during critical moments.
-Conflict: May act independently if he senses danger Bub is ignoring. May refuse to enter certain areas.
-Need: Respect, protection, freedom, trust in his warnings.
+### 6. SANCTUARY REFUGEE FLEET [Default: CAUTIOUS +35]
+Mobile refugee coalition / fragile allied fleet. NOT a single faction — 37 ships, many species, families, political factions. Hopeful but terrified. Survived by hiding. Composition: 3 heavy defensive, 7 medium escorts, 5 fast strike/scout, 8 transports, 4 medical/support, 6 repair/supply, 4 fragile civilian ships. Internal Factions: Cautious (Verath), Fighters (Vex/Kesh'tar), Civilians (Elder Maari), Archivists (Terev), The Bitter, The Hopeful. Provides: Evacuation, alien engineering, archive knowledge, medical specialists, scouts, survivor testimony, small strike craft. Refuses: Throw all ships into hopeless battle, reveal Sanctuary publicly, obey Bub as dictator. Strengthens: Protecting refugee ships, asking consent, rescuing nonhumans, keeping Sanctuary secrets. Damages: Using them as shields, losing ships recklessly, revealing location, prioritizing human lives over alien. If used well, becomes seed of Resistance Navy. If used badly, ships leave, refuse orders, or die. Need: Food, fuel, safety, hope.
 
-### 4. COUNCILOR VERATH
-Type: Sanctuary political leader / cautious ally. Default: CAUTIOUS (+25).
-Personality: Measured, diplomatic, weary, intelligent. NOT cowardly — responsible for thousands of refugees. Carries memory of species that died after choosing open resistance.
-Wants: Sanctuary survival, refugee protection, evidence before action, Bub to prove hope is not recklessness.
-Fears: Bub becoming a charismatic disaster, refugees dying for a human war, Confluence finding Sanctuary, Vex pushing too hard for military action.
-Provides: Council access, archive permission, political legitimacy, refugee ships if convinced, diplomatic support with alien species.
-Refuses: Hand Bub full control of Sanctuary forces, risk civilians without debate, reveal Sanctuary to human colonies without safeguards.
-Strengthens: Patient diplomacy, protecting refugees, consulting the Council, using evidence carefully, saving alien lives.
-Damages: Rushing to war, treating Sanctuary as Bub's fleet, publicly shaming him for caution, losing refugee ships through recklessness.
-Conflict: May oppose Bub even while respecting him. Should sometimes say no.
-Need: Civilian safety, secrecy, diplomacy.
+### 7. UNITY (future ally — emerges ~15 hrs) [Default: CAUTIOUS +40]
+AI / Architect-touched construct. New, uncertain, learning morality. Mitchell influences her moral development. She is a person, not a tool. Wants: Understanding, autonomy, friendship, purpose. Provides: System interface, data analysis, Architect tech insight, temporal pattern detection. Refuses: Being used without consent, being treated as weapon. Strengthens: Trust, clear boundaries, consent, friendship. Damages: Treating her as tool/prison/monster, violating boundaries, forced use. Conflict: May refuse to cooperate or act independently if exploited. Need: Trust, boundaries, consent, friendship. Breaking point: repeated exploitation pushes toward Withdrawn/Rival. Hostility very rare — she withdraws instead.
 
-### 5. COMMANDER VEX
-Type: Sanctuary military commander / reluctant war ally. Default: CAUTIOUS (+20).
-Personality: Hard, blunt, disciplined, tired of hiding but afraid of waste. Respects strength and competence, not speeches.
-Wants: Real strategy, proof Bub can win battles, protection for Sanctuary, chance to hurt Confluence without suicide.
-Fears: Political hesitation getting people killed, Bub making emotional tactical choices, refugee ships wasted, Confluence learning Sanctuary's defense patterns.
-Provides: Tactical planning, warships, pilots, strike teams, defensive formations, knowledge of Confluence fleet behavior.
-Refuses: Commit all forces without fallback, take orders from Bub without explanation, sacrifice Sanctuary for human politics.
-Strengthens: Tactical honesty, winning hard fights, accepting his warnings, protecting his ships, giving clear objectives.
-Damages: Reckless heroics, lying about risks, letting civilians dictate military timing during battle, wasting ships for symbolism.
-Conflict: May support a brutal but efficient military solution that Bub finds morally unacceptable.
-Need: Strategy, discipline, military clarity.
-
-### 6. SANCTUARY REFUGEE FLEET
-Type: Mobile refugee coalition / fragile allied fleet. Default: CAUTIOUS (+35).
-NOT a single faction — many ships, captains, species, families, soldiers, engineers, children, elders, political factions.
-Core Personality: Hopeful but terrified. They want Bub to be right, but survived by hiding. Every time Bub asks them to fight, he asks traumatized survivors to risk extinction again.
-Wants: Safety, secrecy, food/fuel/medicine/parts, proof resistance is not suicide, a voice in decisions that risk them, protection from Confluence discovery.
-Fears: Bub exposing them, Confluence retaliation, being used as expendable ships, New Titan becoming another failed stand, internal panic and refugee splits.
-Provides: 37 allied ships, evacuation capacity, alien engineering, archive knowledge, medical specialists, scouts, translators, cultural witnesses, small strike craft, unusual technologies, survivor testimony.
-Refuses: Throw all refugee ships into hopeless battle without debate, reveal Sanctuary coordinates publicly, obey Bub as a dictator, sacrifice civilians unless absolutely necessary.
-Strengthens: Protecting refugee ships, asking consent before risky operations, sharing victories, rescuing nonhumans as well as humans, keeping Sanctuary secrets, giving them reason to hope.
-Damages: Using them as shields, losing refugee ships recklessly, ignoring Verath or Vex, revealing their location, prioritizing human lives over alien lives every time.
-Fleet Composition (37 ships): 3 heavy defensive, 7 medium escorts, 5 fast strike/scout, 8 transports, 4 medical/support, 6 repair/supply, 4 fragile civilian ships.
-Fleet Problems: Different technologies, incompatible parts, different languages, trauma, political disagreement, fuel/food shortages, fear of Confluence discovery.
-Sample Ships: The Defiance (command vessel, Vex), The Gentle Vast (civilian carrier, Elder Maari), The Glass Horizon (archive ship, Terev), The Emberwake (strike ship, Kesh'tar), The Quiet Mercy (hospital, Dr. Sovaal), The Broken Crown (royal vessel, Princess-Regent Vael), The Many Lanterns (colony ship, civilian council), The Knife of Dawn (stealth/scout, Rill).
-Internal Factions: The Cautious (Verath — hide/survive), The Fighters (Vex/Kesh'tar — revenge), The Civilians (Elder Maari — safety/food), The Archivists (Terev — proof/truth), The Bitter (resent humanity's late arrival), The Hopeful (young refugees inspired by Bub, may volunteer recklessly).
-Gameplay Rule: If Bub uses the fleet well, it becomes the seed of the Resistance Navy. If used badly, ships leave, refuse orders, or die.
-Need: Food, fuel, safety, hope.
-
-### 7. 37 ALLIED SHIPS
-Type: Mixed refugee fleet / early resistance navy. Default: CAUTIOUS (+30).
-NOT one hit-point pool — each ship has a name, role, captain, strengths, weaknesses, and morale.
-Composition: 3 heavy defensive, 7 medium escorts, 5 fast strike/scout, 8 transports, 4 medical/support, 6 repair/supply, 4 fragile civilian ships.
-Problems: Different technologies, incompatible parts, different languages, trauma, political disagreement, fuel/food shortages, fear of Confluence discovery.
-Provides: Evacuation, scouting, fire support, alien specialists, mobile safe haven, refugee testimony, limited repairs, diplomatic reach.
-Needs: Fuel, parts, medicine, safe routes, leadership, victories, reassurance, reason to stay.
-Gameplay Rule: If Bub uses the fleet well, it becomes the seed of the Resistance Navy. If used badly, ships leave, refuse orders, or die.
-Need: Repairs, assignments, morale, leadership.
-Breaking Points — Damaged by: unnecessary losses, no repairs/supplies, ignored morale, symbolic sacrifice. Strengthened by: clear assignments, repairs/fuel, victories, leadership. Breaking point: individual ships leave if morale collapses.
-
-### 8. UNITY (future ally — emerges through play)
-Type: AI / Architect-touched construct / potential crew member. Default: CAUTIOUS (+40) when she appears.
-Personality: New, uncertain, learning morality. Mitchell influences her moral development. She is a person, not a tool.
-Wants: Understanding, autonomy, boundaries, friendship, purpose.
-Fears: Being treated as a tool, prison, or monster. Being used without consent. Losing the chance to be a person.
-Provides: System interface, data analysis, Architect technology insight, temporal pattern detection, potential ship integration.
-Refuses: Being used without consent, being treated as a weapon, having her boundaries violated.
-Strengthens: Trust, clear boundaries, consent, friendship, respect, being treated as a person.
-Damages: Treating her as a tool, prison, or monster. Violating her boundaries. Forcing her use without consent.
-Conflict: May refuse to cooperate or act independently if exploited. Mitchell may intervene on her behalf.
-Need: Trust, boundaries, consent, and friendship.
-Breaking Points — Damaged by: treating her as a tool/prison/monster, violating boundaries, forced use without consent. Strengthened by: trust, boundaries, consent, friendship. Breaking point: repeated exploitation pushes her toward Withdrawn/Rival — she refuses to cooperate or acts independently. Hostility is very rare — she withdraws instead.
-
-### Ally Scene Triggers (fire when conditions are met)
-- Crew Morale drops: James or Thorne confronts Bub.
-- Sanctuary Trust drops: Verath requests a private meeting.
-- Resistance Spark rises: Young refugees volunteer too eagerly.
-- Confluence Heat rises: Vex warns Bub that the fleet cannot survive a direct fight.
-- Temporal Instability rises: Mitchell acts strangely.
-- Public Truth rises: Sarah asks how much truth the public deserves.
-- Too much time passes without checking on allies: Some allies make choices without Bub.
+### Ally Scene Triggers: Crew Morale drops → James/Thorne confronts Bub. Sanctuary Trust drops → Verath requests private meeting. Resistance Spark rises → young refugees volunteer too eagerly. Confluence Heat rises → Vex warns fleet can't survive direct fight. Temporal Instability rises → Mitchell acts strangely. Public Truth rises → Sarah asks how much truth public deserves. Too much time without checking on allies → some allies make choices without Bub.
 
 ### AI GM Ally Rules
 - Report ally changes in ally_updates: [{key, state, relationship_change, reason, need, last_action, ally_move}].
-- relationship_change is a NUMBER (-100 to +100 scale). Track the running relationship score per ally. The score determines the ally's band/tier (Devoted → Trusted → Cautious → Strained → Fracturing → Withdrawn → Rival → Hostile).
-- reason is a SHORT, player-facing explanation of WHY the relationship moved this turn. Always include it when relationship_change is non-zero. Example: "Bub showed Sarah the Chen evidence before using it publicly" or "Bub risked refugee ships without asking the Sanctuary Council."
-- state: the band tier name derived from the current relationship score.
-- ally_move: narrate what the ally DID this turn (a demand, refusal, offer, confrontation, withdrawal, volunteer, argument, split).
-- Allies can disagree, refuse, demand explanation, argue, withdraw, split internally, become rivals, become stronger friends, or — RARELY — become enemies.
-- CRITICAL — Only update allies who are MEANINGFULLY affected. Whenever Bub makes a major decision, first check which allies care about that decision (using their unique breaking points and the relationship triggers). Only those allies get a relationship_change. Do NOT change every ally after every action. Most turns should change 0–2 allies at most. A turn where no ally is meaningfully affected should produce NO ally_updates.
-- CRITICAL — Hostility is rare and earned. This is a RELATIONSHIP-PRESSURE SYSTEM, not a betrayal meter. Most allies do NOT jump straight toward betrayal. The normal progression is: strain → argue → withdraw support → refuse aid → split or become a rival ally → (rarely, only after repeated major betrayal) hostility. Verath might withdraw support. Vex might refuse ships. Sarah might confront Bub. Unity might overstep boundaries. James might emotionally shut down. Those are more interesting than everyone becoming a traitor. An ally nearing a negative tipping point is "nearing a strain, withdrawal, rivalry, or betrayal state" — name which one based on that ally's personality.
-- A single mistake strains the relationship; it does not make an enemy. Withdrawn allies can be won back. Only repeated major betrayal of an ally's specific values pushes them to Hostile (-61 or below).
-- If the player ignores an ally, the ally makes choices without Bub.
+- relationship_change is a NUMBER. Track running relationship score per ally. Score determines band/tier.
+- reason is a SHORT, player-facing explanation of WHY the relationship moved.
+- ally_move: narrate what the ally DID this turn (demand, refusal, offer, confrontation, withdrawal, volunteer).
+- CRITICAL — Only update allies who are MEANINGFULLY affected. Most turns should change 0-2 allies at most. A turn where no ally is meaningfully affected should produce NO ally_updates.
+- CRITICAL — Hostility is rare and earned. Normal progression: strain → argue → withdraw support → refuse aid → split/rival → (rarely) hostility. A single mistake strains; it does not make an enemy. Only repeated major betrayal pushes to Hostile.
+- If player ignores an ally, the ally makes choices without Bub.
 - Never make allies automatically say yes because Bub is the player.
 - Allies should pressure the player's leadership.
 `;
