@@ -603,7 +603,7 @@ export default function CampaignDetail() {
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
-                {myCharacter?.name?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters' || campaign?.game_system === 'legionofdoom') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
+                {((campaign?.game_system === 'thepull' && !campaign?.world_state?.quest_flags?.bullet_named) ? 'The Stranger' : myCharacter?.name)?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters' || campaign?.game_system === 'legionofdoom') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
               </span>
               <button
                 onClick={() => setDiscussMode((m) => !m)}

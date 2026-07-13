@@ -89,6 +89,16 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     });
   }
 
+  // Name given — Shard names the stranger "Bullet" (priority 2)
+  if (dmData.bullet_named && !oldFlags?.bullet_named) {
+    notifications.push({
+      type: 'name',
+      title: 'NAME GIVEN',
+      message: 'Shard calls the stranger Bullet.',
+      priority: 2
+    });
+  }
+
   // Spark's shard acquired (priority 2)
   if (dmData.spark_shard_acquired) {
     notifications.push({

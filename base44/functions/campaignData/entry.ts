@@ -336,9 +336,9 @@ Deno.serve(async (req) => {
           }
         });
 
-        // Auto-create Bullet
+        // Auto-create the Stranger (named "Bullet" by Shard later in the story)
         await base44.entities.Character.create({
-          name: 'Bullet',
+          name: 'The Stranger',
           campaign_id: campaign.id,
           game_system: 'thepull',
           race: 'Amnesiac',
@@ -355,7 +355,7 @@ Deno.serve(async (req) => {
           ],
           skills: [], mutations: [], spells: [], spell_slots: {},
           appearance: 'A wounded man with no memory. A circular scar — like a bullet wound — over his heart. Barefoot, exhausted, wearing torn clothing. Steel-gray eyes that carry something he cannot name.',
-          background: 'You woke face-down in red sand with no memory of who you are. The camp called you Bullet for the scar over your heart.',
+          background: 'You woke face-down in red sand with no memory of who you are. You do not know your name yet.',
           status: 'active'
         });
 
