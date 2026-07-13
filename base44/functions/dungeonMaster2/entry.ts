@@ -1020,7 +1020,11 @@ Respond as the ${isNonDnd ? 'Game Master' : 'DM'} with the JSON object. Resolve 
     await base44.asServiceRole.entities.Campaign.update(campaign_id, campaignUpdates);
 
     // Create journal entries
-    if (!is_roll_result) {
+    // skip_action_log: the caller (campaignData.submitAction) already logged the
+    // player's action as a clean journal entry. Creating it again here would
+    // duplicate it — and the `action` param at this point is the combined_action
+    // string ("Bub Stellar: ..."), which would show the name twice.
+    if (!is_roll_result && !body.skip_action_log) {
       await base44.asServiceRole.entities.JournalEntry.create({
         campaign_id, entry_type: 'action', player_action: action,
         acting_character_name: actingChar.name, chapter: campaign.current_chapter
