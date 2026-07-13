@@ -1374,31 +1374,44 @@ Deno.serve(async (req) => {
     }
 
     // ─── Decision Impact → Clock Sync ───
-    // If the LLM returned a decision_impact mentioning "Camp Trust" with a change
-    // but did NOT return a corresponding local_clock_changes entry for camp_trust,
-    // inject the missing change. This prevents the "popup shows +5 but clock
-    // doesn't move" bug — every trust popup MUST have a real clock change.
-    // SKIP if the impact is a duplicate of an already-completed one-time event
-    // (e.g. "Returned with purifier component" when task_complete is already true).
+    // Every + and - shown in the decision_impact popup MUST be reflected in the
+    // actual clock values. If the LLM returned a decision_impact with a change
+    // for a clock but did NOT return a corresponding local_clock_changes entry,
+    // inject the missing change. This prevents the "popup shows +2 but clock
+    // doesn't move" bug.
+    // SKIP camp_trust duplicates of already-completed one-time events.
     if (result.decision_impact && result.decision_impact.impacts) {
-      const hasCampTrustChange = (result.local_clock_changes || []).some(cc => cc.clock === 'camp_trust');
-      if (!hasCampTrustChange) {
-        const uf = flags.unlock_flags || {};
-        for (const imp of result.decision_impact.impacts) {
-          if (!/camp\s*trust/i.test(imp.label || '')) continue;
-          if (typeof imp.change !== 'number' || imp.change === 0) continue;
-          // Check for duplicate one-time event
+      const existingChangeClocks = new Set((result.local_clock_changes || []).map(cc => cc.clock));
+      const uf = flags.unlock_flags || {};
+      // Map impact labels to canonical clock keys
+      const labelToClock = (label) => {
+        const l = (label || '').toLowerCase();
+        if (/camp\s*trust/.test(l)) return 'camp_trust';
+        if (/heat/.test(l)) return 'heat_exposure';
+        if (/fatigue|exhaust/.test(l)) return 'fatigue';
+        if (/thirst|dehydrat/.test(l)) return 'thirst';
+        if (/hunger|starv/.test(l)) return 'hunger';
+        if (/pull\s*intens/.test(l)) return 'pull_intensity';
+        if (/scar/.test(l)) return 'scar_progression';
+        return null;
+      };
+      for (const imp of result.decision_impact.impacts) {
+        if (typeof imp.change !== 'number' || imp.change === 0) continue;
+        const clockKey = labelToClock(imp.label);
+        if (!clockKey) continue;
+        // Skip if local_clock_changes already covers this clock
+        if (existingChangeClocks.has(clockKey)) continue;
+        // Skip duplicate one-time camp_trust events
+        if (clockKey === 'camp_trust') {
           const reasonText = `${imp.label || ''} ${imp.change_label || ''} ${imp.reason || ''}`.toLowerCase();
-          const isTaskCompleteDupe = uf.task_complete && /task|purif|core|component|returned/i.test(reasonText);
-          if (isTaskCompleteDupe) {
-            console.log('[PullGM] Trust sync: skipped duplicate task completion trust gain (task already complete)');
+          if (uf.task_complete && /task|purif|core|component|returned/i.test(reasonText)) {
+            console.log(`[PullGM] Clock sync: skipped duplicate task completion ${clockKey} gain (task already complete)`);
             continue;
           }
-          updatedLocalClocks.camp_trust = Math.max(0, Math.min(100,
-            (updatedLocalClocks.camp_trust || 0) + imp.change));
-          console.log(`[PullGM] Trust sync: injected camp_trust ${imp.change > 0 ? '+' : ''}${imp.change} from decision_impact (was missing from local_clock_changes)`);
-          break; // only one camp_trust injection per turn
         }
+        updatedLocalClocks[clockKey] = Math.max(0, Math.min(100,
+          (updatedLocalClocks[clockKey] || 0) + imp.change));
+        console.log(`[PullGM] Clock sync: injected ${clockKey} ${imp.change > 0 ? '+' : ''}${imp.change} from decision_impact (was missing from local_clock_changes)`);
       }
     }
 
