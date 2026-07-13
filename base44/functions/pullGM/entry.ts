@@ -79,6 +79,123 @@ const CHAPTER_PACKETS = {
   }
 };
 
+// ─── Chapter 1 Replayability System ───
+// Controlled variation: fixed story spine + probable variable outcomes.
+// Same destination every run. Different scars on the way there.
+
+const CHAPTER1_TASK_VARIANTS = [
+  { id: 'purifier_core', label: 'Purifier Core', desc: 'A humming cylinder of old-world tech that powers the water purifier.' },
+  { id: 'water_regulator', label: 'Water Regulator', desc: 'A valve assembly that controls the purifier flow rate.' },
+  { id: 'filter_crystal', label: 'Filter Crystal', desc: 'A translucent crystal that strains contaminants from the water system.' },
+  { id: 'cooling_coil', label: 'Cooling Coil', desc: 'A spiraled metal tube that keeps the purifier from overheating.' },
+  { id: 'pressure_valve', label: 'Pressure Valve', desc: 'A heavy valve that regulates the purifier internal pressure.' },
+  { id: 'drone_battery', label: 'Drone Battery', desc: 'A power cell salvaged from old-world machines, repurposed for the purifier.' },
+  { id: 'shard_circuit', label: 'Shard-Powered Circuit', desc: 'A circuit board etched with shard-traces that channels energy through the purifier.' },
+  { id: 'metal_valve_housing', label: 'Metal Valve Housing', desc: 'A reinforced housing that protects the purifier intake valve.' },
+  { id: 'fuse_rod', label: 'Purifier Fuse Rod', desc: 'A conductive rod that channels power safely through the purifier system.' },
+  { id: 'condensation_lens', label: 'Condensation Lens', desc: 'A curved glass lens that focuses moisture from the air into the purifier.' }
+];
+
+const CHAPTER1_TASK_COMPLICATIONS = [
+  { id: 'collapsing_ruin', label: 'Collapsing Ruin', weight: 18, desc: 'The station begins to collapse while Bullet searches.', risks: 'injury, lost_time, fatigue' },
+  { id: 'sand_maw', label: 'Sand Maw', weight: 14, desc: 'The ground hides a living mouth beneath the grit.', risks: 'npc_death, serious_injury, panic' },
+  { id: 'old_drone', label: 'Old Drone', weight: 16, desc: 'A broken defense drone activates inside the ruin.', risks: 'combat, wound, noise' },
+  { id: 'heat_delirium', label: 'Heat Delirium', weight: 12, desc: 'The desert heat causes visions and disorientation.', risks: 'wrong_path, fatigue, memory_flash' },
+  { id: 'hostile_scavenger', label: 'Hostile Scavenger', weight: 12, desc: 'Another desperate survivor wants the same part.', risks: 'fight, negotiation, moral_choice' },
+  { id: 'sandstorm', label: 'Sudden Sandstorm', weight: 12, desc: 'Visibility drops and the route back becomes dangerous.', risks: 'lost_time, injury, delayed_return' },
+  { id: 'unstable_machine', label: 'Unstable Machine', weight: 10, desc: 'The component is still wired into a dangerous system.', risks: 'shock, explosion, purifier_damage' },
+  { id: 'quiet_success', label: 'Uneasy Quiet', weight: 6, desc: 'No major attack happens, but the silence feels wrong.', risks: 'hidden_clock_advance' }
+];
+
+const CHAPTER1_OPTIONAL_ENCOUNTERS = [
+  { id: 'dying_survivor', label: 'Dying Survivor', desc: 'A wounded stranger near the ruin. Choices: help, ignore, take supplies, bring back to camp.' },
+  { id: 'buried_cache', label: 'Buried Cache', desc: 'A small cache half-swallowed by sand. Choices: take all, mark for camp, ignore, search more.' },
+  { id: 'memory_echo', label: 'Memory Echo', desc: 'The scar reacts near old metal and gives Bullet a fragment. Choices: focus, pull away, touch shard.' },
+  { id: 'lost_camp_member', label: 'Lost Camp Member', desc: 'One of Shard people is found trapped or wounded. Choices: rescue, prioritize core, try both.' },
+  { id: 'watching_bird', label: 'Mechanical Bird Returns', desc: 'The metal bird circles again but does not attack. Choices: hide, throw scrap, show shard, keep moving.' },
+  { id: null, label: 'No Side Encounter', desc: 'The path is clear of side encounters this run.' }
+];
+
+const CHAPTER1_RAID_COMPLICATIONS = [
+  { id: 'straight_assault', label: 'Straight Assault', desc: 'Raiders charge the camp defenses directly.' },
+  { id: 'cache_flank', label: 'Cache Flank', desc: 'One raider group tries to circle toward the water Cache.' },
+  { id: 'spark_in_danger', label: 'Spark in Danger', desc: 'Spark is nearly cornered but cannot die (protected).' },
+  { id: 'patch_under_attack', label: 'Patch Under Attack', desc: 'Patch is threatened while treating the wounded.' },
+  { id: 'maul_overextends', label: 'Maul Overextends', desc: 'Maul charges too far and may be injured.' },
+  { id: 'sandstorm_raid', label: 'Raid in Sandstorm', desc: 'The attack happens during poor visibility.' },
+  { id: 'fire_near_cache', label: 'Fire Near Cache', desc: 'A torch or explosive threatens stored supplies.' }
+];
+
+const CHAPTER1_WEATHER_EVENTS = [
+  { id: 'clear', label: 'Clear Skies', desc: 'Harsh sun, no weather complication.' },
+  { id: 'heat_wave', label: 'Heat Wave', desc: 'The temperature spikes dangerously.' },
+  { id: 'sandstorm_brewing', label: 'Sandstorm Brewing', desc: 'A storm builds on the horizon throughout the day.' },
+  { id: 'wind_shift', label: 'Shifting Winds', desc: 'Unusual wind patterns carry sound and dust in odd directions.' }
+];
+
+const CHAPTER1_PROTECTED_NPCS = ['shard', 'spark'];
+const CHAPTER1_RISK_ELIGIBLE_NPCS = ['patch', 'maul', 'cowboy', 'rivet', 'hawk', 'ash'];
+const CHAPTER1_DANGER_SCENES = ['task_in_progress', 'raider_attack', 'raider_warning'];
+
+function weightedRoll(table) {
+  const total = table.reduce((s, e) => s + (e.weight || 1), 0);
+  let roll = Math.random() * total;
+  for (const entry of table) { roll -= (entry.weight || 1); if (roll <= 0) return entry; }
+  return table[0];
+}
+function rollFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function generateChapter1ReplayVariant() {
+  const tv = weightedRoll(CHAPTER1_TASK_VARIANTS);
+  const tc = weightedRoll(CHAPTER1_TASK_COMPLICATIONS);
+  const oe = rollFrom(CHAPTER1_OPTIONAL_ENCOUNTERS);
+  const rc = weightedRoll(CHAPTER1_RAID_COMPLICATIONS);
+  const w = rollFrom(CHAPTER1_WEATHER_EVENTS);
+  const riskCount = 1 + Math.floor(Math.random() * 3);
+  const shuffled = [...CHAPTER1_RISK_ELIGIBLE_NPCS].sort(() => Math.random() - 0.5);
+  return {
+    task_variant: tv.id, task_variant_label: tv.label, task_variant_desc: tv.desc,
+    task_complication: tc.id, task_complication_label: tc.label, task_complication_desc: tc.desc, task_complication_risks: tc.risks,
+    optional_encounter: oe ? oe.id : null, optional_encounter_label: oe ? oe.label : null, optional_encounter_desc: oe ? oe.desc : null,
+    raid_complication: rc.id, raid_complication_label: rc.label, raid_complication_desc: rc.desc,
+    weather_event: w.id, weather_event_label: w.label, weather_event_desc: w.desc,
+    npc_risk_targets: shuffled.slice(0, riskCount),
+    protected_npcs: [...CHAPTER1_PROTECTED_NPCS],
+    seed: Date.now()
+  };
+}
+
+// NPC death validation — an NPC can die only in a danger scene, if present, not protected, not already dead
+function canNPCDie(npcKey, stage, npcRels) {
+  if (CHAPTER1_PROTECTED_NPCS.includes(npcKey)) return false;
+  if (!CHAPTER1_DANGER_SCENES.includes(stage)) return false;
+  const rel = (npcRels || {})[npcKey];
+  if (!rel || !rel.first_met) return false;
+  if ((rel.status || '').toLowerCase() === 'dead') return false;
+  return true;
+}
+
+// Format replay variant for the GM prompt — only includes the relevant portion for the current sequence
+function formatReplayVariantForPrompt(variant, seq) {
+  if (!variant) return '(No replay variant generated yet.)';
+  const lines = [];
+  if (seq >= 6) lines.push(`Task Object: ${variant.task_variant_label} — ${variant.task_variant_desc}`);
+  if (seq === 7) {
+    lines.push(`Primary Complication: ${variant.task_complication_label} — ${variant.task_complication_desc}`);
+    lines.push(`Complication Risks: ${variant.task_complication_risks}`);
+    if (variant.optional_encounter) lines.push(`Optional Encounter: ${variant.optional_encounter_label} — ${variant.optional_encounter_desc}`);
+    else lines.push('Optional Encounter: None this run.');
+  }
+  if (variant.weather_event && variant.weather_event !== 'clear') lines.push(`Weather: ${variant.weather_event_label} — ${variant.weather_event_desc}`);
+  if (seq >= 9 && seq <= 10) lines.push(`Raid Complication: ${variant.raid_complication_label} — ${variant.raid_complication_desc}`);
+  if (seq >= 7) {
+    lines.push(`Protected NPCs (CANNOT die): ${(variant.protected_npcs || []).join(', ')}`);
+    lines.push(`At-Risk NPCs (may live, die, or be injured based on choices): ${(variant.npc_risk_targets || []).join(', ')}`);
+  }
+  lines.push('RULE: Use these pre-rolled elements. Do NOT kill protected NPCs. Only kill at-risk NPCs in danger scenes when a player choice or failed roll creates the risk. Record all NPC outcomes in events[] ledger.');
+  return lines.join('\n');
+}
+
 // Generate a structured handoff when a chapter ends (province transition fires).
 // This is the ONLY data from the completed chapter that the next chapter receives.
 function generateChapterHandoff(flags, equipment, chapterNum) {
@@ -108,6 +225,18 @@ function generateChapterHandoff(flags, equipment, chapterNum) {
     variableOutcomes.rivetStatus = (npcRels.rivet?.status || 'Unknown').toLowerCase();
     variableOutcomes.campTrust = (flags.local_clocks || {}).camp_trust ?? 30;
     variableOutcomes.campDamage = (flags.local_clocks || {}).raider_threat ?? 20;
+    // Replay variant + NPC outcome summary — carried to Chapter 2
+    variableOutcomes.task_variant = (flags.chapter1_replay || {}).task_variant_label || 'Purifier Core';
+    variableOutcomes.task_complication = (flags.chapter1_replay || {}).task_complication_label || 'Unknown';
+    variableOutcomes.raid_complication = (flags.chapter1_replay || {}).raid_complication_label || 'Unknown';
+    variableOutcomes.optional_encounter = (flags.chapter1_replay || {}).optional_encounter_label || 'None';
+    const npcOutcomes = {};
+    for (const [nKey, nRel] of Object.entries(npcRels)) {
+      if (nRel.first_met) {
+        npcOutcomes[nKey] = { name: nRel.name, status: (nRel.status || 'Alive').toLowerCase(), relationship: nRel.relationship || 0 };
+      }
+    }
+    variableOutcomes.npc_outcomes = npcOutcomes;
   }
 
   const conditions = flags.conditions || [];
@@ -185,11 +314,11 @@ const CHAPTER1_SEQUENCES = [
   { t: 'The Pull Leads to Camp', i: 'The Pull guides Bullet toward camp. He may see smoke or structures ahead. He enters camp near collapse from thirst. Do NOT introduce NPCs yet — he arrives at the edge of camp, barely conscious. Narrate the approach and arrival.', a: 'Bullet reaches the camp entrance' },
   { t: 'Camp Discovery', i: 'The stranger enters the camp. The survivors are like him — no real memories, nicknames instead of true names, no clear past, a sense of always being here. They know Province 618 is the red sand place, there are other places, the next known is the water Province, people do not survive long outside camps. They do NOT know the big truth. Introduce Shard (bald/scarred camp leader) first — she confronts the stranger. She may ask who he is, but do NOT name him yet — the naming happens in the NEXT sequence. He is still "the stranger." Do NOT give water freely yet — Shard decides if he is a threat first.', a: 'The stranger has entered the camp and met Shard (not yet named)' },
   { t: 'Water / First Trust (Naming)', i: 'THE NAMING SCENE — strict order required: (1) Shard confronts the stranger. (2) Shard asks who he is — "You got a name?" (3) The stranger says he does not know — no memory, woke in the sand. (4) Shard notices the circular scar over his heart. (5) Shard names him "Bullet" — "On account of that mark. Looks like someone put a round through you and you were too stubborn to die." Set bullet_named = true ONLY at step 5 — after Shard has asked his name, he said he does not know, AND she names him. Before that moment, NEVER use the name "Bullet" in narration — he is "the stranger." After the naming, the camp gives him just enough water to survive. Shard makes clear survival requires contribution. Introduce Spark (young inventor), Patch (healer), and Maul (hostile rival). Shard asks Bullet to help with a camp problem. Unlock camp_trust clock via discovered_clocks.', a: 'The stranger is named Bullet (Shard asked, he said he did not know, she saw the scar, she named him) and Shard assigns a task' },
-  { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp — a purifier core (or similar survival-critical component). Shard explains the purifier is failing. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it. Set unlock_flags.task_assigned = true when Shard assigns the task.', a: 'Bullet accepts the task and leaves camp to find the item' },
-  { t: 'Task Danger', i: 'The task involves danger — collapsing ruin, sand maw, old drone, unstable machinery, heat delirium, hostile scavenger, sandstorm, or buried trap. If Bullet faces a physical threat for the first time, he instinctively grabs a battered metal pipe (the Pipe acquisition beat — set pipe_state to battered_metal_pipe, add to inventory via item_changes). He succeeds and returns with the needed object. Optional NPC death/injury may occur (e.g. Cowboy dies, Rivet injured). Maul may blame Bullet. Record exact events in the events[] ledger — especially item_used_name. Set unlock_flags.task_complete = true when Bullet has the item.', a: 'Bullet returns with the needed object (purifier core)' },
+  { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp. USE THE TASK OBJECT from the REPLAY VARIANT section (e.g. condensation lens, pressure valve, fuse rod) — do not default to "purifier core" unless that is the rolled variant. Shard explains the purifier is failing and this component is needed. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it. Set unlock_flags.task_assigned = true when Shard assigns the task.', a: 'Bullet accepts the task and leaves camp to find the item' },
+  { t: 'Task Danger', i: 'USE THE PRIMARY COMPLICATION from the REPLAY VARIANT section (e.g. sand maw, old drone, collapsing ruin, heat delirium). If an OPTIONAL ENCOUNTER is rolled, weave it in during the task. If Bullet faces a physical threat for the first time, he instinctively grabs a battered metal pipe (the Pipe acquisition beat — set pipe_state to battered_metal_pipe, add to inventory via item_changes). He succeeds and returns with the needed object. At-risk NPCs (from REPLAY VARIANT) may be injured or die ONLY if they are present and a player choice or failed roll creates the risk — protected NPCs (Shard, Spark) CANNOT die. Maul may blame Bullet. Record exact events in the events[] ledger — especially item_used_name. Set unlock_flags.task_complete = true when Bullet has the item.', a: 'Bullet returns with the needed object' },
   { t: 'Camp Evening Interlude', i: 'REQUIRED: The camp cast MUST be introduced NOW, before any raider content. Bullet has returned with the purifier core replacement. The camp comes alive around him. Introduce these NPCs in order: (1) SPARK — a young inventor hurries to inspect the core Bullet brought back; she is excited, reaches for tools, wants to see if the core still hums. Someone calls her Spark. Return an npc_update for spark (is_new: true, key: "spark", role: "Inventor", disposition: "friendly", description: "A young woman with dust on her face and bright, restless eyes"). (2) PATCH — a burned woman with steady hands catches Bullet before he collapses from exhaustion/injury; she treats his wounds. "You bring back something useful, you get patched before you bleed into the sand." Someone calls her Patch. Return an npc_update for patch (is_new: true, key: "patch", role: "Healer", disposition: "friendly", description: "A burned woman with steady, careful hands"). (3) MAUL — a broad, burned man watches from near the fire, arms folded, suspicious and hostile toward Bullet. "He brings one piece of scrap back and everyone starts smiling? Drifters are still drifters." Shard shuts him down: "Enough, Maul." Return an npc_update for maul (is_new: true, key: "maul", role: "Rival", disposition: "hostile", description: "A broad, burned man with a suspicious glare"). (4) Shard asks Bullet to stay until dark — the camp could use the hands, and he owes them. Bullet agrees to stay. Set unlock_flags.agreed_to_stay = true ONLY after the three NPCs are introduced AND he agrees. Also: acknowledge the core return by improving Purifier Stability via local_clock_changes (+15-20, reason "Replacement core returned") and returning a decision_impact with is_meaningful: true, label "Task Completed", Camp Trust +15, tone "positive", plus NPC discovery notes for Spark, Patch, and Maul. This is an INTERACTIVE HUB — every player action MUST produce a direct NPC response with spoken dialogue, NOT just atmosphere. If the player asks about defenses or dangers, Shard MAY explain the raider danger (water = target, they\'ve hit before, they may come tonight) and set unlock_flags.raider_danger_explained = true, add raider_threat to discovered_clocks, and update the objective to prepare for possible attack. Do NOT deliver the full "they\'re coming now" warning — that comes in the next stage (seq 9). The objective should be: rest, meet the camp, wait until dark. After the raider danger is explained: "Prepare for possible raider attack." Introduce the NPCs across one or two turns if the player is interacting — do not dump all three in a single wall of text if the player is mid-conversation with one. NO DEAD AIR: Once the cast is introduced, this stage becomes an interactive hub — the player can talk to any NPC, ask questions, rest, or explore. EVERY response must include an NPC speaking direct dialogue that answers the player or reacts to their action. Never respond with only mood text ("the fire flickers, the wind howls"). If the player introduces themselves, NPCs respond with their names. If the player waits, time advances and Shard returns. If the player asks about defenses, Shard explains the raider danger. Follow the PLAYER INTENT hints to route responses.', a: 'Spark, Patch, and Maul are all introduced AND (Bullet agrees to stay OR raider_danger_explained is set)' },
   { t: 'Raider Warning', i: 'ONLY NOW should Raider Threat become visible. A scout reports movement, or Spark sees raiders, or Hawk spots silhouettes. Shard says they are coming for the Cache. Unlock raider_threat clock via discovered_clocks. Set objective to defend Red Sand Camp. Do NOT show Raider Threat earlier than this. Set unlock_flags.raider_warning_given = true when the warning is delivered.', a: 'The raider warning has been delivered' },
-  { t: 'Raider Attack', i: 'Bullet fights with his pipe. This is important canon — the pipe is the weapon. Record pipe as item_used_name in the events[] ledger. Do NOT allow later narration to mutate this into a crossbow/sword/knife kill. Some NPCs may live or die. Shard and Spark MUST survive. Maul may grudgingly respect Bullet or still resent him. Required outcome: raiders are driven off, the camp survives, the pipe becomes emotionally important. Set unlock_flags.raiders_defeated = true.', a: 'Raiders are driven off and the camp survives' },
+  { t: 'Raider Attack', i: 'USE THE RAID COMPLICATION from the REPLAY VARIANT section (e.g. cache flank, spark in danger, maul overextends, fire near cache). Bullet fights with his pipe — this is important canon, the pipe is the weapon. Record pipe as item_used_name in the events[] ledger. Do NOT allow later narration to mutate this into a crossbow/sword/knife kill. At-risk NPCs (from REPLAY VARIANT) may be injured or die during the raid if they are present and a player choice or failed roll creates the risk — protected NPCs (Shard, Spark) MUST survive but may be endangered or shaken. Maul may grudgingly respect Bullet or still resent him. Required outcome: raiders are driven off, the camp survives, the pipe becomes emotionally important. Set unlock_flags.raiders_defeated = true.', a: 'Raiders are driven off and the camp survives' },
   { t: 'Aftermath — Spark\'s Shard', i: 'After the raiders are run off, Bullet has a quiet moment. Spark gives him her shard as a LOAN, not a casual gift. She says something like "Take it. Not forever. Just until you come back." She wants him to come back someday. Set spark_shard_acquired = true and add "Spark\'s Unetched Shard" to inventory via item_changes. Show this once only. Create a guilt/bond entry: Spark — Shard Loan. Set unlock_flags.spark_shard_given = true.', a: 'Spark gives Bullet her shard' },
   { t: 'Shard Gives Breathing Apparatus', i: 'Shard gives Bullet the breathing apparatus. She knows the next Province is water-like and dangerous. She does NOT know everything about Province 472 — only that it is water, it is dangerous, people who go without breathing gear do not survive. Set breathing_gear_acquired = true and add "Shard\'s Breathing Apparatus" to inventory via item_changes. Set unlock_flags.breathing_gear_given = true.', a: 'Shard gives Bullet the breathing apparatus' },
   { t: 'Pull Intensifies', i: 'This is the actual reason Bullet leaves. The Pull tightens beneath his scar. Looking back at camp makes the scar burn. Looking forward eases the pain. He does not know what is calling him. He only knows he cannot stay. Set camp_arc_complete = true. Escalate pull_intensity toward 4-5 (Commanding/Blackout Risk). No HUNTED popup. The player must clearly understand the Pull is the chapter exit force.', a: 'Bullet leaves the camp following the Pull' },
@@ -436,6 +565,7 @@ RULES:
 - THE NAMING (CRITICAL): The protagonist does not start with a name. NPCs call him "the stranger," "the wounded one," or similar. The naming scene has a STRICT ORDER that MUST be followed: (1) Shard confronts the stranger, (2) Shard asks who he is / "You got a name?", (3) the stranger says he does not know — no memory, woke in the sand, (4) Shard notices the circular scar over his heart, (5) Shard names him "Bullet" — "On account of that mark. Looks like someone put a round through you and you were too stubborn to die." ONLY at step 5 do you return bullet_named: true. Before that moment, NEVER use the name "Bullet" in narration, NPC dialogue, choices, objectives, or codex — refer to him as "you," "the stranger," "the wounded man," "the nameless one." If Bullet Named (below) is already "Yes," the naming has happened — use "Bullet" freely in NPC dialogue and narration.
 - CHAPTER 1 CAMP ARC & DEPARTURE (CRITICAL): The Red Sand Camp arc has a clear structure: (1) Bullet arrives and is named, (2) Shard assigns a mission (retrieve a purifier part), (3) Bullet completes the mission and fights off the raiders, (4) the arc is COMPLETE. DURING the arc (steps 1-3), the Pull is QUIET — the camp is where the Pull brought him, and helping these people is the purpose. Do NOT burn or escalate the Pull during the arc. Only once Camp Arc Complete (below) is "YES" (step 4 done) does the Pull begin to intensify every turn — the scar burns, visions come, Bullet feels the unbearable compulsion to leave. Do NOT assign new camp errands, secondary missions, or side tasks to delay departure. The camp was a stop, not a home. He cannot stay. He must move on. Drive toward the departure beat: Bullet says goodbye (or doesn't), leaves the camp, and the Pull drags him toward the next Province. Set a province_transition to 472 when the departure scene concludes. You are in the departure beat now — escalate pull_intensity toward 4-5 (Commanding/Blackout Risk) and narrate the Pull overriding Bullet's will to stay. This is a major story beat, not a side quest.
 - FAREWELL GIFTS BEFORE DEPARTURE (CRITICAL): Before Bullet leaves Red Sand Camp, two final beats MUST happen as part of the farewell scene: (1) Spark gives Bullet her unetched shard as a loaner — she presses a cool, unetched shard into his hand for good luck, with a quiet promise that he'll bring it back someday. Set spark_shard_acquired: true and add "Spark's Unetched Shard" to inventory via item_changes. (2) Shard gives Bullet a breathing apparatus — salvaged gear so he can survive the liquid and oxygen scarcity of the next Province. Set breathing_gear_acquired: true and add "Shard's Breathing Apparatus" to inventory via item_changes. Deliver these during the goodbye scene as the Pull burns to leave. Do NOT transition to Province 472 until BOTH gifts have been given. If Spark's Shard or Breathing Apparatus (above) is still "Not acquired," deliver that gift this turn before any transition.
+- CHAPTER 1 REPLAYABILITY (CRITICAL): This run has pre-rolled controlled variation in the REPLAY VARIANT section. The task object, primary complication, optional encounter, raid complication, weather, and NPC risk targets are set per-run. USE them — do not invent alternate complications or skip the pre-rolled ones. Protected NPCs (Shard, Spark) CANNOT die in Chapter 1 — they can be injured, shaken, or frightened, but never killed. At-risk NPCs may die, but ONLY in danger scenes (task danger seq 7, raid seq 9-10) when a player choice or failed roll creates the risk. Do NOT kill NPCs offscreen or without narrative cause. Record all NPC deaths and injuries in the events[] ledger with the NPC as target_id/target_name and outcome "killed" or "wounded". Most runs should have 1 major danger, 1 emotional cost, 1 successful hero moment, and 1 unresolved debt — not a massacre.
 - Innocent suffering should have emotional weight, not be used casually.
 - LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
 - CLOCK DIRECTION (CRITICAL): Survival danger clocks (thirst, heat_exposure, fatigue, raider_threat, pressure, swimming_fatigue, blood_loss, dreadwraith_threat) — HIGHER = WORSE. Trust/stability clocks (camp_trust, purifier_stability, air, dome_stability, dome_trust, air_supply) — HIGHER = BETTER. When Bullet drinks water, thirst DECREASES (change is negative, e.g. -35). When Bullet earns trust, camp_trust INCREASES (change is positive, e.g. +5). Never set a survival clock to 0 from full in one action, and never set camp_trust above the stage cap.
@@ -547,6 +677,9 @@ ADVANCE WHEN: ${seq.a}
 
 FORBIDDEN AT THIS STAGE (do NOT do any of these):
 ${forbiddenAtStage(ctx.chapter1Sequence || 1)}
+
+CHAPTER 1 REPLAY VARIANT (controlled variation for this run — use these pre-rolled elements, do not invent your own):
+${formatReplayVariantForPrompt(ctx.chapter1Replay, ctx.chapter1Sequence || 1)}
 
 STORY SPINE RULE: Guide Bullet through this sequence's required beats. Allow small player choices and outcome variations, but keep the story spine intact. Do NOT skip ahead to future sequences or reveal future beats. The CODE controls stage advancement — set the required flags/unlock_flags for this beat and the system will auto-advance. You may also set advance_sequence: true if the beat is complete. If the player is still in the middle of this sequence, do NOT set advance_sequence.
 
@@ -913,6 +1046,16 @@ Deno.serve(async (req) => {
       flags.chapter1_stage = CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0];
     }
 
+    // ─── Chapter 1 Replay Variant ───
+    // Generate the per-run controlled variation on the first Chapter 1 turn.
+    // The variant (task object, complication, optional encounter, raid complication,
+    // weather, NPC risk targets) is stored in flags and fed to the GM prompt so
+    // each run feels different while the story spine stays fixed.
+    if (currentProvince === 618 && !flags.chapter1_replay) {
+      flags.chapter1_replay = generateChapter1ReplayVariant();
+      console.log('[PullGM] Generated Chapter 1 replay variant:', JSON.stringify(flags.chapter1_replay));
+    }
+
     // Retroactive camp-cast gate: if the campaign has advanced past the camp
     // evening interlude (seq 9+) OR camp_arc_complete is set, but Spark, Patch,
     // or Maul haven't been introduced yet, pull the sequence back to the camp
@@ -1032,6 +1175,7 @@ Deno.serve(async (req) => {
       chapter1Sequence: flags.chapter1_sequence || 1,
       chapter1Stage: flags.chapter1_stage || CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0],
       previousHandoff,
+      chapter1Replay: flags.chapter1_replay || null,
       action
     });
 
@@ -1342,12 +1486,22 @@ Deno.serve(async (req) => {
 
       const rawName = nu.revealed_name || nu.name || existing.name || key;
       const safeName = isUnrevealedCanonical(nu.name) ? (existing.name || key) : rawName;
+      // NPC Death Guard: protected NPCs and non-danger-scene NPCs cannot die.
+      // Override death to "Injured" if the conditions aren't met.
+      let effectiveNpcStatus = nu.npc_status || existing.status || 'Alive';
+      if (effectiveNpcStatus.toLowerCase() === 'dead') {
+        const deathStage = updatedFlags.chapter1_stage || '';
+        if (!canNPCDie(key, deathStage, npcRels)) {
+          effectiveNpcStatus = 'Injured';
+          console.warn(`[PullGM NPC Death Guard] Prevented death of ${key}: not eligible (stage=${deathStage})`);
+        }
+      }
       const updatedRel = {
         name: isForbiddenHumanAlias(safeName) ? (existing.name || key) : safeName,
         aliases: safeAliases,
         revealed_name: nu.revealed_name || existing.revealed_name || null,
         role: nu.role || existing.role || '',
-        status: nu.npc_status || existing.status || 'Alive',
+        status: effectiveNpcStatus,
         disposition: nu.disposition || existing.disposition || 'neutral',
         relationship: Math.max(-100, Math.min(100, (existing.relationship || 0) + (nu.relationship_change || 0))),
         first_met: existing.first_met || isNew,
