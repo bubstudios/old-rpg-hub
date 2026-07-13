@@ -695,6 +695,67 @@ function isNonHumanNpcUpdate(nu) {
   return /\b(mechanical bird|metal bird|winged machine|red-eyed bird|red eyed bird|scanning bird|bird-shaped machine|sentinel|drone|surveillance)\b/i.test(text);
 }
 
+// ─── NPC Name Reveal Firewall ───
+// Maps province → { npcKey: canonicalRevealedName }. These names must NOT appear
+// in narration until the NPC has revealed their name (revealed_name set in the
+// registry or returned in this turn's npc_updates). Prevents the LLM from using
+// "Shard" before the naming scene, "Spark" before introduction, etc.
+const NPC_REVEAL_NAMES = {
+  618: { shard: 'Shard', patch: 'Patch', spark: 'Spark', maul: 'Maul', ash: 'Ash', hawk: 'Hawk', cowboy: 'Cowboy', rivet: 'Rivet' },
+  472: { ember: 'Ember', thread: 'Thread', veil: 'Veil', glint: 'Glint', flicker: 'Flicker' },
+  837: { ridge: 'Ridge', vest: 'Vest', flint: 'Flint', drift: 'Drift', stitch: 'Stitch', knot: 'Knot', husk: 'Husk', gash: 'Gash' },
+  269: { glow: 'Glow', sol: 'Sol', lumen: 'Lumen', shade: 'Shade' },
+  391: { whisper: 'Whisper', glare: 'Glare', echo: 'Echo' },
+  512: { vine: 'Vine', thorn: 'Thorn', fang: 'Fang', briar: 'Briar' },
+  713: { frosthawk: 'Frosthawk', cinder: 'Cinder', hearth: 'Hearth', stone: 'Stone', twig: 'Twig', glass: 'Glass' },
+  927: { blade: 'Blade', soot: 'Soot', gleam: 'Gleam', crucible: 'Crucible' },
+  108: { silt: 'Silt', crag: 'Crag', mire: 'Mire', alloy: 'Alloy', scour: 'Scour', tangle: 'Tangle', hiss: 'Hiss', drench: 'Drench' },
+  429: { tusk: 'Tusk', scorch: 'Scorch', kindle: 'Kindle' },
+  5121: { mist: 'Mist', knell: 'Knell', glim: 'Glim', haze: 'Haze', hymn: 'Hymn' },
+  1: { ferryman: 'Ferryman' }
+};
+
+// Sanitize narration: replace NPC canonical names that haven't been revealed yet.
+// A name is allowed only if it was already revealed (in existing NPC state) or
+// is being revealed this turn (in result.npc_updates). Otherwise the name is
+// replaced with the NPC's current display name (descriptor).
+function sanitizeNpcNameLeaks(text, existingNpcRels, npcUpdates, currentProvince) {
+  const provinceNames = NPC_REVEAL_NAMES[currentProvince] || {};
+
+  // Build set of names that ARE allowed this turn (already revealed or being revealed now)
+  const allowedNames = new Set();
+  for (const [, rel] of Object.entries(existingNpcRels || {})) {
+    if (rel.revealed_name) allowedNames.add(rel.revealed_name);
+  }
+  for (const nu of (npcUpdates || [])) {
+    if (nu.revealed_name) allowedNames.add(nu.revealed_name);
+  }
+
+  let cleaned = text;
+  const corrections = [];
+
+  for (const [key, canonicalName] of Object.entries(provinceNames)) {
+    if (allowedNames.has(canonicalName)) continue; // Name is revealed — allowed
+
+    // Name hasn't been revealed — check if it appears in narration (case-sensitive
+    // to avoid replacing lowercase common nouns like "shard" the item)
+    const nameRegex = new RegExp(`\\b${escapeRegex(canonicalName)}\\b`, 'g');
+    const matches = cleaned.match(nameRegex);
+    if (matches) {
+      const rel = (existingNpcRels || {})[key];
+      const replacement = rel?.name || rel?.aliases?.[0] || 'the stranger';
+      cleaned = cleaned.replace(nameRegex, replacement);
+      corrections.push(`NPC name leak: "${canonicalName}" → "${replacement}" (not yet revealed)`);
+    }
+  }
+
+  if (corrections.length) {
+    console.warn('[PullGM NPC Name Firewall] Auto-corrected:', corrections.join('; '));
+  }
+
+  return { narration: cleaned, corrections };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -866,6 +927,10 @@ Deno.serve(async (req) => {
       if (toProv === currentProvince || (ci >= 0 && ti === ci + 1)) effectiveProvince = toProv;
     }
     narration = sanitizeSpoilers(narration, deriveKnowledgeFlags(gateFlags, effectiveProvince)).narration;
+
+    // NPC name reveal firewall — block NPC canonical names from narration until
+    // the NPC has actually revealed their name (or is revealing it this turn)
+    narration = sanitizeNpcNameLeaks(narration, flags.npc_relationships || {}, result.npc_updates || [], currentProvince).narration;
 
     // Interlude — player-only cutscene, saved BEFORE the narration so it leads
     // the feed. Shown to the player, NOT Bullet. Does not update any state.
@@ -1117,10 +1182,26 @@ Deno.serve(async (req) => {
         ...(nu.revealed_name ? [nu.revealed_name] : [])
       ].filter(Boolean))]);
 
+      // Name-reveal guard: if the LLM provides a name but no revealed_name, and
+      // the name matches a canonical NPC name for this province, don't use it as
+      // the display name — keep the existing descriptor until the actual reveal
+      const provinceNpcNames = NPC_REVEAL_NAMES[currentProvince] || {};
+      const isUnrevealedCanonical = (name) => {
+        if (!name || nu.revealed_name) return false;
+        return Object.values(provinceNpcNames).some(c => c === name && c !== existing.revealed_name);
+      };
+      // Also filter unrevealed canonical names from the alias list
+      const safeAliases = mergedAliases.filter(a => {
+        const isCanonical = Object.values(provinceNpcNames).some(c => c === a);
+        if (!isCanonical) return true;
+        return nu.revealed_name === a || existing.revealed_name === a;
+      });
+
       const rawName = nu.revealed_name || nu.name || existing.name || key;
+      const safeName = isUnrevealedCanonical(nu.name) ? (existing.name || key) : rawName;
       const updatedRel = {
-        name: isForbiddenHumanAlias(rawName) ? (existing.name || key) : rawName,
-        aliases: mergedAliases,
+        name: isForbiddenHumanAlias(safeName) ? (existing.name || key) : safeName,
+        aliases: safeAliases,
         revealed_name: nu.revealed_name || existing.revealed_name || null,
         role: nu.role || existing.role || '',
         status: nu.npc_status || existing.status || 'Alive',
