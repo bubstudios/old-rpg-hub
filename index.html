@@ -12,6 +12,47 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Suppress transient "Unexpected end of input" SyntaxErrors from Vite HMR.
+      // Vite's dev server pushes module updates over a WebSocket; if a message
+      // arrives incomplete, JSON.parse(data) throws with no stack trace. This
+      // runs before the Vite client module, intercepting the WebSocket message
+      // delivery so the error never propagates to the error overlay.
+      (function () {
+        function isHMRParseError(e) {
+          return e instanceof SyntaxError && /Unexpected end of input/i.test(e.message);
+        }
+        var origAdd = WebSocket.prototype.addEventListener;
+        WebSocket.prototype.addEventListener = function (type, listener, options) {
+          if (type === 'message' && typeof listener === 'function') {
+            var wrapped = function (event) {
+              try { return listener.call(this, event); }
+              catch (e) { if (isHMRParseError(e)) return; throw e; }
+            };
+            return origAdd.call(this, type, wrapped, options);
+          }
+          return origAdd.call(this, type, listener, options);
+        };
+        var desc = Object.getOwnPropertyDescriptor(WebSocket.prototype, 'onmessage');
+        if (desc && desc.set) {
+          var origSet = desc.set;
+          Object.defineProperty(WebSocket.prototype, 'onmessage', {
+            configurable: true,
+            enumerable: desc.enumerable,
+            get: desc.get,
+            set: function (listener) {
+              if (typeof listener === 'function') {
+                return origSet.call(this, function (event) {
+                  try { return listener.call(this, event); }
+                  catch (e) { if (isHMRParseError(e)) return; throw e; }
+                });
+              }
+              return origSet.call(this, listener);
+            }
+          });
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
