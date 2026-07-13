@@ -159,6 +159,9 @@ function PullMeter({ label, value, max, levels, colorClass }) {
         ))}
       </div>
       <p className="text-[9px] text-muted-foreground/60 font-body italic mt-1">{level.desc}</p>
+      <p className="text-[9px] text-primary/70 font-body mt-1.5 leading-relaxed">
+        Follow the Pull → it fades. Resist or linger → it intensifies.
+      </p>
     </div>
   );
 }

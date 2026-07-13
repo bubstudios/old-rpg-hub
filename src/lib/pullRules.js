@@ -4,11 +4,11 @@
 
 // ─── Pull Intensity Scale ───
 export const PULL_SCALE = [
-  { level: 0, label: 'Quiet', desc: 'The Pull is silent. Bullet can rest, explore, and think.' },
-  { level: 1, label: 'Tug', desc: 'A gentle direction forward. Easy to resist.' },
-  { level: 2, label: 'Ache', desc: 'The scar throbs. Resisting causes discomfort.' },
-  { level: 3, label: 'Burn', desc: 'The scar burns. Choices to resist become harder.' },
-  { level: 4, label: 'Commanding', desc: 'Pain and visions. Bullet may stumble forward.' },
+  { level: 0, label: 'Quiet', desc: 'The Pull is silent. Following its direction keeps it at rest.' },
+  { level: 1, label: 'Tug', desc: 'A gentle direction forward. Follow it and the Pull stays quiet.' },
+  { level: 2, label: 'Ache', desc: 'The scar throbs. Lingering or resisting causes discomfort — move forward to ease it.' },
+  { level: 3, label: 'Burn', desc: 'The scar burns. The longer Bullet resists, the harder it pushes.' },
+  { level: 4, label: 'Commanding', desc: 'Pain and visions. Bullet may stumble forward against his will.' },
   { level: 5, label: 'Blackout Risk', desc: 'Forced movement. Memory surge possible.' },
   { level: 6, label: 'Override', desc: 'Bullet moves regardless of will.' }
 ];
@@ -316,7 +316,7 @@ export const CODEX_ENTRIES = {
   },
   pull: {
     category: 'pull', title: 'The Pull',
-    content: 'A force in Bullet\'s chest that drags him forward. It is not a thought. Not a voice. A direction. It intensifies when resisted — from a gentle tug to an ache, a burn, a commanding force that can trigger blackouts. At low intensity, Bullet can delay and explore. At high intensity, the scar burns, visions appear, and forced movement becomes a risk. The Pull never explains itself.',
+    content: 'A force in Bullet\'s chest that drags him forward. It is not a thought. Not a voice. A direction. It intensifies when resisted — from a gentle tug to an ache, a burn, a commanding force that can trigger blackouts. But it FADES when followed: move with the Pull and the scar goes quiet, the pressure eases, and Bullet can rest and think. At low intensity, Bullet can delay and explore. At high intensity, the scar burns, visions appear, and forced movement becomes a risk. The Pull never explains itself — but it rewards surrender to the journey and punishes defiance.',
     alwaysVisible: true
   },
   scar: {
@@ -513,4 +513,6 @@ And inside your chest, something pulls.
 
 Not a thought. Not a voice. A direction.
 
-Forward.`;
+Forward.
+
+When you follow, it quiets. When you resist, it burns.`;
