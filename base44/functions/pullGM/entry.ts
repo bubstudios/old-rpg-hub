@@ -374,7 +374,7 @@ const STAGE_PULL_OVERRIDES = {
 // This makes the stage system deterministic — the CODE owns stage progression,
 // not the AI. The AI narrates within the stage; the code decides when to move on.
 const SEQUENCE_COMPLETION_CHECKS = {
-  2: (f) => !!(f.unlock_flags || {}).mechanical_bird_scanned,
+  2: (f) => !!(f.unlock_flags || {}).mechanical_bird_scanned || (f.codex_unlocks || []).includes('mechanical_bird') || (f.codex_unlocks || []).includes('watcher'),
   4: (f) => Object.keys(f.npc_relationships || {}).length > 0,
   5: (f) => !!f.bullet_named,
   6: (f) => !!(f.unlock_flags || {}).task_assigned,
@@ -1128,6 +1128,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Retroactive mechanical bird scan flag: if the scan happened (codex_unlocks
+    // includes 'watcher' or 'mechanical_bird') but unlock_flags.mechanical_bird_scanned
+    // was never set, infer it now. This un-sticks the sequence completion check
+    // and ensures the threat registry picks it up.
+    if (currentProvince === 618) {
+      const codexHasBird = (flags.codex_unlocks || []).includes('mechanical_bird') || (flags.codex_unlocks || []).includes('watcher');
+      if (codexHasBird && !(flags.unlock_flags || {}).mechanical_bird_scanned) {
+        if (!flags.unlock_flags) flags.unlock_flags = {};
+        flags.unlock_flags.mechanical_bird_scanned = true;
+        console.warn('[PullGM] Retroactive fix: set mechanical_bird_scanned from codex_unlocks');
+      }
+    }
+
     // Only infer bullet_named for legacy campaigns clearly PAST the naming sequence
     // (sequence 5). During the naming sequence itself, the flag must NOT be inferred —
     // the GM must narrate the full scene (Shard asks name → stranger says he doesn't
@@ -1684,13 +1697,17 @@ Deno.serve(async (req) => {
         if (!updatedFlags.known_threats.some(t => t.id === 'threat_618_mechanical_watcher')) {
           updatedFlags.known_threats.push({
             id: 'threat_618_mechanical_watcher',
+            type: 'surveillance_threat',
             displayName: 'Mechanical Watcher',
-            description: 'A red-eyed mechanical bird that scanned Bullet\'s scar before flying away.',
+            aliases: ['mechanical bird', 'metal bird', 'red-eyed bird', 'winged machine', 'scanning drone', 'Watcher'],
+            description: 'A red-eyed mechanical bird scanned Bullet\'s scar and vanished into the heat haze.',
+            discovered: true,
+            discoveredAtStage: 'mechanical_bird_scan',
+            lastSeen: 'Province 618',
             status: 'Observed',
-            lastSeen: 'Red Sand',
             threatLevel: 'Unknown'
           });
-          console.log('[PullGM] Added Mechanical Watcher to known_threats.');
+          console.log('[PullGM] Added Mechanical Watcher to known_threats (surveillance threat).');
         }
       }
     }

@@ -46,15 +46,36 @@ export default function PullWorldState({ campaign }) {
   // Known threats: from explicit threat registry + codex unlocks + hostile NPCs
   // The mechanical bird and other non-human entities live here, NOT in npc_relationships
   const codexUnlocks = flags.codex_unlocks || [];
-  const knownThreats = [...(flags.known_threats || [])];
+  const knownThreats = [...(flags.known_threats || [])].map(t => {
+    // Enrich existing saved records missing the new metadata fields
+    if (t.id === 'threat_618_mechanical_watcher' && !t.type) {
+      return {
+        ...t,
+        type: 'surveillance_threat',
+        aliases: t.aliases || ['mechanical bird', 'metal bird', 'red-eyed bird', 'winged machine', 'scanning drone', 'Watcher'],
+        description: t.description || 'A red-eyed mechanical bird scanned Bullet\'s scar and vanished into the heat haze.',
+        discovered: true,
+        lastSeen: t.lastSeen || 'Province 618',
+        status: t.status || 'Observed',
+        threatLevel: t.threatLevel || 'Unknown'
+      };
+    }
+    return t;
+  });
   // Fallback for existing campaigns where the bird scan happened before known_threats
   // was added — detect via codex_unlocks or unlock_flags
   if ((codexUnlocks.includes('mechanical_bird') || codexUnlocks.includes('watcher') || (flags.unlock_flags || {}).mechanical_bird_scanned)
       && !knownThreats.some(t => t.id === 'threat_618_mechanical_watcher')) {
     knownThreats.push({
       id: 'threat_618_mechanical_watcher',
+      type: 'surveillance_threat',
       displayName: 'Mechanical Watcher',
-      description: 'A red-eyed mechanical bird that scanned Bullet\'s scar before flying away.'
+      aliases: ['mechanical bird', 'metal bird', 'red-eyed bird', 'winged machine', 'scanning drone', 'Watcher'],
+      description: 'A red-eyed mechanical bird scanned Bullet\'s scar and vanished into the heat haze.',
+      discovered: true,
+      lastSeen: 'Province 618',
+      status: 'Observed',
+      threatLevel: 'Unknown'
     });
   }
   if (codexUnlocks.includes('seeker') && !knownThreats.some(t => t.id === 'seeker')) {
@@ -68,6 +89,15 @@ export default function PullWorldState({ campaign }) {
       knownThreats.push({ id: `npc_${n.name}`, displayName: n.name });
     }
   });
+
+  const THREAT_TYPE_LABELS = {
+    surveillance_threat: 'Surveillance threat',
+    combat_threat: 'Combat threat',
+    environmental_threat: 'Environmental threat',
+    predator: 'Predator',
+    raider_threat: 'Human threat',
+    unknown_entity: 'Unknown entity'
+  };
 
   const rep = deriveReputation(npcsMet);
 
@@ -147,9 +177,11 @@ export default function PullWorldState({ campaign }) {
         <div className="pt-1.5 border-t border-border/30">
           <p className="text-muted-foreground/60 text-[10px] font-heading tracking-wide mb-1">KNOWN THREATS</p>
           {knownThreats.length > 0 ? (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {knownThreats.map((t, i) => {
                 const match = npcsMet.find(([_, n]) => n.name === t.displayName);
+                const typeLabel = t.type ? (THREAT_TYPE_LABELS[t.type] || t.type) : (match ? 'Human threat' : null);
+                const desc = t.description || (match ? (match[1].player_knowledge || match[1].notes) : '');
                 return match ? (
                   <button
                     key={i}
@@ -157,12 +189,12 @@ export default function PullWorldState({ campaign }) {
                     className="text-red-300/80 flex items-start gap-1 hover:text-red-300 transition-colors text-left"
                   >
                     <AlertTriangle className="w-2.5 h-2.5 text-red-400/50 mt-0.5 shrink-0" />
-                    <span>{t.displayName}{t.description ? <span className="text-muted-foreground/50"> — {t.description}</span> : null}</span>
+                    <span>{t.displayName}{typeLabel ? <span className="text-muted-foreground/50 text-[9px]"> — {typeLabel}</span> : null}{desc ? <span className="text-muted-foreground/50"> {desc}</span> : null}</span>
                   </button>
                 ) : (
                   <p key={i} className="text-red-300/80 flex items-start gap-1">
                     <AlertTriangle className="w-2.5 h-2.5 text-red-400/50 mt-0.5 shrink-0" />
-                    <span>{t.displayName}{t.description ? <span className="text-muted-foreground/50"> — {t.description}</span> : null}</span>
+                    <span>{t.displayName}{typeLabel ? <span className="text-muted-foreground/50 text-[9px]"> — {typeLabel}</span> : null}{desc ? <span className="text-muted-foreground/50"> {desc}</span> : null}</span>
                   </p>
                 );
               })}
