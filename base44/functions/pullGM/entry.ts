@@ -52,7 +52,7 @@ const CLOCK_DISCOVERY_RULES = {
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
-    narration: { type: "string", description: "2-4 paragraphs of immersive, second-person present tense narration. Dark and atmospheric. Include environmental details, sensory information, and consequences of the player's action." },
+    narration: { type: "string", description: "2-3 paragraphs (max 350 words) of immersive, second-person present tense narration. Dark and atmospheric. Include environmental details, sensory information, and consequences of the player's action. Be concise — every sentence must earn its place." },
     pull_intensity: { type: "number", description: "Updated Pull intensity 0-6" },
     scar_state: { type: "string", description: "Updated scar state: quiet, pulse, burn, flare, or blackout" },
     shard_resonance: { type: "number", description: "Updated shard resonance 0-100" },
@@ -220,7 +220,7 @@ Never leave the objective stale. If the player's situation has changed, update c
 PLAYER ACTION:
 ${ctx.action}
 
-Respond with vivid narration (2-4 paragraphs, second-person present tense, dark and atmospheric). Include environmental details, sensory information, NPC reactions, and consequences. Then provide state changes as JSON. For decision_impact, only set is_meaningful=true for choices that have real consequences (ally trust changes, clock shifts, moral outcomes, lore discoveries). Use change_label values like "Major increase", "Slight decline", "Strong approval", etc.
+Respond with vivid narration (2-3 paragraphs, max 350 words, second-person present tense, dark and atmospheric). Include environmental details, sensory information, NPC reactions, and consequences. Be concise — do not overwrite. Then provide state changes as JSON. For decision_impact, only set is_meaningful=true for choices that have real consequences (ally trust changes, clock shifts, moral outcomes, lore discoveries). Use change_label values like "Major increase", "Slight decline", "Strong approval", etc.
 FUTURE_CONSEQUENCE SPOILER RULE (CRITICAL): The future_consequence field is shown to the player immediately. It must NEVER spoil specific narrative outcomes — do NOT name characters who will be endangered, die, or suffer; do NOT reveal who survives or fails; do NOT describe specific upcoming events. Write future_consequence as a vague, atmospheric hint about thematic or mechanical stakes only. Example GOOD: "The wall's fate and the cost of standing it will weigh on Bullet and the camp." Example BAD: "Whether Cowboy survives the opening minutes of the assault." Never use a named character's survival, death, injury, or fate as the subject of a future_consequence.`;
 }
 
@@ -424,11 +424,14 @@ Deno.serve(async (req) => {
     if (!bullet) return Response.json({ error: 'No character found' }, { status: 404 });
 
     // Load recent journal entries
-    const entries = await admin.entities.JournalEntry.filter({ campaign_id }, '-created_date', 15);
+    const entries = await admin.entities.JournalEntry.filter({ campaign_id }, '-created_date', 8);
 
     // Load recent canonical events (structured action ledger — the source of truth for what actually happened)
     const recentEventsRaw = await admin.entities.EventLog.filter({ campaign_id }, '-created_date', 20);
     const recentEvents = recentEventsRaw.reverse();
+
+    // Pre-load all campaign NPCs once (avoids per-NPC filter calls during upsert)
+    const existingNpcs = await admin.entities.NPC.filter({ campaign_id });
 
     // Build game state
     const ws = campaign.world_state || {};
@@ -552,25 +555,24 @@ Deno.serve(async (req) => {
     // Sanitized for firearms only; spoiler firewall skipped (interludes are
     // explicitly player-facing atmospheric scenes).
     let interludeText = '';
+    const savePromises = [];
     if (result.interlude) {
       interludeText = sanitizeNarration(result.interlude).narration;
-      try {
-        await base44.entities.JournalEntry.create({
-          campaign_id,
-          entry_type: 'system',
-          narration: `✦ INTERLUDE — ELSEWHERE ✦\n\n${interludeText}`,
-          chapter: campaign.current_chapter
-        });
-      } catch { /* best-effort */ }
+      savePromises.push(base44.entities.JournalEntry.create({
+        campaign_id,
+        entry_type: 'system',
+        narration: `✦ INTERLUDE — ELSEWHERE ✦\n\n${interludeText}`,
+        chapter: campaign.current_chapter
+      }).catch(() => {}));
     }
 
-    // Create journal entry
-    await base44.entities.JournalEntry.create({
+    // Create journal entry (deferred to parallel save batch)
+    savePromises.push(base44.entities.JournalEntry.create({
       campaign_id,
       entry_type: 'narration',
       narration,
       chapter: campaign.current_chapter
-    });
+    }).catch(() => {}));
 
     // ─── Update campaign state ───
     const updatedFlags = { ...flags };
@@ -682,28 +684,28 @@ Deno.serve(async (req) => {
 
     if (result.events && result.events.length) {
       const provName = (PROVINCES[currentProvince] || {}).n || `Province ${currentProvince}`;
-      for (const ev of result.events) {
-        if (!ev.event_type && !ev.summary) continue;
-        try {
-          await admin.entities.EventLog.create({
-            campaign_id,
-            chapter: campaign.current_chapter || 1,
-            province: provName,
-            scene: ev.scene || '',
-            event_type: ev.event_type || 'event',
-            actor_id: ev.actor_id || 'bullet',
-            actor_name: ev.actor_name || 'Bullet',
-            target_id: ev.target_id || '',
-            target_name: ev.target_name || '',
-            item_used_id: ev.item_used_id || '',
-            item_used_name: ev.item_used_name || '',
-            outcome: ev.outcome || '',
-            cause: ev.cause || '',
-            summary: ev.summary || '',
-            memory_summary: ev.memory_summary || ev.summary || '',
-            tags: ev.tags || []
-          });
-        } catch (e) { /* best-effort event save — ledger is non-blocking */ }
+      const eventRecords = result.events
+        .filter(ev => ev.event_type || ev.summary)
+        .map(ev => ({
+          campaign_id,
+          chapter: campaign.current_chapter || 1,
+          province: provName,
+          scene: ev.scene || '',
+          event_type: ev.event_type || 'event',
+          actor_id: ev.actor_id || 'bullet',
+          actor_name: ev.actor_name || 'Bullet',
+          target_id: ev.target_id || '',
+          target_name: ev.target_name || '',
+          item_used_id: ev.item_used_id || '',
+          item_used_name: ev.item_used_name || '',
+          outcome: ev.outcome || '',
+          cause: ev.cause || '',
+          summary: ev.summary || '',
+          memory_summary: ev.memory_summary || ev.summary || '',
+          tags: ev.tags || []
+        }));
+      if (eventRecords.length) {
+        savePromises.push(admin.entities.EventLog.bulkCreate(eventRecords).catch(() => {}));
       }
       // Update last_weapon_used from the most recent combat event that used a weapon
       const lastWeaponEv = [...result.events].reverse().find(ev =>
@@ -769,10 +771,28 @@ Deno.serve(async (req) => {
       }
 
       // Upsert NPC entity record (canonical dossier) — merge, never duplicate
-      try {
-        if (isNew) {
-          await admin.entities.NPC.create({
-            campaign_id,
+      if (isNew) {
+        savePromises.push(admin.entities.NPC.create({
+          campaign_id,
+          canonical_id: key,
+          name: updatedRel.name,
+          aliases: mergedAliases,
+          revealed_name: updatedRel.revealed_name,
+          role: updatedRel.role,
+          status: updatedRel.status,
+          disposition: updatedRel.disposition,
+          description: updatedRel.description,
+          what_we_know: updatedRel.player_knowledge,
+          first_met_chapter: campaign.current_chapter || 1
+        }).catch(() => {}));
+      } else {
+        let npcRec = existingNpcs.find(n => n.canonical_id === key);
+        if (!npcRec) {
+          const nameToMatch = existing.name || updatedRel.name;
+          npcRec = existingNpcs.find(n => n.name === nameToMatch);
+        }
+        if (npcRec) {
+          savePromises.push(admin.entities.NPC.update(npcRec.id, {
             canonical_id: key,
             name: updatedRel.name,
             aliases: mergedAliases,
@@ -781,31 +801,10 @@ Deno.serve(async (req) => {
             status: updatedRel.status,
             disposition: updatedRel.disposition,
             description: updatedRel.description,
-            what_we_know: updatedRel.player_knowledge,
-            first_met_chapter: campaign.current_chapter || 1
-          });
-        } else {
-          const byId = await admin.entities.NPC.filter({ campaign_id, canonical_id: key });
-          let npcRec = byId[0];
-          if (!npcRec) {
-            const byName = await admin.entities.NPC.filter({ campaign_id, name: existing.name || updatedRel.name });
-            npcRec = byName[0];
-          }
-          if (npcRec) {
-            await admin.entities.NPC.update(npcRec.id, {
-              canonical_id: key,
-              name: updatedRel.name,
-              aliases: mergedAliases,
-              revealed_name: updatedRel.revealed_name,
-              role: updatedRel.role,
-              status: updatedRel.status,
-              disposition: updatedRel.disposition,
-              description: updatedRel.description,
-              what_we_know: updatedRel.player_knowledge
-            });
-          }
+            what_we_know: updatedRel.player_knowledge
+          }).catch(() => {}));
         }
-      } catch (e) { /* NPC upsert best-effort — registry in flags is source of truth */ }
+      }
     }
     updatedFlags.npc_relationships = npcRels;
 
@@ -880,12 +879,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Save campaign state
-    await admin.entities.Campaign.update(campaign_id, {
+    // Save campaign state (parallel with other saves)
+    savePromises.push(admin.entities.Campaign.update(campaign_id, {
       world_state: { ...ws, quest_flags: updatedFlags },
       current_scene: narration.substring(0, 200),
       ...chapterUpdate
-    });
+    }).catch(() => {}));
 
     // ─── Update character ───
     const charUpdates = {};
@@ -926,8 +925,11 @@ Deno.serve(async (req) => {
     }
 
     if (Object.keys(charUpdates).length) {
-      await admin.entities.Character.update(bullet.id, charUpdates);
+      savePromises.push(admin.entities.Character.update(bullet.id, charUpdates).catch(() => {}));
     }
+
+    // Await all saves in parallel (journal entries, events, NPCs, campaign, character)
+    await Promise.all(savePromises);
 
     // Return response
     return Response.json({
