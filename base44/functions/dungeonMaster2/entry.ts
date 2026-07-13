@@ -543,7 +543,7 @@ AI / Architect-touched construct. New, uncertain, learning morality. Mitchell in
       : isSR ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (DMG ${actingChar.hp_current}/${actingChar.hp_max})`
       : isCP ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (HP ${actingChar.hp_current}/${actingChar.hp_max})`
       : isTrav ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (END ${actingChar.hp_current}/${actingChar.hp_max})`
-      : isPJ ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Vitality ${actingChar.hp_current}/${actingChar.hp_max})`
+      : isPJ ? `${actingChar.name}, Captain of the UES Pathfinder`
       : `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} (Level ${actingChar.level}, HP ${actingChar.hp_current}/${actingChar.hp_max})`;
 
     const rulesLabel = isSW ? 'Star Wars (WEG D6)' : isMSH ? 'Marvel Super Heroes (FASERIP)' : isDCH ? 'DC Heroes (Mayfair)' : isJB ? 'James Bond 007' : isSR ? 'Shadowrun' : isCP ? 'Cyberpunk'       : isTrav ? 'Traveller' : isRL ? 'Ravenloft (AD&D 2e)' : isOD ? 'Original D&D (1974)' : isBX ? 'B/X D&D' : is2e ? 'AD&D 2nd Edition' : is35 ? 'D&D 3.5' : is4e ? 'D&D 4th Edition' : is5e ? 'D&D 5th Edition' : isPJ ? 'Pathfinder Journeys' : 'AD&D 2nd Edition';

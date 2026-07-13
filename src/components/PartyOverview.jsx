@@ -36,7 +36,9 @@ export default function PartyOverview({ characters, campaignId, gameSystem }) {
                   {c.name}
                 </p>
                 <p className="text-[11px] text-muted-foreground font-body">
-                  {gameSystem === 'starfrontiers'
+                  {gameSystem === 'pathfinder'
+                    ? 'Captain, UES Pathfinder'
+                    : gameSystem === 'starfrontiers'
                     ? `${c.race} · ${c.character_class}`
                     : gameSystem === 'gammaworld'
                     ? `${c.race}`
@@ -52,7 +54,7 @@ export default function PartyOverview({ characters, campaignId, gameSystem }) {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {gameSystem !== 'starfrontiers' && gameSystem !== 'gammaworld' && gameSystem !== 'boothill' && gameSystem !== 'indianajones' && gameSystem !== 'topsecret' && gameSystem !== 'conan' && gameSystem !== 'redsonja' && gameSystem !== 'ghostbusters' && gameSystem !== 'gangbusters' && gameSystem !== 'legionofdoom' && (
+                {gameSystem !== 'pathfinder' && gameSystem !== 'starfrontiers' && gameSystem !== 'gammaworld' && gameSystem !== 'boothill' && gameSystem !== 'indianajones' && gameSystem !== 'topsecret' && gameSystem !== 'conan' && gameSystem !== 'redsonja' && gameSystem !== 'ghostbusters' && gameSystem !== 'gangbusters' && gameSystem !== 'legionofdoom' && (
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Shield className="w-3 h-3" strokeWidth={1.5} />
                     <span className="font-heading font-600">{c.ac}</span>
@@ -60,6 +62,7 @@ export default function PartyOverview({ characters, campaignId, gameSystem }) {
                 )}
               </div>
             </div>
+            {gameSystem !== 'pathfinder' && (
             <div className="flex items-center gap-1.5">
               <Heart className={`w-3 h-3 shrink-0 ${isDead ? 'text-red-700' : 'text-red-500'}`} fill="currentColor" strokeWidth={0} />
               <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
@@ -72,6 +75,7 @@ export default function PartyOverview({ characters, campaignId, gameSystem }) {
                 {c.hp_current}/{c.hp_max}
               </span>
             </div>
+            )}
             {isDead && (
               <p className="text-[10px] text-red-400 font-heading tracking-wider mt-1.5">FALLEN</p>
             )}

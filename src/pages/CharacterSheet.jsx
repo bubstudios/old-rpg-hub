@@ -127,7 +127,7 @@ export default function CharacterSheet() {
   }
 
   if (campaign?.game_system === 'pathfinder') {
-    return <PJCharacterSheet character={character} campaignId={campaignId} />;
+    return <PJCharacterSheet character={character} campaignId={campaignId} campaign={campaign} />;
   }
 
   if (campaign?.game_system === 'legionofdoom') {

@@ -698,7 +698,9 @@ export default function CampaignDetail() {
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
-                {((campaign?.game_system === 'thepull' && !campaign?.world_state?.quest_flags?.bullet_named) ? 'The Stranger' : myCharacter?.name)?.toUpperCase()} · {(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters' || campaign?.game_system === 'legionofdoom') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL {myCharacter?.level}
+                {campaign?.game_system === 'pathfinder'
+                  ? `${myCharacter?.name?.toUpperCase()} · UES PATHFINDER`
+                  : `${((campaign?.game_system === 'thepull' && !campaign?.world_state?.quest_flags?.bullet_named) ? 'The Stranger' : myCharacter?.name)?.toUpperCase()} · ${(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters' || campaign?.game_system === 'legionofdoom') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL ${myCharacter?.level}`}
               </span>
               <button
                 onClick={() => setDiscussMode((m) => !m)}
@@ -910,8 +912,8 @@ export default function CampaignDetail() {
           <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-3">
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-              <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">THE PARTY</h3>
-              <span className="text-[10px] text-muted-foreground/50 ml-auto">{characters.length} heroes</span>
+              <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">{campaign?.game_system === 'pathfinder' ? 'BRIDGE COMMAND' : 'THE PARTY'}</h3>
+              <span className="text-[10px] text-muted-foreground/50 ml-auto">{campaign?.game_system === 'pathfinder' ? 'Captain' : `${characters.length} heroes`}</span>
             </div>
             <PartyOverview characters={characters} campaignId={campaignId} gameSystem={campaign.game_system} />
           </div>
@@ -946,7 +948,7 @@ export default function CampaignDetail() {
           {myCharacter && (
             <Link to={`/campaign/${campaignId}/character/${myCharacter.id}`}>
               <Button variant="outline" className="w-full border-border/50 text-muted-foreground hover:text-foreground h-9">
-                <ScrollText className="w-3.5 h-3.5 mr-1.5" /> My Character Sheet
+                <ScrollText className="w-3.5 h-3.5 mr-1.5" /> {campaign?.game_system === 'pathfinder' ? "Captain's File" : 'My Character Sheet'}
               </Button>
             </Link>
           )}
