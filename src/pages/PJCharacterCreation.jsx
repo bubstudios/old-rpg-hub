@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronLeft, ChevronRight, Check, Loader2, Dices, Rocket, UserPlus, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Loader2, Rocket, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import ImportCharacterSheetForm from '@/components/ImportCharacterSheetForm';
-import { PJ_ABILITIES, PJ_ORIGINS, PJ_ROLES, rollAbilityScores, applyOrigin, getVitality } from '@/lib/pjRules';
+import { PJ_ORIGINS, PJ_ROLES } from '@/lib/pjRules';
 
-const STEPS = ['Origin', 'Role', 'Abilities', 'Identity', 'Review'];
+const STEPS = ['Background', 'Identity', 'Review'];
 
 export default function PJCharacterCreation() {
   const { id: campaignId } = useParams();
@@ -16,8 +16,6 @@ export default function PJCharacterCreation() {
   const [step, setStep] = useState(0);
   const [origin, setOrigin] = useState('');
   const [role, setRole] = useState('');
-  const [rawScores, setRawScores] = useState(null);
-  const [scoresRolled, setScoresRolled] = useState(false);
   const [name, setName] = useState('');
   const [appearance, setAppearance] = useState('');
   const [background, setBackground] = useState('');
@@ -28,11 +26,11 @@ export default function PJCharacterCreation() {
     return (
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <button onClick={() => setImportMode(false)} className="flex items-center gap-1.5 text-xs font-heading tracking-wide text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ChevronLeft className="w-3.5 h-3.5" /> Back to Character Builder
+          <ChevronLeft className="w-3.5 h-3.5" /> Back to Captain's File
         </button>
         <div className="flex items-center gap-2 mb-6">
           <FileText className="w-5 h-5 text-primary" strokeWidth={1.5} />
-          <h1 className="font-heading font-700 text-lg text-foreground tracking-wide">IMPORT CHARACTER SHEET</h1>
+          <h1 className="font-heading font-700 text-lg text-foreground tracking-wide">IMPORT CAPTAIN'S FILE</h1>
         </div>
         <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-6 sm:p-8">
           <ImportCharacterSheetForm campaignId={campaignId} onCreated={() => navigate(`/campaign/${campaignId}`)} onCancel={() => setImportMode(false)} />
@@ -41,24 +39,8 @@ export default function PJCharacterCreation() {
     );
   }
 
-  const adjustedScores = rawScores && origin ? applyOrigin(rawScores, PJ_ORIGINS.find(o => o.name === origin)) : rawScores;
   const roleData = PJ_ROLES.find(r => r.name === role);
-  const finalScores = adjustedScores || (roleData ? { ...roleData.abilities } : null);
-  const vitality = finalScores ? getVitality(finalScores) : 0;
-
-  function handleRollScores() {
-    setRawScores(rollAbilityScores());
-    setScoresRolled(true);
-  }
-
-  function useRoleScores() {
-    if (roleData) {
-      setRawScores({ ...roleData.abilities });
-      setScoresRolled(true);
-    }
-  }
-
-  const canProceed = [!!origin, !!role, !!finalScores, !!name.trim(), true][step];
+  const canProceed = [!!origin && !!role, !!name.trim(), true][step];
 
   async function handleCreate() {
     setCreating(true);
@@ -72,14 +54,10 @@ export default function PJCharacterCreation() {
         character_class: role,
         alignment: 'Neutral Good',
         level: 1,
-        ability_scores: finalScores,
-        equipment: [
-          { name: 'Laser Pistol', qty: 1 },
-          { name: 'Commlink', qty: 1 },
-          { name: 'Tactical Vest', qty: 1 }
-        ],
-        gold: 500,
-        skills: [{ name: 'Leadership', level: 1 }],
+        ability_scores: roleData ? { ...roleData.abilities } : {},
+        equipment: [],
+        gold: 0,
+        skills: [],
         spells: [],
         spell_slots: {},
         appearance,
@@ -101,13 +79,13 @@ export default function PJCharacterCreation() {
           <ChevronLeft className="w-3.5 h-3.5" /> Back to Campaign
         </button>
         <button onClick={() => setImportMode(true)} className="flex items-center gap-1 text-[11px] font-heading tracking-wide text-primary/70 hover:text-primary transition-colors">
-          <FileText className="w-3.5 h-3.5" /> Import a sheet instead
+          <FileText className="w-3.5 h-3.5" /> Import a file instead
         </button>
       </div>
 
       <div className="flex items-center gap-2 mb-6">
         <Rocket className="w-5 h-5 text-primary" strokeWidth={1.5} />
-        <h1 className="font-heading font-700 text-lg text-foreground tracking-wide">CREATE YOUR OFFICER</h1>
+        <h1 className="font-heading font-700 text-lg text-foreground tracking-wide">CAPTAIN'S FILE</h1>
       </div>
 
       {/* Stepper */}
@@ -130,107 +108,50 @@ export default function PJCharacterCreation() {
       </div>
 
       <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-6 sm:p-8 min-h-[320px]">
-        {/* Step 1: Origin */}
+        {/* Step 1: Background */}
         {step === 0 && (
-          <div className="animate-ink">
-            <div className="flex items-center gap-2 mb-4">
-              <UserPlus className="w-4 h-4 text-primary" strokeWidth={1.5} />
-              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CHOOSE YOUR ORIGIN</h2>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-2.5">
-              {PJ_ORIGINS.map((o) => (
-                <button key={o.name} onClick={() => { setOrigin(o.name); setRawScores(null); setScoresRolled(false); }}
-                  className={`text-left p-3.5 rounded-lg border transition-all ${origin === o.name ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40 bg-card/30'}`}>
-                  <p className="font-heading font-600 text-sm text-foreground">{o.name}</p>
-                  <p className="text-[11px] text-muted-foreground font-body mt-1 leading-relaxed">{o.desc}</p>
-                  <div className="flex gap-1.5 mt-2 flex-wrap">
-                    {Object.entries(o.adjustments).map(([ab, mod]) => (
-                      <span key={ab} className={`text-[9px] font-heading tracking-wide px-1.5 py-0.5 rounded ${mod > 0 ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-950/40 text-red-400'}`}>
-                        {ab.toUpperCase()} {mod > 0 ? '+' : ''}{mod}
-                      </span>
-                    ))}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Role */}
-        {step === 1 && (
-          <div className="animate-ink">
-            <div className="flex items-center gap-2 mb-4">
-              <Rocket className="w-4 h-4 text-primary" strokeWidth={1.5} />
-              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CHOOSE YOUR ROLE</h2>
-            </div>
-            <div className="grid gap-2.5">
-              {PJ_ROLES.map((r) => (
-                <button key={r.name} onClick={() => setRole(r.name)}
-                  className={`text-left p-3.5 rounded-lg border transition-all ${role === r.name ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40 bg-card/30'}`}>
-                  <p className="font-heading font-600 text-sm text-foreground">{r.name}</p>
-                  <p className="text-[11px] text-muted-foreground font-body mt-1 leading-relaxed">{r.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Abilities */}
-        {step === 2 && (
-          <div className="animate-ink">
-            <div className="flex items-center gap-2 mb-4">
-              <Dices className="w-4 h-4 text-primary" strokeWidth={1.5} />
-              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">ABILITY SCORES</h2>
-            </div>
-            <p className="text-[11px] text-muted-foreground font-body mb-4">
-              Roll your own scores, or use the {role} template as a starting point.
-            </p>
-            {!scoresRolled ? (
-              <div className="space-y-2">
-                <button onClick={handleRollScores} className="w-full py-6 rounded-lg border-2 border-dashed border-primary/40 hover:border-primary hover:bg-primary/5 transition-all flex flex-col items-center gap-2">
-                  <Dices className="w-8 h-8 text-primary animate-flicker" strokeWidth={1.2} />
-                  <span className="font-heading text-sm tracking-wide text-primary">ROLL THE DICE</span>
-                </button>
-                {roleData && (
-                  <button onClick={useRoleScores} className="w-full py-3 rounded-lg border border-border/50 hover:border-primary/40 text-[11px] font-heading tracking-wide text-muted-foreground hover:text-foreground transition-colors">
-                    USE {role.toUpperCase()} TEMPLATE
+          <div className="animate-ink space-y-6">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <UserPlus className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CHOOSE YOUR ORIGIN</h2>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-2.5">
+                {PJ_ORIGINS.map((o) => (
+                  <button key={o.name} onClick={() => setOrigin(o.name)}
+                    className={`text-left p-3.5 rounded-lg border transition-all ${origin === o.name ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40 bg-card/30'}`}>
+                    <p className="font-heading font-600 text-sm text-foreground">{o.name}</p>
+                    <p className="text-[11px] text-muted-foreground font-body mt-1 leading-relaxed">{o.desc}</p>
                   </button>
-                )}
+                ))}
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {PJ_ABILITIES.map((ab) => {
-                    const val = finalScores?.[ab.key] || 0;
-                    return (
-                      <div key={ab.key} className="p-3 rounded-lg border border-border/40 bg-card/40 text-center">
-                        <p className="text-[10px] font-heading tracking-[0.1em] text-muted-foreground">{ab.label.slice(0, 3).toUpperCase()}</p>
-                        <p className="font-heading font-700 text-2xl text-foreground tabular-nums">{val}</p>
-                        <p className="text-[9px] text-muted-foreground/60 mt-0.5">{ab.label}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/30">
-                  <span className="text-xs font-heading tracking-wide text-primary">VITALITY (HP)</span>
-                  <span className="font-heading font-700 text-xl text-primary tabular-nums">{vitality}</span>
-                </div>
-                <Button onClick={handleRollScores} variant="outline" className="w-full border-primary/40 text-primary">
-                  <Dices className="w-4 h-4 mr-1.5" /> Reroll All Scores
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 4: Identity */}
-        {step === 3 && (
-          <div className="animate-ink space-y-4">
-            <div className="flex items-center gap-2 mb-2">
-              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">IDENTITY</h2>
             </div>
             <div>
-              <label className="text-[11px] font-heading tracking-wide text-muted-foreground">CHARACTER NAME</label>
+              <div className="flex items-center gap-2 mb-4">
+                <Rocket className="w-4 h-4 text-primary" strokeWidth={1.5} />
+                <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CHOOSE YOUR ROLE</h2>
+              </div>
+              <div className="grid gap-2.5">
+                {PJ_ROLES.map((r) => (
+                  <button key={r.name} onClick={() => setRole(r.name)}
+                    className={`text-left p-3.5 rounded-lg border transition-all ${role === r.name ? 'border-primary bg-primary/10' : 'border-border/40 hover:border-primary/40 bg-card/30'}`}>
+                    <p className="font-heading font-600 text-sm text-foreground">{r.name}</p>
+                    <p className="text-[11px] text-muted-foreground font-body mt-1 leading-relaxed">{r.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Identity */}
+        {step === 1 && (
+          <div className="animate-ink space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">CAPTAIN'S FILE</h2>
+            </div>
+            <div>
+              <label className="text-[11px] font-heading tracking-wide text-muted-foreground">CAPTAIN NAME</label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Captain Bub Stellar" className="mt-1 bg-background/60 font-heading" maxLength={40} />
             </div>
             <div>
@@ -238,14 +159,14 @@ export default function PJCharacterCreation() {
               <textarea value={appearance} onChange={(e) => setAppearance(e.target.value)} placeholder="A weathered officer with silver at the temples..." className="mt-1 w-full bg-background/60 font-body text-sm rounded-md border border-input px-3 py-2 min-h-[60px] resize-none focus:outline-none focus:ring-1 focus:ring-ring" maxLength={300} />
             </div>
             <div>
-              <label className="text-[11px] font-heading tracking-wide text-muted-foreground">BACKGROUND</label>
+              <label className="text-[11px] font-heading tracking-wide text-muted-foreground">SERVICE RECORD</label>
               <textarea value={background} onChange={(e) => setBackground(e.target.value)} placeholder="A former Earth Command officer who saw the truth..." className="mt-1 w-full bg-background/60 font-body text-sm rounded-md border border-input px-3 py-2 min-h-[80px] resize-none focus:outline-none focus:ring-1 focus:ring-ring" maxLength={500} />
             </div>
           </div>
         )}
 
-        {/* Step 5: Review */}
-        {step === 4 && (
+        {/* Step 3: Review */}
+        {step === 2 && (
           <div className="animate-ink">
             <div className="flex items-center gap-2 mb-4">
               <Check className="w-4 h-4 text-primary" strokeWidth={1.5} />
@@ -254,28 +175,26 @@ export default function PJCharacterCreation() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
-                  <p className="text-[10px] font-heading tracking-wide text-muted-foreground">NAME</p>
+                  <p className="text-[10px] font-heading tracking-wide text-muted-foreground">CAPTAIN</p>
                   <p className="font-heading font-600 text-foreground mt-0.5">{name}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
                   <p className="text-[10px] font-heading tracking-wide text-muted-foreground">ORIGIN / ROLE</p>
-                  <p className="font-heading font-600 text-foreground mt-0.5">{origin} {role}</p>
+                  <p className="font-heading font-600 text-foreground mt-0.5">{origin} · {role}</p>
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
-                <p className="text-[10px] font-heading tracking-wide text-muted-foreground mb-2">ABILITY SCORES</p>
-                <div className="flex gap-3 flex-wrap">
-                  {PJ_ABILITIES.map(ab => (
-                    <span key={ab.key} className="text-xs font-heading text-foreground">
-                      <span className="text-muted-foreground">{ab.label.slice(0, 3).toUpperCase()}</span> {finalScores?.[ab.key] || 0}
-                    </span>
-                  ))}
+              {appearance && (
+                <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
+                  <p className="text-[10px] font-heading tracking-wide text-muted-foreground mb-1">APPEARANCE</p>
+                  <p className="text-sm text-foreground/80 font-body italic leading-relaxed">{appearance}</p>
                 </div>
-              </div>
-              <div className="p-3 rounded-lg bg-primary/10 border border-primary/30 text-center">
-                <p className="text-[10px] font-heading tracking-wide text-primary">VITALITY</p>
-                <p className="font-heading font-700 text-lg text-primary">{vitality}</p>
-              </div>
+              )}
+              {background && (
+                <div className="p-3 rounded-lg bg-secondary/30 border border-border/40">
+                  <p className="text-[10px] font-heading tracking-wide text-muted-foreground mb-1">SERVICE RECORD</p>
+                  <p className="text-sm text-foreground/80 font-body italic leading-relaxed">{background}</p>
+                </div>
+              )}
             </div>
           </div>
         )}
