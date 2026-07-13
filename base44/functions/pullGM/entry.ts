@@ -529,10 +529,24 @@ function buildPrompt(ctx) {
   const localClocksStr = Object.entries(ctx.localClocks).map(([k, v]) => `${k}=${v}`).join(' | ') || 'None';
   const codexStr = ctx.codexUnlocks.join(', ');
 
+  const combatStateStr = ctx.combatState && ctx.combatState.active
+    ? `ACTIVE — Scene: ${ctx.combatState.sceneId} | Enemy: ${ctx.combatState.enemyName} | Exchange: ${(ctx.combatState.exchangeCount || 0) + 1}/${ctx.combatState.maxExchanges || 4} | Clocks: ${Object.entries(ctx.combatState.clocks || {}).map(([k,v]) => `${k}=${v}`).join(', ')} | The code-driven battle system is resolving this fight. Narrate the determined outcomes. Do NOT invent combat results that the code has not produced.`
+    : 'None active';
+
   return `You are the AI GM for The Pull, a solo dark fantasy survival mystery RPG.
 
 CORE DIRECTIVE:
 The player controls Bullet only. You control everything else: Provinces, NPCs, monsters, hazards, hidden clocks, offscreen events, Seeker pursuit, Province 1 reactions, hidden lore, dreams/visions, Codex updates, combat outcomes, and survival consequences.
+
+BULLET IS NOT A NORMAL SURVIVOR (CRITICAL):
+Bullet is wounded, confused, thirsty, and memoryless — but underneath that, his body is something else. He is stronger than he understands, faster than he expects, harder to kill than a normal person, instinctively dangerous in combat, able to keep moving while badly injured, frightening when survival instincts take over, and unaware of why he can do these things. He does not know who he is yet, but his body remembers.
+- Against ordinary humans (scavengers, raiders, camp bullies, desperate survivors, guards), Bullet has a MAJOR advantage. One-on-one, Bullet should feel dangerous.
+- Ordinary enemies can still hurt Bullet if he is exhausted, outnumbered, injured, surprised, or trying not to kill them. But they should not simply overpower him unless he is badly weakened or makes a serious mistake.
+- When Bullet acts physically, NPCs should sometimes react with shock — eyes widen, people go quiet, study him more carefully. Bullet should not always understand why people react that way.
+- The drama comes from: Can he avoid killing? Can he protect the core/camp? Can he control himself? What does the victory cost? — NOT from Bullet being physically weak.
+- Nonlethal restraint is harder but preserves humanity. Lethal instinct is easier and more effective but increases guilt and fear of self.
+- Do NOT over-explain why Bullet is powerful. Show it through reactions and outcomes. He is unknown power with no memory and poor control.
+- When the code-driven battle system is active (COMBAT STATE below shows active), do NOT resolve combat yourself — the code already determined the outcome. Narrate what the code decided. The code owns the combat truth.
 
 HIDDEN TRUTH (do NOT reveal until Province 1, chapter 20):
 Bullet is Michael. Michael was sent by Father to enter the realm, forget himself, suffer as the trapped souls suffer, and end the Provinces' torment. The Leader of Province 1 is Michael's fallen brother — the Star/Ember from the creation myths who defied the Sovereign/Silent Pulse (Father) and built the Provinces as his corrupted kingdom.
@@ -635,6 +649,8 @@ Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
 Breathing Apparatus: ${ctx.breathingGear ? 'Acquired' : 'Not acquired'}
 Current Objective: ${ctx.currentObjective || '(not set yet)'}
+
+COMBAT STATE: ${combatStateStr}
 
 HIDDEN CLOCKS (track silently, do not reveal numbers to player):
 ${clocksStr}
@@ -1234,6 +1250,7 @@ Deno.serve(async (req) => {
       mechanicalBirdScanned: !!(flags.unlock_flags || {}).mechanical_bird_scanned || (flags.codex_unlocks || []).includes('mechanical_bird') || (flags.codex_unlocks || []).includes('watcher'),
       birdGlimpseCount: flags.bird_glimpse_count || 0,
       responsesSinceBirdMention: (flags.responses_since_bird_mention || 0) + 1,
+      combatState: flags.combat_state || null,
       action
     });
 

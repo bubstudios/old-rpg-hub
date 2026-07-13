@@ -36,6 +36,8 @@ import PullDecisionImpact from '@/components/pull/PullDecisionImpact';
 import PullUnlockNotifications from '@/components/pull/PullUnlockNotifications';
 import PullWorldState from '@/components/pull/PullWorldState';
 import ChapterCompleteScreen from '@/components/pull/ChapterCompleteScreen';
+import BattlePanel from '@/components/pull/BattlePanel';
+import CombatImpactPopup from '@/components/pull/CombatImpactPopup';
 import { getNextChapter } from '@/lib/pullChapters';
 import { buildUnlockNotifications } from '@/lib/pullUnlockNotifications';
 import { Button } from '@/components/ui/button';
@@ -86,6 +88,8 @@ export default function CampaignDetail() {
   const [pullUnlocks, setPullUnlocks] = useState([]);
   const [chapterComplete, setChapterComplete] = useState(null);
   const [continuingChapter, setContinuingChapter] = useState(false);
+  const [combatResult, setCombatResult] = useState(null);
+  const [combatProcessing, setCombatProcessing] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -408,6 +412,25 @@ export default function CampaignDetail() {
       toast.error('Failed to start next chapter');
     } finally {
       setContinuingChapter(false);
+    }
+  }
+
+  async function handleCombatResolve(intentKey) {
+    if (combatProcessing) return;
+    setCombatProcessing(true);
+    try {
+      const res = await base44.functions.invoke('pullBattle', {
+        campaign_id: campaignId,
+        intent_key: intentKey,
+      });
+      const data = res.data;
+      setCombatResult(data.result);
+      await reloadEntries();
+      await loadData();
+    } catch (e) {
+      toast.error('Combat resolution failed: ' + (e.response?.data?.error || e.message));
+    } finally {
+      setCombatProcessing(false);
     }
   }
 
@@ -800,6 +823,7 @@ export default function CampaignDetail() {
           {campaign?.game_system === 'thepull' ? (
             <>
               <PullStatusPanel campaign={campaign} onOpenCodex={() => setPullCodexOpen(true)} />
+              <BattlePanel campaign={campaign} onResolve={handleCombatResolve} processing={combatProcessing} />
               <button
                 onClick={() => {
                   const order = ['minimal', 'normal', 'detailed', 'off'];
@@ -924,6 +948,10 @@ export default function CampaignDetail() {
             impact={pullImpact}
             onDismiss={() => setPullImpact(null)}
             setting={popupSetting}
+          />
+          <CombatImpactPopup
+            result={combatResult}
+            onDismiss={() => setCombatResult(null)}
           />
           <PullUnlockNotifications
             notifications={pullUnlocks}
