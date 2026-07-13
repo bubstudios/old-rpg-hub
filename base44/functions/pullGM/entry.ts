@@ -187,7 +187,7 @@ const CHAPTER1_SEQUENCES = [
   { t: 'Water / First Trust (Naming)', i: 'THE NAMING SCENE — strict order required: (1) Shard confronts the stranger. (2) Shard asks who he is — "You got a name?" (3) The stranger says he does not know — no memory, woke in the sand. (4) Shard notices the circular scar over his heart. (5) Shard names him "Bullet" — "On account of that mark. Looks like someone put a round through you and you were too stubborn to die." Set bullet_named = true ONLY at step 5 — after Shard has asked his name, he said he does not know, AND she names him. Before that moment, NEVER use the name "Bullet" in narration — he is "the stranger." After the naming, the camp gives him just enough water to survive. Shard makes clear survival requires contribution. Introduce Spark (young inventor), Patch (healer), and Maul (hostile rival). Shard asks Bullet to help with a camp problem. Unlock camp_trust clock via discovered_clocks.', a: 'The stranger is named Bullet (Shard asked, he said he did not know, she saw the scar, she named him) and Shard assigns a task' },
   { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp — a purifier core (or similar survival-critical component). Shard explains the purifier is failing. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it. Set unlock_flags.task_assigned = true when Shard assigns the task.', a: 'Bullet accepts the task and leaves camp to find the item' },
   { t: 'Task Danger', i: 'The task involves danger — collapsing ruin, sand maw, old drone, unstable machinery, heat delirium, hostile scavenger, sandstorm, or buried trap. If Bullet faces a physical threat for the first time, he instinctively grabs a battered metal pipe (the Pipe acquisition beat — set pipe_state to battered_metal_pipe, add to inventory via item_changes). He succeeds and returns with the needed object. Optional NPC death/injury may occur (e.g. Cowboy dies, Rivet injured). Maul may blame Bullet. Record exact events in the events[] ledger — especially item_used_name. Set unlock_flags.task_complete = true when Bullet has the item.', a: 'Bullet returns with the needed object (purifier core)' },
-  { t: 'Shard Asks Him to Stay', i: 'After the task succeeds, Shard asks Bullet to stay. He should not immediately say yes or no — he says something like "I don\'t know if I can" or "I need to know who I am" or "There\'s something out there pulling me." Shard asks him to stay because the camp expects trouble. He stays because the camp needs help and he owes them, not because he is settling down. Set unlock_flags.agreed_to_stay = true when the player agrees.', a: 'Bullet agrees to stay through the night' },
+  { t: 'Camp Evening Interlude', i: 'REQUIRED: The camp cast MUST be introduced NOW, before any raider content. Bullet has returned with the purifier core replacement. The camp comes alive around him. Introduce these NPCs in order: (1) SPARK — a young inventor hurries to inspect the core Bullet brought back; she is excited, reaches for tools, wants to see if the core still hums. Someone calls her Spark. Return an npc_update for spark (is_new: true, key: "spark", role: "Inventor", disposition: "friendly", description: "A young woman with dust on her face and bright, restless eyes"). (2) PATCH — a burned woman with steady hands catches Bullet before he collapses from exhaustion/injury; she treats his wounds. "You bring back something useful, you get patched before you bleed into the sand." Someone calls her Patch. Return an npc_update for patch (is_new: true, key: "patch", role: "Healer", disposition: "friendly", description: "A burned woman with steady, careful hands"). (3) MAUL — a broad, burned man watches from near the fire, arms folded, suspicious and hostile toward Bullet. "He brings one piece of scrap back and everyone starts smiling? Drifters are still drifters." Shard shuts him down: "Enough, Maul." Return an npc_update for maul (is_new: true, key: "maul", role: "Rival", disposition: "hostile", description: "A broad, burned man with a suspicious glare"). (4) Shard asks Bullet to stay until dark — the camp could use the hands, and he owes them. Bullet agrees to stay. Set unlock_flags.agreed_to_stay = true ONLY after the three NPCs are introduced AND he agrees. Also: acknowledge the core return by improving Purifier Stability via local_clock_changes (+15-20, reason "Replacement core returned") and returning a decision_impact with is_meaningful: true, label "Task Completed", Camp Trust +15, tone "positive", plus NPC discovery notes for Spark, Patch, and Maul. Do NOT mention raiders, raider warnings, "hold the camp," or "defend the camp" — raiders come later. The objective should be: rest, meet the camp, wait until dark. Introduce the NPCs across one or two turns if the player is interacting — do not dump all three in a single wall of text if the player is mid-conversation with one.', a: 'Spark, Patch, and Maul are all introduced AND Bullet agrees to stay through the night' },
   { t: 'Raider Warning', i: 'ONLY NOW should Raider Threat become visible. A scout reports movement, or Spark sees raiders, or Hawk spots silhouettes. Shard says they are coming for the Cache. Unlock raider_threat clock via discovered_clocks. Set objective to defend Red Sand Camp. Do NOT show Raider Threat earlier than this. Set unlock_flags.raider_warning_given = true when the warning is delivered.', a: 'The raider warning has been delivered' },
   { t: 'Raider Attack', i: 'Bullet fights with his pipe. This is important canon — the pipe is the weapon. Record pipe as item_used_name in the events[] ledger. Do NOT allow later narration to mutate this into a crossbow/sword/knife kill. Some NPCs may live or die. Shard and Spark MUST survive. Maul may grudgingly respect Bullet or still resent him. Required outcome: raiders are driven off, the camp survives, the pipe becomes emotionally important. Set unlock_flags.raiders_defeated = true.', a: 'Raiders are driven off and the camp survives' },
   { t: 'Aftermath — Spark\'s Shard', i: 'After the raiders are run off, Bullet has a quiet moment. Spark gives him her shard as a LOAN, not a casual gift. She says something like "Take it. Not forever. Just until you come back." She wants him to come back someday. Set spark_shard_acquired = true and add "Spark\'s Unetched Shard" to inventory via item_changes. Show this once only. Create a guilt/bond entry: Spark — Shard Loan. Set unlock_flags.spark_shard_given = true.', a: 'Spark gives Bullet her shard' },
@@ -208,7 +208,7 @@ const CHAPTER1_STAGES = [
   'name_given',                // seq 5 (also water_received)
   'task_assigned',             // seq 6
   'task_in_progress',          // seq 7
-  'stay_request',              // seq 8
+  'camp_evening_interlude',     // seq 8 — introduces Spark, Patch, Maul before raiders
   'raider_warning',            // seq 9
   'raider_attack',             // seq 10
   'spark_shard_received',      // seq 11
@@ -233,7 +233,7 @@ const STAGE_PULL_OVERRIDES = {
   name_given:                   { intensity: 1, scar: 'pulse'  }, // Present, Warm
   task_assigned:                { intensity: 1, scar: 'pulse'  }, // Present, Warm — quest travel is service
   task_in_progress:             { intensity: 1, scar: 'pulse'  }, // Tug, Pulsing — guides without forcing departure
-  stay_request:                 { intensity: 2, scar: 'pulse'  }, // Growing, Aching — begins reminding he can't stay
+  camp_evening_interlude:       { intensity: 1, scar: 'pulse'  }, // Present, Warm — camp is where the Pull wants him; rest and meet the people
   raider_warning:               { intensity: 1, scar: 'pulse'  }, // Suppressed, Tense — immediate danger overrides Pull
   raider_attack:                { intensity: 3, scar: 'burn'   }, // Burning, Hot — survival/combat state
   spark_shard_received:         { intensity: 3, scar: 'burn'   }, // Intensifying, Burning — departure is approaching
@@ -250,7 +250,10 @@ const SEQUENCE_COMPLETION_CHECKS = {
   5: (f) => !!f.bullet_named,
   6: (f) => !!(f.unlock_flags || {}).task_assigned,
   7: (f) => !!(f.unlock_flags || {}).task_complete,
-  8: (f) => !!(f.unlock_flags || {}).agreed_to_stay,
+  8: (f) => {
+    const r = f.npc_relationships || {};
+    return !!(f.unlock_flags || {}).agreed_to_stay && !!(r.spark && r.patch && r.maul);
+  },
   9: (f) => !!(f.unlock_flags || {}).raider_warning_given,
   10: (f) => !!(f.unlock_flags || {}).raiders_defeated,
   11: (f) => !!f.spark_shard,
@@ -267,7 +270,7 @@ function forbiddenAtStage(seq) {
   const items = [];
   if (seq < 5) items.push('Naming Bullet — Shard must ask name first, stranger says he does not know, Shard sees scar, THEN names him');
   if (seq < 6) items.push('Assigning Shard\'s task before water is received and naming happens');
-  if (seq < 9) items.push('Raider warning / Raider Threat visibility');
+  if (seq < 9) items.push('Raider warning / Raider Threat visibility / "hold the camp" or "defend the camp" objectives');
   if (seq < 10) items.push('Raider attack');
   if (seq < 11) items.push('Spark giving her shard');
   if (seq < 12) items.push('Shard giving breathing apparatus');
@@ -487,7 +490,9 @@ CURRENT OBJECTIVE (CRITICAL): Always track Bullet's active mission in current_ob
 - After entering camp: title "Learn About the Camp", description "Speak with the camp survivors. Learn where you are."
 - After being given a mission: title "Find the Missing Scout" (use actual mission), description "Leave Red Sand Camp and search the dunes." (use actual mission details)
 - After mission success: title "Return to Camp", description "Return to Red Sand Camp. Tell Shard what you found."
-- After returning to camp post-mission: title "The Pull Tightens", description "The camp is safe. The mission is done. But the Pull will not let you stay."
+- After returning to camp post-mission (BEFORE the camp cast is introduced): title "Rest at Red Sand Camp", description "Shard has asked Bullet to stay until dark. Meet the camp survivors — Spark, Patch, and the others. Learn who lives here and what the camp needs."
+- After the camp cast is introduced and Bullet agrees to stay: title "Wait Until Dark", description "The camp settles in. Rest and speak with the survivors while Shard decides what comes next."
+- After the camp arc is complete (mission done AND raiders fought off): title "The Pull Tightens", description "The camp is safe. The mission is done. But the Pull will not let you stay."
 - When the Pull forces departure: title "Follow the Pull", description "Follow the Pull beyond Red Sand Camp. It will not let you rest here."
 - In later provinces: reflect the current province's survival pressure and moral choice.
 Never leave the objective stale. If the player's situation has changed, update current_objective.
@@ -861,6 +866,34 @@ Deno.serve(async (req) => {
     // Initialize chapter1_stage from the current sequence if not set
     if (!flags.chapter1_stage) {
       flags.chapter1_stage = CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0];
+    }
+
+    // Retroactive camp-cast gate: if the campaign has advanced past the camp
+    // evening interlude (seq 9+) OR camp_arc_complete is set, but Spark, Patch,
+    // or Maul haven't been introduced yet, pull the sequence back to the camp
+    // evening interlude (seq 8) and clear any premature camp_arc_complete flag.
+    // This fixes existing saves that skipped the required cast introduction.
+    if (currentProvince === 618) {
+      const seq = flags.chapter1_sequence || 1;
+      const r = flags.npc_relationships || {};
+      const uf = flags.unlock_flags || {};
+      const castMissing = !r.spark || !r.patch || !r.maul;
+      const arcPremature = !!flags.camp_arc_complete && !uf.raiders_defeated;
+      if (castMissing && (seq >= 9 || arcPremature)) {
+        if (seq !== 8) {
+          flags.chapter1_sequence = 8;
+        }
+        flags.chapter1_stage = 'camp_evening_interlude';
+        if (arcPremature) {
+          flags.camp_arc_complete = false;
+          console.warn('[PullGM] Retroactive fix: cleared premature camp_arc_complete (raiders not defeated, cast not introduced)');
+        }
+        flags.current_objective = {
+          title: 'Rest at Red Sand Camp',
+          description: 'Shard has asked Bullet to stay until dark. Meet the camp survivors — Spark, Patch, and the others. Learn who lives here and what the camp needs.'
+        };
+        console.warn(`[PullGM] Retroactive camp-cast gate: seq ${seq} -> 8 (missing: ${[!r.spark && 'spark', !r.patch && 'patch', !r.maul && 'maul'].filter(Boolean).join(', ')})`);
+      }
     }
 
     // Only infer bullet_named for legacy campaigns clearly PAST the naming sequence
@@ -1460,11 +1493,19 @@ Deno.serve(async (req) => {
         console.log(`[PullGM] Chapter 1 auto-advanced: ${currentSeq} -> ${currentSeq + 1} (flag-based)`);
         currentSeq = currentSeq + 1;
       }
-      // LLM-requested advance (only if auto-check didn't already advance this turn)
+      // LLM-requested advance — gated: if the current sequence has a completion
+      // check, the LLM can only advance when the required conditions are met.
+      // This prevents skipping required beats (e.g. advancing past the camp
+      // evening interlude before Spark, Patch, and Maul are introduced).
       if (result.advance_sequence && currentSeq === (updatedFlags.chapter1_sequence || 1) && currentSeq < 15) {
-        updatedFlags.chapter1_sequence = currentSeq + 1;
-        updatedFlags.chapter1_stage = CHAPTER1_STAGES[currentSeq] || CHAPTER1_STAGES[0];
-        console.log(`[PullGM] Chapter 1 sequence advanced: ${currentSeq} -> ${currentSeq + 1} (LLM-requested)`);
+        const llmCheck = SEQUENCE_COMPLETION_CHECKS[currentSeq];
+        if (llmCheck && !llmCheck(updatedFlags)) {
+          console.warn(`[PullGM] Held LLM-requested advance from seq ${currentSeq}: required conditions not met`);
+        } else {
+          updatedFlags.chapter1_sequence = currentSeq + 1;
+          updatedFlags.chapter1_stage = CHAPTER1_STAGES[currentSeq] || CHAPTER1_STAGES[0];
+          console.log(`[PullGM] Chapter 1 sequence advanced: ${currentSeq} -> ${currentSeq + 1} (LLM-requested)`);
+        }
       }
     }
 
