@@ -79,10 +79,11 @@ export default function PullCharacterSheet({ character, campaignId, campaign: in
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-heading tracking-[0.2em] text-primary/60">{isMichael ? 'TRUE IDENTITY' : 'NAME'}</p>
-            <h1 className="font-heading font-700 text-2xl text-foreground tracking-wide">{isMichael ? 'Michael' : 'Bullet'}</h1>
+            <h1 className="font-heading font-700 text-2xl text-foreground tracking-wide">{isMichael ? 'Michael' : (flags.bullet_named ? 'Bullet' : '???')}</h1>
             {isMichael && <p className="text-xs text-muted-foreground font-body mt-0.5">Also known as: Bullet</p>}
+            {!isMichael && !flags.bullet_named && <p className="text-xs text-muted-foreground font-body mt-0.5">No name yet — the camp hasn't named you.</p>}
             <p className="text-xs text-muted-foreground font-body mt-1">
-              {isMichael ? 'Brother of the fallen Leader · Sent by Father' : 'Amnesiac survivor · Pull-bound anomaly'}
+              {isMichael ? 'Brother of the fallen Leader · Sent by Father' : (flags.bullet_named ? 'Amnesiac survivor · Pull-bound anomaly' : 'Nameless stranger · Pull-bound anomaly')}
             </p>
           </div>
           <div className="text-right">

@@ -489,6 +489,7 @@ export const PULL_INITIAL_STATE = {
   shard_resonance: 5,
   spark_shard: false,
   pipe_state: 'unfound',
+  bullet_named: false,
   shard_focus_unlocked: false,
   conditions: [],
   codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'province_618'],

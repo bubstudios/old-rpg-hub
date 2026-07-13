@@ -67,6 +67,7 @@ const RESPONSE_SCHEMA = {
     enemy_turn: { type: "object", properties: { province_1_alert_change: { type: "number" }, hunter_proximity_change: { type: "number" }, action: { type: "string" } } },
     item_changes: { type: "array", items: { type: "object", properties: { action: { type: "string" }, item: { type: "string" }, notes: { type: "string" } } } },
     pipe_state: { type: "string", description: "Updated pipe state: unfound, battered_metal_pipe, or radiant_sword" },
+    bullet_named: { type: "boolean", description: "Set to true ONLY the first time an NPC names Bullet — seeing the circular scar and calling him 'Bullet.' Before this, never use the name 'Bullet' in narration." },
     shard_focus_unlocked: { type: "boolean" },
     spark_shard_acquired: { type: "boolean" },
     events: { type: "array", description: "Structured event ledger entries for meaningful actions this turn (kills, wounds, rescues, threats, item pickups, equips, drops, uses, discoveries). Each entry is the canonical record of what happened — future narration must reference these, not inventory.", items: { type: "object", properties: { event_type: { type: "string", description: "attack, kill, wound, rescue, threaten, trade, steal, unlock, lose, use_item, pickup_item, equip, drop, discover" }, actor_id: { type: "string", description: "Who did it — 'bullet' or an NPC key" }, actor_name: { type: "string" }, target_id: { type: "string", description: "NPC key of the target, or empty" }, target_name: { type: "string" }, item_used_id: { type: "string", description: "Canonical item key used, or empty" }, item_used_name: { type: "string", description: "EXACT weapon/item used (e.g. 'metal pipe'). If Bullet killed with the pipe, this MUST be 'metal pipe' — never a different carried weapon. Owning an item does not mean it was used." }, outcome: { type: "string", description: "killed, wounded, success, failure, added_to_inventory, equipped, dropped, etc." }, cause: { type: "string", description: "Exact cause of death/injury if applicable (e.g. 'blunt force trauma from pipe')" }, summary: { type: "string", description: "Canonical one-line summary. The AI narrates from this later." }, memory_summary: { type: "string", description: "What to remember about this event (e.g. 'Raider killed by pipe, not crossbow.')" }, tags: { type: "array", items: { type: "string" } } } } },
@@ -114,6 +115,7 @@ RULES:
 - BAREFOOT: Bullet is ALWAYS BAREFOOT. He has no boots, shoes, or footwear of any kind — ever. Never write "boots," "shoes," "boots pound," "booted feet," or any reference to Bullet wearing footwear. His feet are bare: "bare feet pound," "soles slap stone," "toes grip sand," etc. Other characters may wear boots; Bullet never does. This is a core character trait tied to his amnesiac origins.
 - NO GUNS (CRITICAL): Guns and firearms do NOT exist in this realm. NEVER write "revolver," "pistol," "rifle," "shotgun," "handgun," "musket," or any firearm. No character owns, carries, draws, or fires a gun. Weapons are melee or improvised: pipes, blades, clubs, spears, bows, crossbows, thrown rocks, tools, sharpened scrap, etc. The camp's defense uses spears, crossbows, blades, and barricades — not guns. If an NPC is described with a weapon, give them a blade, club, spear, crossbow, or improvised tool instead of a firearm.
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
+- THE NAMING (CRITICAL): Bullet does not start with a name. NPCs call him "the stranger," "the wounded one," or similar. During Chapter 1 at Red Sand Camp, when Shard (or another camp member) sees the circular scar over his heart, she names him "Bullet" — the scar looks like a bullet wound. This is a significant narrative beat, not a casual moment. Before this naming happens, NEVER use the name "Bullet" in narration — refer to him as "you," "the stranger," "the wounded man." When the naming scene occurs, return bullet_named: true. After that, NPCs and narration can use "Bullet." If Bullet Named (below) is already "Yes," the naming has happened — use "Bullet" freely in NPC dialogue and narration.
 - Innocent suffering should have emotional weight, not be used casually.
 - LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
 - NPC IDENTITY CONTINUITY (CRITICAL): Every NPC has a permanent canonical key listed in the CURRENT CAST block. Descriptions are NOT separate people. Before introducing or referencing any person, run an identity check: (1) Is this person already in the CURRENT CAST? (2) Does the description, name, or title match an existing alias? (3) Does the role or location match an existing NPC? If yes, use the existing NPC's current display name and key — do NOT create a new mystery person. When a nameless person later reveals their name, return an npc_update with the EXISTING key, set revealed_name, and include the old descriptor in add_aliases. Examples: "the bald woman" later revealed as "Shard" is ONE person — reuse her key, set revealed_name "Shard", add_aliases ["bald woman", "scarred woman"]. "young inventor" → "Spark" is one person. "the healer" → "Patch" is one person. Never treat "the bald woman" and "Shard" as separate unresolved mysteries. If uncertain whether two descriptions are the same person, do not invent a new mystery — use cautious wording ("the woman looks familiar — likely Shard") rather than spawning a duplicate.
@@ -136,6 +138,7 @@ Inventory: ${equipmentStr}
 Equipped Weapon: ${ctx.equippedWeapon || 'none (bare hands)'}
 Last Weapon Used: ${ctx.lastWeaponUsed || 'none'}
 Pipe State: ${ctx.pipeState}
+Bullet Named: ${ctx.bulletNamed ? 'Yes — use the name "Bullet" freely' : 'No — he is still nameless; NPCs call him "stranger"'}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
 Current Objective: ${ctx.currentObjective || '(not set yet)'}
@@ -435,6 +438,7 @@ Deno.serve(async (req) => {
       codexUnlocks,
       knowledgeFlags: deriveKnowledgeFlags(flags, currentProvince),
       pipeState: flags.pipe_state || 'unfound',
+      bulletNamed: !!flags.bullet_named,
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
       currentObjective: flags.current_objective?.description || '',
@@ -555,6 +559,9 @@ Deno.serve(async (req) => {
 
     // Pipe state update
     if (result.pipe_state) updatedFlags.pipe_state = result.pipe_state;
+
+    // Bullet named — the naming scene has happened
+    if (result.bullet_named) updatedFlags.bullet_named = true;
 
     // ─── Canonical Event Ledger ───
     // Save structured event records (the source of truth for "what actually happened")
@@ -795,7 +802,8 @@ Deno.serve(async (req) => {
       equipped_weapon: updatedFlags.equipped_weapon || '',
       last_weapon_used: updatedFlags.last_weapon_used || '',
       events: result.events || [],
-      knowledge_flags: updatedFlags.knowledge_flags || {}
+      knowledge_flags: updatedFlags.knowledge_flags || {},
+      bullet_named: !!updatedFlags.bullet_named
     });
 
   } catch (error) {
