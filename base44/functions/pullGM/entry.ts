@@ -665,6 +665,36 @@ function sanitizeSpoilers(text, knowledgeFlags) {
   return { narration: cleaned, corrections };
 }
 
+// ─── NPC Alias Firewall ───
+// Aliases that must NEVER be attached to a human NPC. These belong to non-human
+// entities (surveillance machines, sentinels, drones) or are generic placeholders
+// that don't identify a person. Prevents the LLM from polluting a human NPC's
+// record with machine terms (e.g. calling Shard "Sentinel" because the
+// mechanical bird scanned Bullet in the same scene).
+const FORBIDDEN_HUMAN_NPC_ALIASES = [
+  'sentinel', 'the sentinel', 'mechanical bird', 'metal bird', 'red-eyed bird',
+  'red eyed bird', 'winged machine', 'scanning bird', 'bird-shaped machine',
+  'drone', 'watcher', 'unknown', 'the unknown', 'machine', 'the machine',
+  'bird', 'the bird', 'the scanner', 'scanner'
+];
+
+function isForbiddenHumanAlias(alias) {
+  const n = (alias || '').toString().toLowerCase().trim();
+  return FORBIDDEN_HUMAN_NPC_ALIASES.some(f => n === f);
+}
+
+function filterNpcAliases(aliases) {
+  return (aliases || []).filter(a => !isForbiddenHumanAlias(a));
+}
+
+// Detect npc_updates that describe non-human entities (surveillance machines,
+// mechanical creatures, drones). These should NOT enter the human NPC registry.
+function isNonHumanNpcUpdate(nu) {
+  const text = [nu.name, nu.revealed_name, ...(nu.add_aliases || []), nu.description || '', nu.role || '']
+    .filter(Boolean).join(' ');
+  return /\b(mechanical bird|metal bird|winged machine|red-eyed bird|red eyed bird|scanning bird|bird-shaped machine|sentinel|drone|surveillance)\b/i.test(text);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -1035,6 +1065,18 @@ Deno.serve(async (req) => {
     // Descriptions are not separate people: if a key/name/alias matches an
     // existing NPC record, merge into that record instead of creating a duplicate.
     const npcRels = { ...(flags.npc_relationships || {}) };
+    // Clean up forbidden aliases that leaked into existing NPC records from
+    // previous LLM responses (e.g. "Sentinel" or "Unknown" attached to Shard)
+    for (const [k, rel] of Object.entries(npcRels)) {
+      if (rel.aliases && rel.aliases.length) {
+        const cleaned = filterNpcAliases(rel.aliases);
+        if (cleaned.length !== rel.aliases.length) {
+          const removed = rel.aliases.filter(a => !cleaned.includes(a));
+          npcRels[k] = { ...rel, aliases: cleaned };
+          console.warn(`[PullGM NPC Firewall] Cleaned forbidden aliases from ${k}: ${removed.join(', ')}`);
+        }
+      }
+    }
     const norm = (s) => (s || '').toString().toLowerCase().trim();
     // Reverse index: normalized name/alias/key -> canonical key, for fast resolution
     const aliasIndex = {};
@@ -1054,6 +1096,12 @@ Deno.serve(async (req) => {
     };
 
     for (const nu of (result.npc_updates || [])) {
+      // Skip non-human entities (mechanical bird, drones, sentinels) — they
+      // don't belong in the human NPC registry and must not merge with people
+      if (isNonHumanNpcUpdate(nu)) {
+        console.warn(`[PullGM NPC Firewall] Skipped non-human entity update: ${nu.name || nu.key || '(unnamed)'}`);
+        continue;
+      }
       let key = resolveKey(nu);
       if (!key && !nu.key) continue;
       if (!key) key = nu.key;
@@ -1061,15 +1109,17 @@ Deno.serve(async (req) => {
       const isNew = !existing.first_met;
 
       // Merge aliases: existing + add_aliases + name + revealed_name (deduped)
-      const mergedAliases = [...new Set([
+      // Filter out forbidden aliases that belong to non-human entities
+      const mergedAliases = filterNpcAliases([...new Set([
         ...(existing.aliases || []),
         ...(nu.add_aliases || []),
         ...(nu.name ? [nu.name] : []),
         ...(nu.revealed_name ? [nu.revealed_name] : [])
-      ].filter(Boolean))];
+      ].filter(Boolean))]);
 
+      const rawName = nu.revealed_name || nu.name || existing.name || key;
       const updatedRel = {
-        name: nu.revealed_name || nu.name || existing.name || key,
+        name: isForbiddenHumanAlias(rawName) ? (existing.name || key) : rawName,
         aliases: mergedAliases,
         revealed_name: nu.revealed_name || existing.revealed_name || null,
         role: nu.role || existing.role || '',
