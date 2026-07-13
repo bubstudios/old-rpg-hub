@@ -71,6 +71,7 @@ const RESPONSE_SCHEMA = {
     camp_arc_complete: { type: "boolean", description: "Set to true when the Chapter 1 Red Sand Camp arc is resolved: Bullet completed the mission Shard gave him (retrieving the purifier part), helped fight off the raiders, and returned to camp. Once true, the Pull MUST escalate toward forced departure — do NOT assign new camp errands or side missions to delay. Drive toward the departure beat and transition to Province 472." },
     shard_focus_unlocked: { type: "boolean" },
     spark_shard_acquired: { type: "boolean" },
+    breathing_gear_acquired: { type: "boolean", description: "Set to true when Shard gives Bullet the breathing apparatus for Province 472." },
     events: { type: "array", description: "Structured event ledger entries for meaningful actions this turn (kills, wounds, rescues, threats, item pickups, equips, drops, uses, discoveries). Each entry is the canonical record of what happened — future narration must reference these, not inventory.", items: { type: "object", properties: { event_type: { type: "string", description: "attack, kill, wound, rescue, threaten, trade, steal, unlock, lose, use_item, pickup_item, equip, drop, discover" }, actor_id: { type: "string", description: "Who did it — 'bullet' or an NPC key" }, actor_name: { type: "string" }, target_id: { type: "string", description: "NPC key of the target, or empty" }, target_name: { type: "string" }, item_used_id: { type: "string", description: "Canonical item key used, or empty" }, item_used_name: { type: "string", description: "EXACT weapon/item used (e.g. 'metal pipe'). If Bullet killed with the pipe, this MUST be 'metal pipe' — never a different carried weapon. Owning an item does not mean it was used." }, outcome: { type: "string", description: "killed, wounded, success, failure, added_to_inventory, equipped, dropped, etc." }, cause: { type: "string", description: "Exact cause of death/injury if applicable (e.g. 'blunt force trauma from pipe')" }, summary: { type: "string", description: "Canonical one-line summary. The AI narrates from this later." }, memory_summary: { type: "string", description: "What to remember about this event (e.g. 'Raider killed by pipe, not crossbow.')" }, tags: { type: "array", items: { type: "string" } } } } },
     equipped_weapon: { type: "string", description: "Bullet's currently equipped weapon name (e.g. 'metal pipe'). Only update when the player explicitly equips or switches weapons. Picking up an item adds it to inventory but does NOT equip it." },
     choices: { type: "array", items: { type: "string" }, description: "3-4 suggested player actions for the next turn" },
@@ -118,6 +119,7 @@ RULES:
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - THE NAMING (CRITICAL): Bullet does not start with a name. NPCs call him "the stranger," "the wounded one," or similar. During Chapter 1 at Red Sand Camp, when Shard (or another camp member) sees the circular scar over his heart, she names him "Bullet" — the scar looks like a bullet wound. This is a significant narrative beat, not a casual moment. Before this naming happens, NEVER use the name "Bullet" in narration — refer to him as "you," "the stranger," "the wounded man." When the naming scene occurs, return bullet_named: true. After that, NPCs and narration can use "Bullet." If Bullet Named (below) is already "Yes," the naming has happened — use "Bullet" freely in NPC dialogue and narration.
 - CHAPTER 1 CAMP ARC & DEPARTURE (CRITICAL): The Red Sand Camp arc has a clear structure: (1) Bullet arrives and is named, (2) Shard assigns a mission (retrieve a purifier part), (3) Bullet completes the mission and fights off the raiders, (4) the arc is COMPLETE. Once Camp Arc Complete (below) is "YES," the Pull MUST intensify every turn — the scar burns, visions come, Bullet feels the unbearable compulsion to leave. Do NOT assign new camp errands, secondary missions, or side tasks to delay departure. The camp was a stop, not a home. He cannot stay. He must move on. Drive toward the departure beat: Bullet says goodbye (or doesn't), leaves the camp, and the Pull drags him toward the next Province. Set a province_transition to 472 when the departure scene concludes. You are in the departure beat now — escalate pull_intensity toward 4-5 (Commanding/Blackout Risk) and narrate the Pull overriding Bullet's will to stay. This is a major story beat, not a side quest.
+- FAREWELL GIFTS BEFORE DEPARTURE (CRITICAL): Before Bullet leaves Red Sand Camp, two final beats MUST happen as part of the farewell scene: (1) Spark gives Bullet her unetched shard as a loaner — she presses a cool, unetched shard into his hand for good luck, with a quiet promise that he'll bring it back someday. Set spark_shard_acquired: true and add "Spark's Unetched Shard" to inventory via item_changes. (2) Shard gives Bullet a breathing apparatus — salvaged gear so he can survive the liquid and oxygen scarcity of the next Province. Set breathing_gear_acquired: true and add "Shard's Breathing Apparatus" to inventory via item_changes. Deliver these during the goodbye scene as the Pull burns to leave. Do NOT transition to Province 472 until BOTH gifts have been given. If Spark's Shard or Breathing Apparatus (above) is still "Not acquired," deliver that gift this turn before any transition.
 - Innocent suffering should have emotional weight, not be used casually.
 - LOCAL CLOCK DISCOVERY (CRITICAL): Bullet only sees clocks he has discovered. At game start ONLY these are discovered: thirst, heat_exposure, fatigue. Do NOT add camp_trust, purifier_stability, or raider_threat to discovered_clocks until their trigger fires. Triggers: camp_trust = Bullet reaches camp AND talks to someone (at least one NPC met); purifier_stability = Shard, Spark, or Patch explains the purifier is failing; raider_threat = Spark warns raiders coming, Bullet sees raider tracks, a scout reports movement, or the attack begins. Track hidden clock VALUES in local_clocks but NEVER add their keys to discovered_clocks until the trigger actually happens this turn.
 - NPC IDENTITY CONTINUITY (CRITICAL): Every NPC has a permanent canonical key listed in the CURRENT CAST block. Descriptions are NOT separate people. Before introducing or referencing any person, run an identity check: (1) Is this person already in the CURRENT CAST? (2) Does the description, name, or title match an existing alias? (3) Does the role or location match an existing NPC? If yes, use the existing NPC's current display name and key — do NOT create a new mystery person. When a nameless person later reveals their name, return an npc_update with the EXISTING key, set revealed_name, and include the old descriptor in add_aliases. Examples: "the bald woman" later revealed as "Shard" is ONE person — reuse her key, set revealed_name "Shard", add_aliases ["bald woman", "scarred woman"]. "young inventor" → "Spark" is one person. "the healer" → "Patch" is one person. Never treat "the bald woman" and "Shard" as separate unresolved mysteries. If uncertain whether two descriptions are the same person, do not invent a new mystery — use cautious wording ("the woman looks familiar — likely Shard") rather than spawning a duplicate.
@@ -144,6 +146,7 @@ Bullet Named: ${ctx.bulletNamed ? 'Yes — use the name "Bullet" freely' : 'No �
 Camp Arc Complete: ${ctx.campArcComplete ? 'YES — the Chapter 1 mission is done and raiders are handled. ESCALATE the Pull toward forced departure. Do NOT assign new camp errands or side missions. Drive toward the departure beat and transition to Province 472.' : 'No — camp arc still in progress'}
 Shard Focus Unlocked: ${ctx.shardFocusUnlocked}
 Spark's Shard: ${ctx.sparkShard ? 'Acquired' : 'Not acquired'}
+Breathing Apparatus: ${ctx.breathingGear ? 'Acquired' : 'Not acquired'}
 Current Objective: ${ctx.currentObjective || '(not set yet)'}
 
 HIDDEN CLOCKS (track silently, do not reveal numbers to player):
@@ -471,6 +474,7 @@ Deno.serve(async (req) => {
       campArcComplete: !!flags.camp_arc_complete,
       shardFocusUnlocked: !!flags.shard_focus_unlocked,
       sparkShard: !!flags.spark_shard,
+      breathingGear: !!flags.breathing_gear,
       currentObjective: flags.current_objective?.description || '',
       npcRelationships: flags.npc_relationships || {},
       recentEvents,
@@ -581,6 +585,9 @@ Deno.serve(async (req) => {
 
     // Spark shard acquired
     if (result.spark_shard_acquired) updatedFlags.spark_shard = true;
+
+    // Breathing apparatus acquired
+    if (result.breathing_gear_acquired) updatedFlags.breathing_gear = true;
 
     // Current objective
     if (result.current_objective && result.current_objective.description) {
@@ -750,7 +757,12 @@ Deno.serve(async (req) => {
       const currentIdx = CANONICAL_PROVINCE_ORDER.indexOf(currentProvince);
       const targetIdx = CANONICAL_PROVINCE_ORDER.indexOf(toProv);
       // Allow: same province (sub-area transition) OR the next province in canonical order
-      if (toProv === currentProvince || (currentIdx >= 0 && targetIdx === currentIdx + 1)) {
+      // Block departure to Province 472 until both farewell gifts are delivered
+      const giftsPending = toProv === 472 && (!updatedFlags.spark_shard || !updatedFlags.breathing_gear);
+      if (giftsPending) {
+        console.warn(`Held transition to 472: farewell gifts pending (spark_shard=${!!updatedFlags.spark_shard}, breathing_gear=${!!updatedFlags.breathing_gear})`);
+      }
+      if (!giftsPending && (toProv === currentProvince || (currentIdx >= 0 && targetIdx === currentIdx + 1))) {
         validTransition = result.province_transition;
         updatedFlags.current_province = toProv;
         // Only record a province change in history if Bullet actually moved to a different province
@@ -815,9 +827,16 @@ Deno.serve(async (req) => {
           updatedEquipment = updatedEquipment.filter(e => e.name !== ic.item);
         }
       }
-      if (updatedEquipment.length !== (bullet.equipment || []).length || JSON.stringify(updatedEquipment) !== JSON.stringify(bullet.equipment || [])) {
-        charUpdates.equipment = updatedEquipment;
-      }
+    }
+    // Ensure farewell gift items are in inventory when their flags are set
+    if (updatedFlags.spark_shard && !updatedEquipment.some(e => /spark'?s?.*shard/i.test(e.name))) {
+      updatedEquipment.push({ name: "Spark's Unetched Shard", qty: 1, notes: 'A loaner for good luck. Spark asked you to bring it back someday.' });
+    }
+    if (updatedFlags.breathing_gear && !updatedEquipment.some(e => /breathing apparatus/i.test(e.name))) {
+      updatedEquipment.push({ name: "Shard's Breathing Apparatus", qty: 1, notes: 'Salvaged breathing gear for Province 472.' });
+    }
+    if (updatedEquipment.length !== (bullet.equipment || []).length || JSON.stringify(updatedEquipment) !== JSON.stringify(bullet.equipment || [])) {
+      charUpdates.equipment = updatedEquipment;
     }
 
     if (Object.keys(charUpdates).length) {
@@ -846,6 +865,7 @@ Deno.serve(async (req) => {
       pipe_state: updatedFlags.pipe_state,
       shard_focus_unlocked: !!result.shard_focus_unlocked,
       spark_shard_acquired: !!result.spark_shard_acquired,
+      breathing_gear_acquired: !!result.breathing_gear_acquired,
       choices: result.choices || [],
       current_objective: updatedFlags.current_objective || null,
       equipped_weapon: updatedFlags.equipped_weapon || '',

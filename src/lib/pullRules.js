@@ -488,6 +488,7 @@ export const PULL_INITIAL_STATE = {
   scar_state: 'pulse',
   shard_resonance: 5,
   spark_shard: false,
+  breathing_gear: false,
   pipe_state: 'unfound',
   bullet_named: false,
   camp_arc_complete: false,
