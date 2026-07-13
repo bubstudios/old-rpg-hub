@@ -41,7 +41,14 @@ window.addEventListener('unhandledrejection', (event) => {
 // Also filter console.error so the Base44 error overlay doesn't surface these
 const _origConsoleError = console.error;
 console.error = (...args) => {
-  const isHMR = args.some(a => isTransientHMRError(a) || (typeof a === 'string' && /Unexpected end of input/i.test(a)));
+  const isHMR = args.some(a =>
+    isTransientHMRError(a) ||
+    (typeof a === 'string' && /Unexpected end of input/i.test(a)) ||
+    (a && typeof a === 'object' && /Unexpected end of input/i.test(a?.message || a?.toString?.() || ''))
+  );
+  // Also catch Vite overlay's formatted error bundles: [SyntaxError, "Unexpected end of input", ...]
+  const flatStr = args.map(a => (typeof a === 'string' ? a : (a?.message || ''))).join(' ');
+  if (/Unexpected end of input/i.test(flatStr) && /SyntaxError/i.test(flatStr)) return;
   if (isHMR) return;
   _origConsoleError(...args);
 };
