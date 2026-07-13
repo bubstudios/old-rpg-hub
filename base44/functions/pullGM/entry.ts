@@ -1354,8 +1354,10 @@ Deno.serve(async (req) => {
       updatedLocalClocks[cc.clock] = Math.max(0, Math.min(100, (updatedLocalClocks[cc.clock] || 0) + (cc.change || 0)));
     }
 
-    // ─── Water enforcement ───
-    // If the LLM reports Bullet received water, ensure thirst drops by at least 30.
+    // ─── Rest Recovery Enforcement ───
+    // If the player rests/sleeps/waits at camp, the code enforces heat/fatigue/thirst
+    // reductions (see the Rest Recovery block below). The LLM should ALSO return
+    // local_clock_changes for these — but if it doesn't, the code catches it.
     // The LLM sometimes narrates water without reducing the thirst clock — this
     // forces a visible reduction so the player sees that getting water mattered.
     if (result.water_received) {
@@ -1726,6 +1728,94 @@ Deno.serve(async (req) => {
           });
           console.log('[PullGM] Added Mechanical Watcher to known_threats (surveillance threat).');
         }
+      }
+    }
+
+    // ─── Rest Recovery + Camp Trust Floor Enforcement ───
+    // CODE-ENFORCED: When Bullet rests in camp, the desert stops actively killing
+    // him. Heat exposure, fatigue, and thirst MUST decrease. The LLM sometimes
+    // narrates rest without applying clock reductions — this ensures the player
+    // sees that resting mattered, just like water_received enforces thirst reduction.
+    // Also: story events set a MINIMUM camp_trust. If the LLM returned a
+    // decision_impact popup showing "+5 Camp Trust" but didn't return a
+    // local_clock_change for camp_trust, the clock never moved. This enforces
+    // the floor so accumulated trust is reflected in the visible clock.
+    {
+      const tc = { ...(updatedFlags.local_clocks || {}) };
+      let clockChanged = false;
+
+      // ── Rest Recovery ──
+      // If Bullet is resting/sleeping/waiting at camp (Province 618, NPCs met,
+      // camp arc not complete), enforce recovery on heat, fatigue, and thirst.
+      const actionLower = (action || '').toLowerCase();
+      const isRestAction = /\b(rest|sleep|sit|wait|stay|settle|lie down|nap|recover|resting|rests|shade|water|drink|treat|patch|heal|evening|night|dark|fire)\b/.test(actionLower);
+      const isAtCamp = currentProvince === 618 &&
+        Object.keys(updatedFlags.npc_relationships || {}).length > 0 &&
+        !updatedFlags.camp_arc_complete;
+
+      if (isRestAction && isAtCamp) {
+        // Heat exposure: -15 to -25 (shade, shelter from desert sun)
+        const currentHeat = tc.heat_exposure ?? 65;
+        if (currentHeat > 30) {
+          const heatReduction = Math.min(currentHeat - 25, 15 + Math.floor(Math.random() * 11));
+          if (heatReduction > 0) {
+            tc.heat_exposure = Math.max(0, currentHeat - heatReduction);
+            clockChanged = true;
+            console.log(`[PullGM] Rest recovery: heat_exposure ${currentHeat} → ${tc.heat_exposure}`);
+          }
+        }
+        // Fatigue: -10 to -20
+        const currentFatigue = tc.fatigue ?? 55;
+        if (currentFatigue > 20) {
+          const fatigueReduction = Math.min(currentFatigue - 10, 10 + Math.floor(Math.random() * 11));
+          if (fatigueReduction > 0) {
+            tc.fatigue = Math.max(0, currentFatigue - fatigueReduction);
+            clockChanged = true;
+            console.log(`[PullGM] Rest recovery: fatigue ${currentFatigue} → ${tc.fatigue}`);
+          }
+        }
+        // Thirst: -5 to -10 if water is available (camp has working purifier or water supply)
+        const purifierStability = tc.purifier_stability ?? 40;
+        if (purifierStability > 15) {
+          const currentThirst = tc.thirst ?? 75;
+          if (currentThirst > 0) {
+            const thirstReduction = Math.min(currentThirst, 5 + Math.floor(Math.random() * 6));
+            if (thirstReduction > 0) {
+              tc.thirst = Math.max(0, currentThirst - thirstReduction);
+              clockChanged = true;
+              console.log(`[PullGM] Rest recovery: thirst ${currentThirst} → ${tc.thirst}`);
+            }
+          }
+        }
+      }
+
+      // ── Camp Trust Floor ──
+      // Story events set a minimum trust level. If current trust is below the
+      // floor, raise it. This catches cases where the LLM narrated trust gains
+      // (decision_impact popup "Camp Trust +5") but didn't return the
+      // local_clock_change, so the clock never moved.
+      const uf = updatedFlags.unlock_flags || {};
+      let trustFloor = 10; // Base: entered camp
+      if (uf.raiders_defeated) trustFloor = 55;
+      else if (uf.task_complete) trustFloor = 35;
+      else if (uf.task_assigned) trustFloor = 20;
+
+      // If task was completed (event ledger shows retrieval) but flag not set yet
+      const hasTaskComplete = (recentEvents || []).some(ev =>
+        /retriev|found|obtain|recover|brought back|returned with|secured/i.test(ev.summary || '') &&
+        /purif|coil|core|filtrat|valve|lens|crystal|fuse|circuit|housing|regulator|battery/i.test((ev.summary || '') + ' ' + (ev.item_used_name || ''))
+      );
+      if (hasTaskComplete && !uf.task_complete) trustFloor = Math.max(trustFloor, 30);
+
+      const currentTrust = tc.camp_trust ?? 10;
+      if (currentTrust < trustFloor) {
+        tc.camp_trust = trustFloor;
+        clockChanged = true;
+        console.log(`[PullGM] Trust floor enforced: camp_trust ${currentTrust} → ${trustFloor} (story events warrant minimum)`);
+      }
+
+      if (clockChanged) {
+        updatedFlags.local_clocks = tc;
       }
     }
 
