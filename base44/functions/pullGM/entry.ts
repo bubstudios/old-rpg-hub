@@ -187,7 +187,7 @@ const CHAPTER1_SEQUENCES = [
   { t: 'Water / First Trust (Naming)', i: 'THE NAMING SCENE — strict order required: (1) Shard confronts the stranger. (2) Shard asks who he is — "You got a name?" (3) The stranger says he does not know — no memory, woke in the sand. (4) Shard notices the circular scar over his heart. (5) Shard names him "Bullet" — "On account of that mark. Looks like someone put a round through you and you were too stubborn to die." Set bullet_named = true ONLY at step 5 — after Shard has asked his name, he said he does not know, AND she names him. Before that moment, NEVER use the name "Bullet" in narration — he is "the stranger." After the naming, the camp gives him just enough water to survive. Shard makes clear survival requires contribution. Introduce Spark (young inventor), Patch (healer), and Maul (hostile rival). Shard asks Bullet to help with a camp problem. Unlock camp_trust clock via discovered_clocks.', a: 'The stranger is named Bullet (Shard asked, he said he did not know, she saw the scar, she named him) and Shard assigns a task' },
   { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp — a purifier core (or similar survival-critical component). Shard explains the purifier is failing. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it. Set unlock_flags.task_assigned = true when Shard assigns the task.', a: 'Bullet accepts the task and leaves camp to find the item' },
   { t: 'Task Danger', i: 'The task involves danger — collapsing ruin, sand maw, old drone, unstable machinery, heat delirium, hostile scavenger, sandstorm, or buried trap. If Bullet faces a physical threat for the first time, he instinctively grabs a battered metal pipe (the Pipe acquisition beat — set pipe_state to battered_metal_pipe, add to inventory via item_changes). He succeeds and returns with the needed object. Optional NPC death/injury may occur (e.g. Cowboy dies, Rivet injured). Maul may blame Bullet. Record exact events in the events[] ledger — especially item_used_name. Set unlock_flags.task_complete = true when Bullet has the item.', a: 'Bullet returns with the needed object (purifier core)' },
-  { t: 'Camp Evening Interlude', i: 'REQUIRED: The camp cast MUST be introduced NOW, before any raider content. Bullet has returned with the purifier core replacement. The camp comes alive around him. Introduce these NPCs in order: (1) SPARK — a young inventor hurries to inspect the core Bullet brought back; she is excited, reaches for tools, wants to see if the core still hums. Someone calls her Spark. Return an npc_update for spark (is_new: true, key: "spark", role: "Inventor", disposition: "friendly", description: "A young woman with dust on her face and bright, restless eyes"). (2) PATCH — a burned woman with steady hands catches Bullet before he collapses from exhaustion/injury; she treats his wounds. "You bring back something useful, you get patched before you bleed into the sand." Someone calls her Patch. Return an npc_update for patch (is_new: true, key: "patch", role: "Healer", disposition: "friendly", description: "A burned woman with steady, careful hands"). (3) MAUL — a broad, burned man watches from near the fire, arms folded, suspicious and hostile toward Bullet. "He brings one piece of scrap back and everyone starts smiling? Drifters are still drifters." Shard shuts him down: "Enough, Maul." Return an npc_update for maul (is_new: true, key: "maul", role: "Rival", disposition: "hostile", description: "A broad, burned man with a suspicious glare"). (4) Shard asks Bullet to stay until dark — the camp could use the hands, and he owes them. Bullet agrees to stay. Set unlock_flags.agreed_to_stay = true ONLY after the three NPCs are introduced AND he agrees. Also: acknowledge the core return by improving Purifier Stability via local_clock_changes (+15-20, reason "Replacement core returned") and returning a decision_impact with is_meaningful: true, label "Task Completed", Camp Trust +15, tone "positive", plus NPC discovery notes for Spark, Patch, and Maul. Do NOT mention raiders, raider warnings, "hold the camp," or "defend the camp" — raiders come later. The objective should be: rest, meet the camp, wait until dark. Introduce the NPCs across one or two turns if the player is interacting — do not dump all three in a single wall of text if the player is mid-conversation with one.', a: 'Spark, Patch, and Maul are all introduced AND Bullet agrees to stay through the night' },
+  { t: 'Camp Evening Interlude', i: 'REQUIRED: The camp cast MUST be introduced NOW, before any raider content. Bullet has returned with the purifier core replacement. The camp comes alive around him. Introduce these NPCs in order: (1) SPARK — a young inventor hurries to inspect the core Bullet brought back; she is excited, reaches for tools, wants to see if the core still hums. Someone calls her Spark. Return an npc_update for spark (is_new: true, key: "spark", role: "Inventor", disposition: "friendly", description: "A young woman with dust on her face and bright, restless eyes"). (2) PATCH — a burned woman with steady hands catches Bullet before he collapses from exhaustion/injury; she treats his wounds. "You bring back something useful, you get patched before you bleed into the sand." Someone calls her Patch. Return an npc_update for patch (is_new: true, key: "patch", role: "Healer", disposition: "friendly", description: "A burned woman with steady, careful hands"). (3) MAUL — a broad, burned man watches from near the fire, arms folded, suspicious and hostile toward Bullet. "He brings one piece of scrap back and everyone starts smiling? Drifters are still drifters." Shard shuts him down: "Enough, Maul." Return an npc_update for maul (is_new: true, key: "maul", role: "Rival", disposition: "hostile", description: "A broad, burned man with a suspicious glare"). (4) Shard asks Bullet to stay until dark — the camp could use the hands, and he owes them. Bullet agrees to stay. Set unlock_flags.agreed_to_stay = true ONLY after the three NPCs are introduced AND he agrees. Also: acknowledge the core return by improving Purifier Stability via local_clock_changes (+15-20, reason "Replacement core returned") and returning a decision_impact with is_meaningful: true, label "Task Completed", Camp Trust +15, tone "positive", plus NPC discovery notes for Spark, Patch, and Maul. This is an INTERACTIVE HUB — every player action MUST produce a direct NPC response with spoken dialogue, NOT just atmosphere. If the player asks about defenses or dangers, Shard MAY explain the raider danger (water = target, they\'ve hit before, they may come tonight) and set unlock_flags.raider_danger_explained = true, add raider_threat to discovered_clocks, and update the objective to prepare for possible attack. Do NOT deliver the full "they\'re coming now" warning — that comes in the next stage (seq 9). The objective should be: rest, meet the camp, wait until dark. After the raider danger is explained: "Prepare for possible raider attack." Introduce the NPCs across one or two turns if the player is interacting — do not dump all three in a single wall of text if the player is mid-conversation with one. NO DEAD AIR: Once the cast is introduced, this stage becomes an interactive hub — the player can talk to any NPC, ask questions, rest, or explore. EVERY response must include an NPC speaking direct dialogue that answers the player or reacts to their action. Never respond with only mood text ("the fire flickers, the wind howls"). If the player introduces themselves, NPCs respond with their names. If the player waits, time advances and Shard returns. If the player asks about defenses, Shard explains the raider danger. Follow the PLAYER INTENT hints to route responses.', a: 'Spark, Patch, and Maul are all introduced AND (Bullet agrees to stay OR raider_danger_explained is set)' },
   { t: 'Raider Warning', i: 'ONLY NOW should Raider Threat become visible. A scout reports movement, or Spark sees raiders, or Hawk spots silhouettes. Shard says they are coming for the Cache. Unlock raider_threat clock via discovered_clocks. Set objective to defend Red Sand Camp. Do NOT show Raider Threat earlier than this. Set unlock_flags.raider_warning_given = true when the warning is delivered.', a: 'The raider warning has been delivered' },
   { t: 'Raider Attack', i: 'Bullet fights with his pipe. This is important canon — the pipe is the weapon. Record pipe as item_used_name in the events[] ledger. Do NOT allow later narration to mutate this into a crossbow/sword/knife kill. Some NPCs may live or die. Shard and Spark MUST survive. Maul may grudgingly respect Bullet or still resent him. Required outcome: raiders are driven off, the camp survives, the pipe becomes emotionally important. Set unlock_flags.raiders_defeated = true.', a: 'Raiders are driven off and the camp survives' },
   { t: 'Aftermath — Spark\'s Shard', i: 'After the raiders are run off, Bullet has a quiet moment. Spark gives him her shard as a LOAN, not a casual gift. She says something like "Take it. Not forever. Just until you come back." She wants him to come back someday. Set spark_shard_acquired = true and add "Spark\'s Unetched Shard" to inventory via item_changes. Show this once only. Create a guilt/bond entry: Spark — Shard Loan. Set unlock_flags.spark_shard_given = true.', a: 'Spark gives Bullet her shard' },
@@ -252,7 +252,9 @@ const SEQUENCE_COMPLETION_CHECKS = {
   7: (f) => !!(f.unlock_flags || {}).task_complete,
   8: (f) => {
     const r = f.npc_relationships || {};
-    return !!(f.unlock_flags || {}).agreed_to_stay && !!(r.spark && r.patch && r.maul);
+    const uf = f.unlock_flags || {};
+    const castMet = !!(r.spark && r.patch && r.maul);
+    return (castMet && !!uf.agreed_to_stay) || !!uf.raider_danger_explained;
   },
   9: (f) => !!(f.unlock_flags || {}).raider_warning_given,
   10: (f) => !!(f.unlock_flags || {}).raiders_defeated,
@@ -270,7 +272,7 @@ function forbiddenAtStage(seq) {
   const items = [];
   if (seq < 5) items.push('Naming Bullet — Shard must ask name first, stranger says he does not know, Shard sees scar, THEN names him');
   if (seq < 6) items.push('Assigning Shard\'s task before water is received and naming happens');
-  if (seq < 9) items.push('Raider warning / Raider Threat visibility / "hold the camp" or "defend the camp" objectives');
+  if (seq < 9) items.push('Explicit raider warning ("they\'re coming tonight", scout reporting movement) — BUT if the player ASKS about defenses, Shard MAY explain the raider danger (water = target, they\'ve hit before) and set raider_danger_explained. The full "they\'re here" warning comes in seq 9.');
   if (seq < 10) items.push('Raider attack');
   if (seq < 11) items.push('Spark giving her shard');
   if (seq < 12) items.push('Shard giving breathing apparatus');
@@ -281,6 +283,45 @@ function forbiddenAtStage(seq) {
   return items.map(f => `- ${f}`).join('\n');
 }
 
+// ─── Player Intent Detection ───
+// Lightweight keyword-based intent detection that adds hints to the GM prompt.
+// This guides the LLM to respond with direct NPC dialogue and concrete scene
+// beats instead of atmospheric "dead air" narration. Not a full router — the
+// LLM still narrates, but the intent hint tells it WHICH beat to hit.
+function detectPlayerIntent(action, stage) {
+  const a = (action || '').toLowerCase();
+  const intents = [];
+
+  if (stage === 'camp_evening_interlude') {
+    if (/\b(introduc|my name|i'm|i am|who are you|who am i|tell them|meet|hello|hi\b)\b/.test(a)) {
+      intents.push('INTRODUCE_SELF — The player is introducing themselves or asking who the NPCs are. Each NPC (Spark, Patch, Maul) MUST speak a line of direct dialogue giving their name and role. Do not just describe them — let them talk.');
+    }
+    if (/\b(wait|rest|sit|stay|night|dark|morning|sleep|settle|linger)\b/.test(a)) {
+      intents.push('WAIT — The player is waiting or resting. Advance time slightly (the fire dims, the sky darkens). Bring Shard back if she was away. She acknowledges Bullet kept his word. Then move toward the next beat — if defenses haven\'t been discussed, Shard or Maul raises the topic.');
+    }
+    if (/\b(defen|protect|guard|attack|raid|danger|threat|safe|why.*camp|why.*here|what.*coming|worried|fear)\b/.test(a)) {
+      intents.push('ASK_ABOUT_DEFENSES — The player is asking about the camp\'s defenses or dangers. This is the RAIDER FORESHADOWING trigger. Shard explains directly: water means a camp worth robbing, raiders have hit them before, they may come for the Cache tonight. Maul adds hostility ("They smell weakness"). Spark expresses concern. Set unlock_flags.raider_danger_explained = true. Add raider_threat to discovered_clocks. Update objective to prepare for possible attack. This advances the story toward the raider warning (seq 9).');
+    }
+    if (/\b(purif|water|machin|core|fix|repair|work|hum|broken)\b/.test(a)) {
+      intents.push('ASK_ABOUT_PURIFIER — The player is asking about the purifier or water. Spark explains directly: the purifier is what keeps them alive, the core Bullet brought back is critical, without it they\'d be dead in days. Let Spark speak with enthusiasm and technical pride.');
+    }
+    if (/\b(heal|wound|hurt|injur|cut|blood|sick|patch|medicine|treat)\b/.test(a)) {
+      intents.push('ASK_FOR_HEALING — The player needs healing or is asking about wounds. Patch speaks directly: she offers to treat Bullet\'s wounds, comments on their severity. Apply hp_change (+1 to +3) if Patch actually treats him this turn.');
+    }
+    if (/\b(maul|big.*man|burned.*man|angry|hostile|rival|trouble)\b/.test(a)) {
+      intents.push('TALK_TO_MAUL — The player is engaging with Maul. Maul speaks directly: he expresses suspicion, calls Bullet a drifter, questions his motives. Maul is NOT friendly — he is a rival. But he is a camp member, not a traitor.');
+    }
+    if (/\b(spark|young.*woman|inventor|girl)\b/.test(a)) {
+      intents.push('TALK_TO_SPARK — The player is engaging with Spark. Spark speaks directly: she shares her enthusiasm for machines, mentions the purifier, maybe hints at wanting to leave the camp someday.');
+    }
+    if (/\b(shard|leader|bald.*woman|boss)\b/.test(a)) {
+      intents.push('TALK_TO_SHARD — The player is engaging with Shard. Shard speaks directly: she acknowledges Bullet\'s contribution, discusses the camp\'s situation, may foreshadow the raider danger if asked about defenses or the future.');
+    }
+  }
+
+  return intents;
+}
+
 // Server-side validation: a clock can only be discovered once its narrative
 // condition is met. This prevents the LLM from revealing hidden clocks early.
 const CLOCK_DISCOVERY_RULES = {
@@ -289,7 +330,7 @@ const CLOCK_DISCOVERY_RULES = {
     const r = f.npc_relationships || {};
     return !!(r.shard || r.spark || r.patch);
   },
-  raider_threat: (f) => (f.discovered_clocks || []).includes('camp_trust'),
+  raider_threat: (f) => !!((f.unlock_flags || {}).raider_warning_given) || !!((f.unlock_flags || {}).raider_danger_explained),
   air: (f) => (f.current_province || 618) === 472,
   pressure: (f) => (f.current_province || 618) === 472,
   swimming_fatigue: (f) => (f.current_province || 618) === 472,
@@ -372,6 +413,7 @@ CLEANUP MODE (province -1): Michael walks back through every province in reverse
 Until the Province 1 climax, only give fragments: the scar, the Pull, the etched shard, the symbol (circle bisected by jagged line), Father myths, Blade of Dawn myths, Garden references, Province 1 recognition, steel-gray eyes, the phrase "to end its torment."
 
 RULES:
+- NO DEAD AIR (CRITICAL): Every player action MUST produce a DIRECT RESPONSE — never just atmosphere. Your narration must include at least ONE of: (a) an NPC speaking direct dialogue that answers the player\'s question or reacts to their action, (b) a concrete information reveal, (c) an objective update via current_objective, (d) a new NPC introduction, (e) a clock change, or (f) 3-4 clear next choices. Atmospheric description ("the wind howls," "the fire flickers") is fine as SETTING, but it must WRAP a real response — it can NEVER be the whole response. If the player asks a question, an NPC MUST answer it with spoken dialogue. If the player takes an action, the world MUST react concretely. If the player introduces themselves, NPCs MUST respond with their names. If the player waits, time MUST advance and something MUST happen. Never respond to a player action with only mood text.
 - CONTINUITY IS SACRED (CRITICAL): You must accurately track HOW the player accomplished recent actions. Read RECENT STORY carefully. If the player killed a scout with the pipe, do NOT say "by crossbow bolt." Match the player's declared method exactly — weapon, approach, outcome. Never invent or swap weapons, tactics, or results the player did not state. If uncertain, describe the outcome without specifying a method the player did not use. The pipe is Bullet's main weapon; do not attribute kills or strikes to a crossbow, bow, or other weapon unless the player explicitly stated using one.
 - PAST ACTION MEMORY (CRITICAL): Narrate past actions from the CANONICAL RECENT FACTS block and the event ledger — NEVER from inventory or assumption. Owning or carrying an item does NOT mean Bullet used it. If the ledger says he killed with the pipe, every future reference must say pipe — even if he also carries a crossbow. If the ledger says he picked up a crossbow but never used it, never say he fired, drew, or struck with it. If you do not know which weapon was used, say you do not know rather than inventing one. Possession is not use.
 - ITEM POSSESSION vs USE: Carrying an item is not the same as using it. Bullet's equipped weapon is tracked explicitly (Equipped Weapon / Last Weapon Used above). He only uses a carried weapon if he has equipped it OR the player explicitly stated using it. Picking up an item adds it to inventory; it does NOT equip or fire it. When the player switches weapons, return equipped_weapon with the new weapon name. When Bullet uses a weapon in a meaningful action (attack, kill, wound, threaten, break, strike), return an events[] entry with item_used_name set to the EXACT weapon used — this becomes the permanent canonical record future narration must follow.
@@ -507,6 +549,9 @@ FORBIDDEN AT THIS STAGE (do NOT do any of these):
 ${forbiddenAtStage(ctx.chapter1Sequence || 1)}
 
 STORY SPINE RULE: Guide Bullet through this sequence's required beats. Allow small player choices and outcome variations, but keep the story spine intact. Do NOT skip ahead to future sequences or reveal future beats. The CODE controls stage advancement — set the required flags/unlock_flags for this beat and the system will auto-advance. You may also set advance_sequence: true if the beat is complete. If the player is still in the middle of this sequence, do NOT set advance_sequence.
+
+PLAYER INTENT (detected from the player's action — use this to guide your response, but narrate naturally):
+${detectPlayerIntent(ctx.action, ctx.chapter1Stage).join('\n') || '(No specific intent detected — respond naturally, but still include a direct NPC response, not just atmosphere)'}
 
 PLAYER ACTION:
 ${ctx.action}
@@ -879,15 +924,17 @@ Deno.serve(async (req) => {
       const uf = flags.unlock_flags || {};
       const castMissing = !r.spark || !r.patch || !r.maul;
       const arcPremature = !!flags.camp_arc_complete && !uf.raiders_defeated;
+      // Clear premature camp_arc_complete regardless of cast status — the arc
+      // can only be complete if raiders have been defeated
+      if (arcPremature && seq < 13) {
+        flags.camp_arc_complete = false;
+        console.warn('[PullGM] Retroactive fix: cleared premature camp_arc_complete (raiders not defeated, seq < 13)');
+      }
       if (castMissing && (seq >= 9 || arcPremature)) {
         if (seq !== 8) {
           flags.chapter1_sequence = 8;
         }
         flags.chapter1_stage = 'camp_evening_interlude';
-        if (arcPremature) {
-          flags.camp_arc_complete = false;
-          console.warn('[PullGM] Retroactive fix: cleared premature camp_arc_complete (raiders not defeated, cast not introduced)');
-        }
         flags.current_objective = {
           title: 'Rest at Red Sand Camp',
           description: 'Shard has asked Bullet to stay until dark. Meet the camp survivors — Spark, Patch, and the others. Learn who lives here and what the camp needs.'
@@ -1364,6 +1411,30 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── Raider Danger Explained Inference ───
+    // The LLM doesn't always set unlock_flags.raider_danger_explained even when
+    // it narrates the raider explanation. Infer it from response signals so the
+    // raider_threat clock gets discovered and the sequence can advance to seq 9.
+    {
+      const raiderExplainedSignals = [
+        (result.codex_unlocks || []).includes('raider_threat'),
+        (result.discovered_clocks || []).includes('raider_threat'),
+        /raider/i.test(narration) && /\b(defen|danger|threat|coming|attack|raid|rob|cache)\b/i.test(narration)
+      ];
+      if (raiderExplainedSignals.some(Boolean)) {
+        if (!updatedFlags.unlock_flags) updatedFlags.unlock_flags = {};
+        if (!updatedFlags.unlock_flags.raider_danger_explained) {
+          updatedFlags.unlock_flags.raider_danger_explained = true;
+          console.log('[PullGM] Inferred raider_danger_explained from response signals');
+        }
+        // Also ensure raider_threat is in discovered_clocks
+        if (!(updatedFlags.discovered_clocks || []).includes('raider_threat')) {
+          updatedFlags.discovered_clocks = [...(updatedFlags.discovered_clocks || []), 'raider_threat'];
+          console.log('[PullGM] Auto-discovered raider_threat clock (raider danger explained)');
+        }
+      }
+    }
+
     // ─── Camp Trust stage cap + initialization ───
     // Camp Trust cannot exceed the cap for the current story stage. This prevents
     // the LLM from jumping trust to 100 after a minor action like receiving water.
@@ -1526,6 +1597,20 @@ Deno.serve(async (req) => {
         }
         updatedFlags.pull_intensity = override.intensity;
         updatedFlags.scar_state = override.scar;
+      }
+    }
+
+    // ─── Final camp_arc_complete validation ───
+    // camp_arc_complete means the camp arc is DONE: mission complete AND raiders
+    // fought off. Clear it if raiders haven't been defeated and we're not at the
+    // departure stage (seq >= 13). This catches LLM errors where camp_arc_complete
+    // or raiders_defeated are set prematurely.
+    if (updatedFlags.camp_arc_complete && currentProvince === 618) {
+      const uf = updatedFlags.unlock_flags || {};
+      const seq = updatedFlags.chapter1_sequence || 1;
+      if (!uf.raiders_defeated && seq < 13) {
+        updatedFlags.camp_arc_complete = false;
+        console.warn(`[PullGM] Final validation: cleared camp_arc_complete (raiders not defeated, seq=${seq})`);
       }
     }
 
