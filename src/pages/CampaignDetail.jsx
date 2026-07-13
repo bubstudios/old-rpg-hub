@@ -481,7 +481,7 @@ export default function CampaignDetail() {
           <h1 className="font-heading font-700 text-xl sm:text-2xl text-foreground tracking-wide truncate">
             {campaign.name}
           </h1>
-          {campaign.current_scene && (
+          {campaign.current_scene && campaign.game_system !== 'thepull' && (
             <p className="text-xs text-muted-foreground font-body italic mt-0.5 line-clamp-1">
               {campaign.current_scene}
             </p>
