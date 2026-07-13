@@ -514,7 +514,7 @@ Deno.serve(async (req) => {
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: RESPONSE_SCHEMA,
-      model: 'claude_sonnet_4_6'
+      model: 'claude_opus_4_8'
     });
 
     // Unwrap response
