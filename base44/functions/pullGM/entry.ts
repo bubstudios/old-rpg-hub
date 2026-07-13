@@ -1957,12 +1957,12 @@ Deno.serve(async (req) => {
       const tc = { ...(updatedFlags.local_clocks || {}) };
       const uf = updatedFlags.unlock_flags || {};
       const seq = updatedFlags.chapter1_sequence || 1;
-      let trustCap = 20;
-      if (uf.raiders_defeated) trustCap = 85;
-      else if (uf.task_complete) trustCap = 55;
-      else if (uf.task_assigned) trustCap = 40;
-      else if (seq >= 7) trustCap = 30;
-      else if (seq >= 5) trustCap = 25;
+      let trustCap = 35;
+      if (uf.raiders_defeated) trustCap = 100;
+      else if (uf.task_complete) trustCap = 80;
+      else if (uf.task_assigned) trustCap = 60;
+      else if (seq >= 7) trustCap = 50;
+      else if (seq >= 5) trustCap = 45;
       if (typeof tc.camp_trust === 'number') {
         tc.camp_trust = Math.min(tc.camp_trust, trustCap);
       }
