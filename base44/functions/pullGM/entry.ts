@@ -1739,6 +1739,52 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── Task Assigned / Complete Inference ───
+    // The LLM narrates Shard assigning a task and later accepting the retrieved
+    // component, but doesn't always set unlock_flags.task_assigned / task_complete.
+    // Without these flags, the trust floor stays at 10 and the stage cap limits
+    // trust to 15 — so the clock appears "stuck" even though the story has
+    // progressed. Infer from NPC player_knowledge, current_objective, events,
+    // and narration so the trust floor/cap can advance correctly.
+    {
+      if (!updatedFlags.unlock_flags) updatedFlags.unlock_flags = {};
+      const uf = updatedFlags.unlock_flags;
+
+      // Gather text signals from multiple sources
+      const npcKnowledge = Object.values(updatedFlags.npc_relationships || {})
+        .map(r => r.player_knowledge || '').join(' ');
+      const objText = (updatedFlags.current_objective?.description || '') + ' ' + (updatedFlags.current_objective?.title || '');
+      const eventSummaries = (result.events || []).map(ev => ev.summary || '').join(' ');
+      const signalText = `${npcKnowledge} ${objText} ${eventSummaries} ${narration}`;
+
+      // task_assigned: Shard tasked Bullet with retrieving something
+      if (!uf.task_assigned) {
+        const assignSignals = [
+          /\b(task|mission|assign|retrieve|fetch|bring back|get back|recover)\b/i.test(signalText),
+          /purif|core|coil|crystal|filtrat|valve|lens|fuse|circuit|housing|regulator|battery/i.test(signalText) && /\b(task|mission|need|must|retrieve|fetch|bring|get)\b/i.test(signalText)
+        ];
+        if (assignSignals.some(Boolean)) {
+          uf.task_assigned = true;
+          console.log('[PullGM] Inferred task_assigned from narrative signals');
+        }
+      }
+
+      // task_complete: Bullet returned with the component and Shard accepted it
+      if (!uf.task_complete) {
+        const completeSignals = [
+          /\b(retriev|return|brought back|brought the|secured the|found the|obtained the)\b/i.test(signalText) &&
+            /purif|core|coil|crystal|filtrat|valve|lens|fuse|circuit|housing|regulator|battery|component|part/i.test(signalText),
+          /\b(accept|accepted|success|succeed|well done|good work|competence|completed)\b/i.test(signalText) &&
+            /purif|core|coil|crystal|filtrat|valve|lens|fuse|circuit|housing|regulator|battery|component|part/i.test(signalText),
+          /accepted the component/i.test(signalText)
+        ];
+        if (completeSignals.some(Boolean)) {
+          uf.task_complete = true;
+          console.log('[PullGM] Inferred task_complete from narrative signals');
+        }
+      }
+    }
+
     // ─── Mechanical Bird Mention Tracking ───
     // The mechanical bird's direct scar scan is a ONE-TIME Chapter 1 event.
     // Track bird mentions for the cooldown system: after the first scan, the
@@ -1904,14 +1950,18 @@ Deno.serve(async (req) => {
       if (newClockList.includes('camp_trust') && !oldClockSet.has('camp_trust') && (tc.camp_trust || 0) > 25) {
         tc.camp_trust = 10;
       }
-      // Stage cap
+      // Stage cap — must be >= trust floor for the same stage, otherwise the
+      // cap silently overrides the floor and trust gets stuck (e.g. floor 20,
+      // cap 15 → always 15). The cap limits how HIGH trust can go from a single
+      // action; the floor sets the minimum from story progress.
       const uf = updatedFlags.unlock_flags || {};
       const seq = updatedFlags.chapter1_sequence || 1;
-      let trustCap = 15;
+      let trustCap = 20;
       if (uf.raiders_defeated) trustCap = 85;
       else if (uf.task_complete) trustCap = 55;
+      else if (uf.task_assigned) trustCap = 40;
       else if (seq >= 7) trustCap = 30;
-      else if (seq >= 5) trustCap = 20;
+      else if (seq >= 5) trustCap = 25;
       if (typeof tc.camp_trust === 'number') {
         tc.camp_trust = Math.min(tc.camp_trust, trustCap);
       }
