@@ -1847,11 +1847,24 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── Camp Trust First-Discovery Reset ───
+    // When camp_trust is FIRST discovered, reset to 10 if a legacy campaign had
+    // it inflated. This runs BEFORE the trust floor so the floor can raise it
+    // to the correct story-appropriate level afterwards.
+    {
+      const tc = { ...(updatedFlags.local_clocks || {}) };
+      const oldClockSet = new Set(flags.discovered_clocks || []);
+      const newClockList = updatedFlags.discovered_clocks || [];
+      if (newClockList.includes('camp_trust') && !oldClockSet.has('camp_trust') && (tc.camp_trust || 0) > 25) {
+        tc.camp_trust = 10;
+        console.log('[PullGM] First-discovery reset: camp_trust reset to 10 (was inflated in legacy data)');
+      }
+      updatedFlags.local_clocks = tc;
+    }
+
     // ─── Rest Recovery + Camp Trust Floor Enforcement ───
     // CODE-ENFORCED: When Bullet rests in camp, the desert stops actively killing
-    // him. Heat exposure, fatigue, and thirst MUST decrease. The LLM sometimes
-    // narrates rest without applying clock reductions — this ensures the player
-    // sees that resting mattered, just like water_received enforces thirst reduction.
+    // him. Heat exposure, fatigue, and thirst MUST decrease.
     // Also: story events set a MINIMUM camp_trust. If the LLM returned a
     // decision_impact popup showing "+5 Camp Trust" but didn't return a
     // local_clock_change for camp_trust, the clock never moved. This enforces
@@ -1935,25 +1948,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ─── Camp Trust stage cap + initialization ───
+    // ─── Camp Trust stage cap ───
     // Camp Trust cannot exceed the cap for the current story stage. This prevents
     // the LLM from jumping trust to 100 after a minor action like receiving water.
-    // Mercy (giving water) is not the same as trust. Caps: before water 15, after
-    // water 20, after agreeing to help 30, after task success 55, after raider
-    // defense 85. Also: when camp_trust is FIRST discovered, reset to 10 if a
-    // legacy campaign had it inflated to 100.
+    // The cap must be >= trust floor for the same stage, otherwise the cap
+    // silently overrides the floor and trust gets stuck.
     {
       const tc = { ...(updatedFlags.local_clocks || {}) };
-      // First-discovery reset for legacy campaigns
-      const oldClockSet = new Set(flags.discovered_clocks || []);
-      const newClockList = updatedFlags.discovered_clocks || [];
-      if (newClockList.includes('camp_trust') && !oldClockSet.has('camp_trust') && (tc.camp_trust || 0) > 25) {
-        tc.camp_trust = 10;
-      }
-      // Stage cap — must be >= trust floor for the same stage, otherwise the
-      // cap silently overrides the floor and trust gets stuck (e.g. floor 20,
-      // cap 15 → always 15). The cap limits how HIGH trust can go from a single
-      // action; the floor sets the minimum from story progress.
       const uf = updatedFlags.unlock_flags || {};
       const seq = updatedFlags.chapter1_sequence || 1;
       let trustCap = 20;
