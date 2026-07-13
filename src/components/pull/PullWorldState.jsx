@@ -43,13 +43,30 @@ export default function PullWorldState({ campaign }) {
   const allLocalClocks = { thirst: 75, heat_exposure: 65, fatigue: 55, ...(flags.local_clocks || {}) };
   const visibleClocks = discoveredClocks.map(k => ({ key: k, value: allLocalClocks[k] ?? 0 }));
 
-  // Known threats: derived from codex unlocks + hostile NPCs
+  // Known threats: from explicit threat registry + codex unlocks + hostile NPCs
+  // The mechanical bird and other non-human entities live here, NOT in npc_relationships
   const codexUnlocks = flags.codex_unlocks || [];
-  const knownThreats = [];
-  if (codexUnlocks.includes('seeker')) knownThreats.push('The Seeker');
-  if (codexUnlocks.includes('dreadwraith')) knownThreats.push('The Dreadwraith');
+  const knownThreats = [...(flags.known_threats || [])];
+  // Fallback for existing campaigns where the bird scan happened before known_threats
+  // was added — detect via codex_unlocks or unlock_flags
+  if ((codexUnlocks.includes('mechanical_bird') || codexUnlocks.includes('watcher') || (flags.unlock_flags || {}).mechanical_bird_scanned)
+      && !knownThreats.some(t => t.id === 'threat_618_mechanical_watcher')) {
+    knownThreats.push({
+      id: 'threat_618_mechanical_watcher',
+      displayName: 'Mechanical Watcher',
+      description: 'A red-eyed mechanical bird that scanned Bullet\'s scar before flying away.'
+    });
+  }
+  if (codexUnlocks.includes('seeker') && !knownThreats.some(t => t.id === 'seeker')) {
+    knownThreats.push({ id: 'seeker', displayName: 'The Seeker' });
+  }
+  if (codexUnlocks.includes('dreadwraith') && !knownThreats.some(t => t.id === 'dreadwraith')) {
+    knownThreats.push({ id: 'dreadwraith', displayName: 'The Dreadwraith' });
+  }
   npcsMet.forEach(([_, n]) => {
-    if ((n.disposition || '').toLowerCase() === 'hostile') knownThreats.push(n.name);
+    if ((n.disposition || '').toLowerCase() === 'hostile' && !knownThreats.some(t => t.displayName === n.name)) {
+      knownThreats.push({ id: `npc_${n.name}`, displayName: n.name });
+    }
   });
 
   const rep = deriveReputation(npcsMet);
@@ -130,20 +147,22 @@ export default function PullWorldState({ campaign }) {
         <div className="pt-1.5 border-t border-border/30">
           <p className="text-muted-foreground/60 text-[10px] font-heading tracking-wide mb-1">KNOWN THREATS</p>
           {knownThreats.length > 0 ? (
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {knownThreats.map((t, i) => {
-                const match = npcsMet.find(([_, n]) => n.name === t);
+                const match = npcsMet.find(([_, n]) => n.name === t.displayName);
                 return match ? (
                   <button
                     key={i}
                     onClick={() => setSelection({ type: 'npc', name: match[1].name, fallback: { name: match[1].name, disposition: match[1].disposition, notes: match[1].notes } })}
-                    className="text-red-300/80 flex items-center gap-1 hover:text-red-300 transition-colors text-left"
+                    className="text-red-300/80 flex items-start gap-1 hover:text-red-300 transition-colors text-left"
                   >
-                    <AlertTriangle className="w-2.5 h-2.5 text-red-400/50" /> {t}
+                    <AlertTriangle className="w-2.5 h-2.5 text-red-400/50 mt-0.5 shrink-0" />
+                    <span>{t.displayName}{t.description ? <span className="text-muted-foreground/50"> — {t.description}</span> : null}</span>
                   </button>
                 ) : (
-                  <p key={i} className="text-red-300/80 flex items-center gap-1">
-                    <AlertTriangle className="w-2.5 h-2.5 text-red-400/50" /> {t}
+                  <p key={i} className="text-red-300/80 flex items-start gap-1">
+                    <AlertTriangle className="w-2.5 h-2.5 text-red-400/50 mt-0.5 shrink-0" />
+                    <span>{t.displayName}{t.description ? <span className="text-muted-foreground/50"> — {t.description}</span> : null}</span>
                   </p>
                 );
               })}

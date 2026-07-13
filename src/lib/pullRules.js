@@ -505,6 +505,7 @@ export const PULL_INITIAL_STATE = {
     { type: 'fatigue', label: 'Fatigue', severity: 'moderate' }
   ],
   codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'province_618'],
+  known_threats: [],
   npc_relationships: {},
   memories: [],
   guilt_echoes: [],

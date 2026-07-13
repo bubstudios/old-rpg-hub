@@ -1218,7 +1218,7 @@ Deno.serve(async (req) => {
       chapter1Stage: flags.chapter1_stage || CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0],
       previousHandoff,
       chapter1Replay: flags.chapter1_replay || null,
-      mechanicalBirdScanned: !!(flags.unlock_flags || {}).mechanical_bird_scanned || (flags.codex_unlocks || []).includes('mechanical_bird'),
+      mechanicalBirdScanned: !!(flags.unlock_flags || {}).mechanical_bird_scanned || (flags.codex_unlocks || []).includes('mechanical_bird') || (flags.codex_unlocks || []).includes('watcher'),
       birdGlimpseCount: flags.bird_glimpse_count || 0,
       responsesSinceBirdMention: (flags.responses_since_bird_mention || 0) + 1,
       action
@@ -1265,7 +1265,7 @@ Deno.serve(async (req) => {
     narration = sanitizeNpcNameLeaks(narration, flags.npc_relationships || {}, result.npc_updates || [], currentProvince).narration;
 
     // Mechanical bird repeat-scan firewall — replaces any repeat scan with a distant glimpse
-    narration = sanitizeRepeatBirdScan(narration, !!(flags.unlock_flags || {}).mechanical_bird_scanned || codexUnlocks.includes('mechanical_bird')).narration;
+    narration = sanitizeRepeatBirdScan(narration, !!(flags.unlock_flags || {}).mechanical_bird_scanned || codexUnlocks.includes('mechanical_bird') || codexUnlocks.includes('watcher')).narration;
 
     // Interlude — player-only cutscene, saved BEFORE the narration so it leads
     // the feed. Shown to the player, NOT Bullet. Does not update any state.
@@ -1643,8 +1643,8 @@ Deno.serve(async (req) => {
     // bird may only appear as a distant glimpse (max 2/chapter, 8-response cooldown).
     {
       const birdRe = /\b(mechanical bird|metal bird|winged machine|bird-shaped machine|red-eyed bird|red eyed bird|scanning bird|the bird)\b/i;
-      const scanWasSet = !!((flags.unlock_flags || {}).mechanical_bird_scanned) || (flags.codex_unlocks || []).includes('mechanical_bird');
-      const scanIsSet = !!((updatedFlags.unlock_flags || {}).mechanical_bird_scanned) || (updatedFlags.codex_unlocks || []).includes('mechanical_bird');
+      const scanWasSet = !!((flags.unlock_flags || {}).mechanical_bird_scanned) || (flags.codex_unlocks || []).includes('mechanical_bird') || (flags.codex_unlocks || []).includes('watcher');
+      const scanIsSet = !!((updatedFlags.unlock_flags || {}).mechanical_bird_scanned) || (updatedFlags.codex_unlocks || []).includes('mechanical_bird') || (updatedFlags.codex_unlocks || []).includes('watcher');
       const firstScanThisTurn = !scanWasSet && scanIsSet;
 
       if (firstScanThisTurn) {
@@ -1654,12 +1654,12 @@ Deno.serve(async (req) => {
           chapter: campaign.current_chapter || 1,
           province: (PROVINCES[currentProvince] || {}).n || `Province ${currentProvince}`,
           scene: 'mechanical_bird_scan',
-          event_type: 'discover',
-          actor_id: 'entity_618_mechanical_bird',
-          actor_name: 'Mechanical Bird',
-          summary: 'A mechanical bird scanned Bullet. The beam paused on the scar over his heart.',
+          event_type: 'threat_discovered',
+          actor_id: 'threat_618_mechanical_watcher',
+          actor_name: 'Mechanical Watcher',
+          summary: 'A red-eyed mechanical bird scanned Bullet. The beam paused on the scar over his heart.',
           memory_summary: 'The bird scanned Bullet once — a one-time event. Do not rescan.',
-          tags: ['surveillance', 'mechanical_bird', 'chapter_1']
+          tags: ['surveillance', 'mechanical_bird', 'chapter_1', 'threat']
         }).catch(() => {}));
         updatedFlags.responses_since_bird_mention = 0;
         console.log('[PullGM] First mechanical bird scan — event ledger recorded.');
@@ -1673,6 +1673,24 @@ Deno.serve(async (req) => {
           console.log('[PullGM] Bird glimpse/mention detected. Count:', updatedFlags.bird_glimpse_count, 'of 2 max. Cooldown reset.');
         } else {
           updatedFlags.responses_since_bird_mention = (flags.responses_since_bird_mention || 0) + 1;
+        }
+      }
+
+      // Add mechanical bird to known_threats (NOT the NPC registry) when scanned.
+      // This is a threat/entity, not a person — it appears in World State under
+      // Known Threats, never under NPCs Met or People.
+      if (scanIsSet) {
+        if (!updatedFlags.known_threats) updatedFlags.known_threats = [];
+        if (!updatedFlags.known_threats.some(t => t.id === 'threat_618_mechanical_watcher')) {
+          updatedFlags.known_threats.push({
+            id: 'threat_618_mechanical_watcher',
+            displayName: 'Mechanical Watcher',
+            description: 'A red-eyed mechanical bird that scanned Bullet\'s scar before flying away.',
+            status: 'Observed',
+            lastSeen: 'Red Sand',
+            threatLevel: 'Unknown'
+          });
+          console.log('[PullGM] Added Mechanical Watcher to known_threats.');
         }
       }
     }
