@@ -52,7 +52,7 @@ const CLOCK_DISCOVERY_RULES = {
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
-    narration: { type: "string", description: "2-3 paragraphs (max 350 words) of immersive, second-person present tense narration. Dark and atmospheric. Include environmental details, sensory information, and consequences of the player's action. Be concise — every sentence must earn its place." },
+    narration: { type: "string", description: "One paragraph (max 120 words) of immersive, second-person present tense narration. Dark and atmospheric. Include the key sensory detail, NPC reaction, and consequence of the player's action. Be concise — get straight to what matters." },
     pull_intensity: { type: "number", description: "Updated Pull intensity 0-6" },
     scar_state: { type: "string", description: "Updated scar state: quiet, pulse, burn, flare, or blackout" },
     shard_resonance: { type: "number", description: "Updated shard resonance 0-100" },
@@ -220,7 +220,7 @@ Never leave the objective stale. If the player's situation has changed, update c
 PLAYER ACTION:
 ${ctx.action}
 
-Respond with vivid narration (2-3 paragraphs, max 350 words, second-person present tense, dark and atmospheric). Include environmental details, sensory information, NPC reactions, and consequences. Be concise — do not overwrite. Then provide state changes as JSON. For decision_impact, only set is_meaningful=true for choices that have real consequences (ally trust changes, clock shifts, moral outcomes, lore discoveries). Use change_label values like "Major increase", "Slight decline", "Strong approval", etc.
+Respond with vivid narration (ONE paragraph, max 120 words, second-person present tense, dark and atmospheric). Include the key sensory detail, NPC reaction, and consequence. Be concise — get straight to what matters. Then provide state changes as JSON. For decision_impact, only set is_meaningful=true for choices that have real consequences (ally trust changes, clock shifts, moral outcomes, lore discoveries). Use change_label values like "Major increase", "Slight decline", "Strong approval", etc.
 FUTURE_CONSEQUENCE SPOILER RULE (CRITICAL): The future_consequence field is shown to the player immediately. It must NEVER spoil specific narrative outcomes — do NOT name characters who will be endangered, die, or suffer; do NOT reveal who survives or fails; do NOT describe specific upcoming events. Write future_consequence as a vague, atmospheric hint about thematic or mechanical stakes only. Example GOOD: "The wall's fate and the cost of standing it will weigh on Bullet and the camp." Example BAD: "Whether Cowboy survives the opening minutes of the assault." Never use a named character's survival, death, injury, or fate as the subject of a future_consequence.`;
 }
 
