@@ -184,17 +184,76 @@ const CHAPTER1_SEQUENCES = [
   { t: 'The Pull Leads to Camp', i: 'The Pull guides Bullet toward camp. He may see smoke or structures ahead. He enters camp near collapse from thirst. Do NOT introduce NPCs yet — he arrives at the edge of camp, barely conscious. Narrate the approach and arrival.', a: 'Bullet reaches the camp entrance' },
   { t: 'Camp Discovery', i: 'The stranger enters the camp. The survivors are like him — no real memories, nicknames instead of true names, no clear past, a sense of always being here. They know Province 618 is the red sand place, there are other places, the next known is the water Province, people do not survive long outside camps. They do NOT know the big truth. Introduce Shard (bald/scarred camp leader) first — she confronts the stranger. She may ask who he is, but do NOT name him yet — the naming happens in the NEXT sequence. He is still "the stranger." Do NOT give water freely yet — Shard decides if he is a threat first.', a: 'The stranger has entered the camp and met Shard (not yet named)' },
   { t: 'Water / First Trust (Naming)', i: 'THE NAMING SCENE — strict order required: (1) Shard confronts the stranger. (2) Shard asks who he is — "You got a name?" (3) The stranger says he does not know — no memory, woke in the sand. (4) Shard notices the circular scar over his heart. (5) Shard names him "Bullet" — "On account of that mark. Looks like someone put a round through you and you were too stubborn to die." Set bullet_named = true ONLY at step 5 — after Shard has asked his name, he said he does not know, AND she names him. Before that moment, NEVER use the name "Bullet" in narration — he is "the stranger." After the naming, the camp gives him just enough water to survive. Shard makes clear survival requires contribution. Introduce Spark (young inventor), Patch (healer), and Maul (hostile rival). Shard asks Bullet to help with a camp problem. Unlock camp_trust clock via discovered_clocks.', a: 'The stranger is named Bullet (Shard asked, he said he did not know, she saw the scar, she named him) and Shard assigns a task' },
-  { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp — a purifier core (or similar survival-critical component). Shard explains the purifier is failing. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it.', a: 'Bullet accepts the task and leaves camp to find the item' },
+  { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp — a purifier core (or similar survival-critical component). Shard explains the purifier is failing. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it. Set unlock_flags.task_assigned = true when Shard assigns the task.', a: 'Bullet accepts the task and leaves camp to find the item' },
   { t: 'Task Danger', i: 'The task involves danger — collapsing ruin, sand maw, old drone, unstable machinery, heat delirium, hostile scavenger, sandstorm, or buried trap. If Bullet faces a physical threat for the first time, he instinctively grabs a battered metal pipe (the Pipe acquisition beat — set pipe_state to battered_metal_pipe, add to inventory via item_changes). He succeeds and returns with the needed object. Optional NPC death/injury may occur (e.g. Cowboy dies, Rivet injured). Maul may blame Bullet. Record exact events in the events[] ledger — especially item_used_name. Set unlock_flags.task_complete = true when Bullet has the item.', a: 'Bullet returns with the needed object (purifier core)' },
   { t: 'Shard Asks Him to Stay', i: 'After the task succeeds, Shard asks Bullet to stay. He should not immediately say yes or no — he says something like "I don\'t know if I can" or "I need to know who I am" or "There\'s something out there pulling me." Shard asks him to stay because the camp expects trouble. He stays because the camp needs help and he owes them, not because he is settling down. Set unlock_flags.agreed_to_stay = true when the player agrees.', a: 'Bullet agrees to stay through the night' },
-  { t: 'Raider Warning', i: 'ONLY NOW should Raider Threat become visible. A scout reports movement, or Spark sees raiders, or Hawk spots silhouettes. Shard says they are coming for the Cache. Unlock raider_threat clock via discovered_clocks. Set objective to defend Red Sand Camp. Do NOT show Raider Threat earlier than this.', a: 'The raider warning has been delivered' },
+  { t: 'Raider Warning', i: 'ONLY NOW should Raider Threat become visible. A scout reports movement, or Spark sees raiders, or Hawk spots silhouettes. Shard says they are coming for the Cache. Unlock raider_threat clock via discovered_clocks. Set objective to defend Red Sand Camp. Do NOT show Raider Threat earlier than this. Set unlock_flags.raider_warning_given = true when the warning is delivered.', a: 'The raider warning has been delivered' },
   { t: 'Raider Attack', i: 'Bullet fights with his pipe. This is important canon — the pipe is the weapon. Record pipe as item_used_name in the events[] ledger. Do NOT allow later narration to mutate this into a crossbow/sword/knife kill. Some NPCs may live or die. Shard and Spark MUST survive. Maul may grudgingly respect Bullet or still resent him. Required outcome: raiders are driven off, the camp survives, the pipe becomes emotionally important. Set unlock_flags.raiders_defeated = true.', a: 'Raiders are driven off and the camp survives' },
   { t: 'Aftermath — Spark\'s Shard', i: 'After the raiders are run off, Bullet has a quiet moment. Spark gives him her shard as a LOAN, not a casual gift. She says something like "Take it. Not forever. Just until you come back." She wants him to come back someday. Set spark_shard_acquired = true and add "Spark\'s Unetched Shard" to inventory via item_changes. Show this once only. Create a guilt/bond entry: Spark — Shard Loan. Set unlock_flags.spark_shard_given = true.', a: 'Spark gives Bullet her shard' },
   { t: 'Shard Gives Breathing Apparatus', i: 'Shard gives Bullet the breathing apparatus. She knows the next Province is water-like and dangerous. She does NOT know everything about Province 472 — only that it is water, it is dangerous, people who go without breathing gear do not survive. Set breathing_gear_acquired = true and add "Shard\'s Breathing Apparatus" to inventory via item_changes. Set unlock_flags.breathing_gear_given = true.', a: 'Shard gives Bullet the breathing apparatus' },
   { t: 'Pull Intensifies', i: 'This is the actual reason Bullet leaves. The Pull tightens beneath his scar. Looking back at camp makes the scar burn. Looking forward eases the pain. He does not know what is calling him. He only knows he cannot stay. Set camp_arc_complete = true. Escalate pull_intensity toward 4-5 (Commanding/Blackout Risk). No HUNTED popup. The player must clearly understand the Pull is the chapter exit force.', a: 'Bullet leaves the camp following the Pull' },
   { t: 'Province 1 / Leader Cutscene', i: 'Show the Province 1 cutscene as an INTERLUDE (player-only, Bullet does not see this). Use the interlude field. Include: Province 1 castle/fortress, a robed figure reporting a new arrival in Province 618, no Nexus record, the Leader in a charcoal suit, the Leader orders investigation. After the cutscene: do NOT update Bullet\'s Codex, Objective, or known locations. Do NOT add Province 1 to known locations. Do NOT show Hunted status. Set unlock_flags.province1_interlude_shown = true.', a: 'The Province 1 interlude has been shown' },
-  { t: 'End of Chapter 1 — Wall of Water', i: 'Bullet reaches the edge of the next Province. He sees a giant wall of water-like substance — it stretches as far as he can see, rises impossibly high, it is not a lake or river or ocean, it is a wall/slab/block of liquid. The Pull points directly into it. Set province_transition to { to_province: 472, reason: "Bullet reaches the wall of water" }. Do NOT mention the dome or the Dreadwraith yet. End the chapter here.', a: 'Bullet reaches the wall of water and the province transition fires' }
+  { t: 'End of Chapter 1 — Wall of Water', i: 'Bullet reaches the edge of the next Province. He sees a giant wall of water-like substance — it stretches as far as he can see, rises impossibly high, it is not a lake or river or ocean, it is a wall/slab/block of liquid. The Pull points directly into it. Set province_transition to { to_province: 472, reason: "Bullet reaches the wall of water" }. Do NOT mention the dome or the Dreadwraith yet. End the chapter here. Set unlock_flags.water_wall_reached = true when Bullet reaches the wall of water.', a: 'Bullet reaches the wall of water and the province transition fires' }
 ];
+
+// ─── Chapter 1 Stage System ───
+// Maps sequence numbers to human-readable stage names. The stage name is
+// stored in flags.chapter1_stage and returned to the frontend for display.
+const CHAPTER1_STAGES = [
+  'desert_wake',               // seq 1
+  'mechanical_bird_scan',      // seq 2
+  'camp_seen',                 // seq 3
+  'camp_intro',                // seq 4
+  'name_given',                // seq 5 (also water_received)
+  'task_assigned',             // seq 6
+  'task_in_progress',          // seq 7
+  'stay_request',              // seq 8
+  'raider_warning',            // seq 9
+  'raider_attack',             // seq 10
+  'spark_shard_received',      // seq 11
+  'breathing_apparatus_received', // seq 12
+  'pull_departure',            // seq 13
+  'province1_interlude',       // seq 14
+  'water_wall_reached'         // seq 15
+];
+
+// Code-driven sequence advancement: when the current sequence's required flag
+// is set, auto-advance the sequence even if the LLM didn't set advance_sequence.
+// This makes the stage system deterministic — the CODE owns stage progression,
+// not the AI. The AI narrates within the stage; the code decides when to move on.
+const SEQUENCE_COMPLETION_CHECKS = {
+  2: (f) => !!(f.unlock_flags || {}).mechanical_bird_scanned,
+  4: (f) => Object.keys(f.npc_relationships || {}).length > 0,
+  5: (f) => !!f.bullet_named,
+  6: (f) => !!(f.unlock_flags || {}).task_assigned,
+  7: (f) => !!(f.unlock_flags || {}).task_complete,
+  8: (f) => !!(f.unlock_flags || {}).agreed_to_stay,
+  9: (f) => !!(f.unlock_flags || {}).raider_warning_given,
+  10: (f) => !!(f.unlock_flags || {}).raiders_defeated,
+  11: (f) => !!f.spark_shard,
+  12: (f) => !!f.breathing_gear,
+  13: (f) => !!f.camp_arc_complete,
+  14: (f) => !!(f.unlock_flags || {}).province1_interlude_shown,
+  15: (f) => !!(f.unlock_flags || {}).water_wall_reached
+};
+
+// Returns the list of forbidden actions for the current sequence, so the LLM
+// knows exactly what it cannot do at this stage. This prevents premature
+// story beats (naming, task assignment, raider attack, chapter completion, etc.)
+function forbiddenAtStage(seq) {
+  const items = [];
+  if (seq < 5) items.push('Naming Bullet — Shard must ask name first, stranger says he does not know, Shard sees scar, THEN names him');
+  if (seq < 6) items.push('Assigning Shard\'s task before water is received and naming happens');
+  if (seq < 9) items.push('Raider warning / Raider Threat visibility');
+  if (seq < 10) items.push('Raider attack');
+  if (seq < 11) items.push('Spark giving her shard');
+  if (seq < 12) items.push('Shard giving breathing apparatus');
+  if (seq < 13) items.push('Pull departure / leaving camp');
+  if (seq < 14) items.push('Province 1 / Leader interlude');
+  if (seq < 15) items.push('Chapter complete / province transition / water wall');
+  items.push('Michael, Father, Garden, Dreadwraith, Seeker, Cleanup, dome, future Provinces beyond water');
+  return items.map(f => `- ${f}`).join('\n');
+}
 
 // Server-side validation: a clock can only be discovered once its narrative
 // condition is met. This prevents the LLM from revealing hidden clocks early.
@@ -407,11 +466,15 @@ CURRENT OBJECTIVE (CRITICAL): Always track Bullet's active mission in current_ob
 Never leave the objective stale. If the player's situation has changed, update current_objective.
 
 CHAPTER 1 STORY SEQUENCE (CRITICAL):
-Current Sequence: ${ctx.chapter1Sequence || 1} of 15 — ${seq.t}
+Current Stage: ${ctx.chapter1Stage || 'desert_wake'} (sequence ${ctx.chapter1Sequence || 1} of 15)
+Current Beat: ${seq.t}
 ${seq.i}
 ADVANCE WHEN: ${seq.a}
 
-STORY SPINE RULE: Guide Bullet through this sequence's required beats. Allow small player choices and outcome variations, but keep the story spine intact. Do NOT skip ahead to future sequences or reveal future beats. When this sequence's required events have occurred, set advance_sequence: true. If the player is still in the middle of this sequence, do NOT set advance_sequence.
+FORBIDDEN AT THIS STAGE (do NOT do any of these):
+${forbiddenAtStage(ctx.chapter1Sequence || 1)}
+
+STORY SPINE RULE: Guide Bullet through this sequence's required beats. Allow small player choices and outcome variations, but keep the story spine intact. Do NOT skip ahead to future sequences or reveal future beats. The CODE controls stage advancement — set the required flags/unlock_flags for this beat and the system will auto-advance. You may also set advance_sequence: true if the beat is complete. If the player is still in the middle of this sequence, do NOT set advance_sequence.
 
 PLAYER ACTION:
 ${ctx.action}
@@ -641,6 +704,11 @@ Deno.serve(async (req) => {
     const codexUnlocks = flags.codex_unlocks || [];
     const currentProvince = flags.current_province || 618;
 
+    // Initialize chapter1_stage from the current sequence if not set
+    if (!flags.chapter1_stage) {
+      flags.chapter1_stage = CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0];
+    }
+
     // Only infer bullet_named for legacy campaigns clearly PAST the naming sequence
     // (sequence 5). During the naming sequence itself, the flag must NOT be inferred —
     // the GM must narrate the full scene (Shard asks name → stranger says he doesn't
@@ -718,6 +786,7 @@ Deno.serve(async (req) => {
       lastWeaponUsed: flags.last_weapon_used || '',
       recentStory,
       chapter1Sequence: flags.chapter1_sequence || 1,
+      chapter1Stage: flags.chapter1_stage || CHAPTER1_STAGES[(flags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0],
       previousHandoff,
       action
     });
@@ -1155,13 +1224,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Chapter 1 sequence advancement — the LLM signals when the current
-    // sequence's required beats are complete. Increment the sequence tracker.
-    if (result.advance_sequence && currentProvince === 618) {
-      const currentSeq = updatedFlags.chapter1_sequence || 1;
-      if (currentSeq < 15) {
+    // Chapter 1 sequence advancement — CODE-DRIVEN with LLM assist.
+    // The code checks if the current sequence's required flag is set and
+    // auto-advances. The LLM's advance_sequence signal is a secondary trigger.
+    // This makes the stage system deterministic: the CODE owns progression.
+    if (currentProvince === 618) {
+      let currentSeq = updatedFlags.chapter1_sequence || 1;
+      // Auto-advance: check if the current sequence's completion flag is set
+      const check = SEQUENCE_COMPLETION_CHECKS[currentSeq];
+      if (check && check(updatedFlags) && currentSeq < 15) {
         updatedFlags.chapter1_sequence = currentSeq + 1;
-        console.log(`[PullGM] Chapter 1 sequence advanced: ${currentSeq} -> ${currentSeq + 1}`);
+        updatedFlags.chapter1_stage = CHAPTER1_STAGES[currentSeq] || CHAPTER1_STAGES[0];
+        console.log(`[PullGM] Chapter 1 auto-advanced: ${currentSeq} -> ${currentSeq + 1} (flag-based)`);
+        currentSeq = currentSeq + 1;
+      }
+      // LLM-requested advance (only if auto-check didn't already advance this turn)
+      if (result.advance_sequence && currentSeq === (updatedFlags.chapter1_sequence || 1) && currentSeq < 15) {
+        updatedFlags.chapter1_sequence = currentSeq + 1;
+        updatedFlags.chapter1_stage = CHAPTER1_STAGES[currentSeq] || CHAPTER1_STAGES[0];
+        console.log(`[PullGM] Chapter 1 sequence advanced: ${currentSeq} -> ${currentSeq + 1} (LLM-requested)`);
       }
     }
 
@@ -1276,6 +1357,7 @@ Deno.serve(async (req) => {
       bullet_named: !!updatedFlags.bullet_named,
       camp_arc_complete: !!updatedFlags.camp_arc_complete,
       chapter1_sequence: updatedFlags.chapter1_sequence || 1,
+      chapter1_stage: updatedFlags.chapter1_stage || CHAPTER1_STAGES[(updatedFlags.chapter1_sequence || 1) - 1] || CHAPTER1_STAGES[0],
       chapter_complete: chapterComplete,
       handoff: handoffData
     });
