@@ -30,6 +30,29 @@ const CANONICAL_PROVINCE_ORDER = [618, 472, 837, 269, 391, 512, 713, 927, 108, 4
 
 const PULL_LABELS = ['Quiet', 'Tug', 'Ache', 'Burn', 'Commanding', 'Blackout Risk', 'Override'];
 
+// ─── Chapter 1 Story Spine ───
+// 15 required sequences the GM must guide Bullet through. The prompt only
+// includes the CURRENT sequence's instruction, preventing the LLM from
+// skipping ahead or improvising the whole chapter. The GM returns
+// advance_sequence: true when the current beat is complete.
+const CHAPTER1_SEQUENCES = [
+  { t: 'Wake in the Sand', i: 'Bullet wakes face-down in red sand with no memory. The sky is wrong, the sand burns. He discovers: circular scar over his heart, etched shard in his pocket, the Pull in his chest. Let the player explore and discover these. Do NOT advance to camp yet — stay in the waking scene until the player has discovered the scar, shard, and Pull and begins moving forward.', a: 'Bullet discovers the scar, shard, and Pull and begins moving in the direction the Pull leads' },
+  { t: 'Mechanical Bird Scan', i: 'REQUIRED EVENT — this MUST happen this sequence. As Bullet walks the desert, a mechanical bird scans him. Narrate: a shadow crosses the red sand, Bullet looks up and sees a bird-shaped machine with metal-feather wings, red eyes lock onto him, a thin beam of light sweeps over his body pausing on the scar above his heart, the scar pulses, then the bird folds its wings and vanishes into heat shimmer. Bullet may think something saw him, something was watching. Do NOT show HUNTED, Hunter Proximity, or Province 1 Alert UI — those are hidden clocks only. Set unlock_flags.mechanical_bird_scanned = true when this happens. Also set clock_changes for mechanical_bird_surveillance.', a: 'The mechanical bird scan has occurred (mechanical_bird_scanned flag set)' },
+  { t: 'The Pull Leads to Camp', i: 'The Pull guides Bullet toward camp. He may see smoke or structures ahead. He enters camp near collapse from thirst. Do NOT introduce NPCs yet — he arrives at the edge of camp, barely conscious. Narrate the approach and arrival.', a: 'Bullet reaches the camp entrance' },
+  { t: 'Camp Discovery', i: 'Bullet enters the camp. The survivors are like him — no real memories, nicknames instead of true names, no clear past, a sense of always being here. They know Province 618 is the red sand place, there are other places, the next known is the water Province, people do not survive long outside camps. They do NOT know the big truth. Introduce Shard (bald/scarred camp leader) first — she questions Bullet. Do NOT give water freely yet — Shard decides if he is a threat first.', a: 'Bullet has entered the camp and met Shard' },
+  { t: 'Water / First Trust (Naming)', i: 'Shard questions Bullet. He says he does not know his name. She notices the circular scar and names him "Bullet." The camp gives him just enough water to survive. Shard makes clear survival requires contribution. Introduce Spark (young inventor), Patch (healer), and Maul (hostile rival). Shard asks Bullet to help with a camp problem. Set bullet_named = true when Shard names him. Unlock camp_trust clock via discovered_clocks.', a: 'Bullet is named and Shard assigns a task' },
+  { t: 'Shard\'s Task', i: 'Shard asks Bullet to retrieve something for the camp — a purifier core (or similar survival-critical component). Shard explains the purifier is failing. Unlock purifier_stability clock via discovered_clocks. Set objective to retrieve the item and return it.', a: 'Bullet accepts the task and leaves camp to find the item' },
+  { t: 'Task Danger', i: 'The task involves danger — collapsing ruin, sand maw, old drone, unstable machinery, heat delirium, hostile scavenger, sandstorm, or buried trap. If Bullet faces a physical threat for the first time, he instinctively grabs a battered metal pipe (the Pipe acquisition beat — set pipe_state to battered_metal_pipe, add to inventory via item_changes). He succeeds and returns with the needed object. Optional NPC death/injury may occur (e.g. Cowboy dies, Rivet injured). Maul may blame Bullet. Record exact events in the events[] ledger — especially item_used_name. Set unlock_flags.task_complete = true when Bullet has the item.', a: 'Bullet returns with the needed object (purifier core)' },
+  { t: 'Shard Asks Him to Stay', i: 'After the task succeeds, Shard asks Bullet to stay. He should not immediately say yes or no — he says something like "I don\'t know if I can" or "I need to know who I am" or "There\'s something out there pulling me." Shard asks him to stay because the camp expects trouble. He stays because the camp needs help and he owes them, not because he is settling down. Set unlock_flags.agreed_to_stay = true when the player agrees.', a: 'Bullet agrees to stay through the night' },
+  { t: 'Raider Warning', i: 'ONLY NOW should Raider Threat become visible. A scout reports movement, or Spark sees raiders, or Hawk spots silhouettes. Shard says they are coming for the Cache. Unlock raider_threat clock via discovered_clocks. Set objective to defend Red Sand Camp. Do NOT show Raider Threat earlier than this.', a: 'The raider warning has been delivered' },
+  { t: 'Raider Attack', i: 'Bullet fights with his pipe. This is important canon — the pipe is the weapon. Record pipe as item_used_name in the events[] ledger. Do NOT allow later narration to mutate this into a crossbow/sword/knife kill. Some NPCs may live or die. Shard and Spark MUST survive. Maul may grudgingly respect Bullet or still resent him. Required outcome: raiders are driven off, the camp survives, the pipe becomes emotionally important. Set unlock_flags.raiders_defeated = true.', a: 'Raiders are driven off and the camp survives' },
+  { t: 'Aftermath — Spark\'s Shard', i: 'After the raiders are run off, Bullet has a quiet moment. Spark gives him her shard as a LOAN, not a casual gift. She says something like "Take it. Not forever. Just until you come back." She wants him to come back someday. Set spark_shard_acquired = true and add "Spark\'s Unetched Shard" to inventory via item_changes. Show this once only. Create a guilt/bond entry: Spark — Shard Loan. Set unlock_flags.spark_shard_given = true.', a: 'Spark gives Bullet her shard' },
+  { t: 'Shard Gives Breathing Apparatus', i: 'Shard gives Bullet the breathing apparatus. She knows the next Province is water-like and dangerous. She does NOT know everything about Province 472 — only that it is water, it is dangerous, people who go without breathing gear do not survive. Set breathing_gear_acquired = true and add "Shard\'s Breathing Apparatus" to inventory via item_changes. Set unlock_flags.breathing_gear_given = true.', a: 'Shard gives Bullet the breathing apparatus' },
+  { t: 'Pull Intensifies', i: 'This is the actual reason Bullet leaves. The Pull tightens beneath his scar. Looking back at camp makes the scar burn. Looking forward eases the pain. He does not know what is calling him. He only knows he cannot stay. Set camp_arc_complete = true. Escalate pull_intensity toward 4-5 (Commanding/Blackout Risk). No HUNTED popup. The player must clearly understand the Pull is the chapter exit force.', a: 'Bullet leaves the camp following the Pull' },
+  { t: 'Province 1 / Leader Cutscene', i: 'Show the Province 1 cutscene as an INTERLUDE (player-only, Bullet does not see this). Use the interlude field. Include: Province 1 castle/fortress, a robed figure reporting a new arrival in Province 618, no Nexus record, the Leader in a charcoal suit, the Leader orders investigation. After the cutscene: do NOT update Bullet\'s Codex, Objective, or known locations. Do NOT add Province 1 to known locations. Do NOT show Hunted status. Set unlock_flags.province1_interlude_shown = true.', a: 'The Province 1 interlude has been shown' },
+  { t: 'End of Chapter 1 — Wall of Water', i: 'Bullet reaches the edge of the next Province. He sees a giant wall of water-like substance — it stretches as far as he can see, rises impossibly high, it is not a lake or river or ocean, it is a wall/slab/block of liquid. The Pull points directly into it. Set province_transition to { to_province: 472, reason: "Bullet reaches the wall of water" }. Do NOT mention the dome or the Dreadwraith yet. End the chapter here.', a: 'Bullet reaches the wall of water and the province transition fires' }
+];
+
 // Server-side validation: a clock can only be discovered once its narrative
 // condition is met. This prevents the LLM from revealing hidden clocks early.
 const CLOCK_DISCOVERY_RULES = {
@@ -89,12 +112,14 @@ const RESPONSE_SCHEMA = {
     events: { type: "array", description: "Structured event ledger entries for meaningful actions this turn (kills, wounds, rescues, threats, item pickups, equips, drops, uses, discoveries). Each entry is the canonical record of what happened — future narration must reference these, not inventory.", items: { type: "object", properties: { event_type: { type: "string", description: "attack, kill, wound, rescue, threaten, trade, steal, unlock, lose, use_item, pickup_item, equip, drop, discover" }, actor_id: { type: "string", description: "Who did it — 'bullet' or an NPC key" }, actor_name: { type: "string" }, target_id: { type: "string", description: "NPC key of the target, or empty" }, target_name: { type: "string" }, item_used_id: { type: "string", description: "Canonical item key used, or empty" }, item_used_name: { type: "string", description: "EXACT weapon/item used (e.g. 'metal pipe'). If Bullet killed with the pipe, this MUST be 'metal pipe' — never a different carried weapon. Owning an item does not mean it was used." }, outcome: { type: "string", description: "killed, wounded, success, failure, added_to_inventory, equipped, dropped, etc." }, cause: { type: "string", description: "Exact cause of death/injury if applicable (e.g. 'blunt force trauma from pipe')" }, summary: { type: "string", description: "Canonical one-line summary. The AI narrates from this later." }, memory_summary: { type: "string", description: "What to remember about this event (e.g. 'Raider killed by pipe, not crossbow.')" }, tags: { type: "array", items: { type: "string" } } } } },
     equipped_weapon: { type: "string", description: "Bullet's currently equipped weapon name (e.g. 'metal pipe'). Only update when the player explicitly equips or switches weapons. Picking up an item adds it to inventory but does NOT equip it." },
     choices: { type: "array", items: { type: "string" }, description: "3-4 suggested player actions for the next turn" },
-    current_objective: { type: "object", properties: { title: { type: "string", description: "Short objective title (2-5 words)" }, description: { type: "string", description: "1-3 line objective reflecting Bullet's active mission right now" } }, description: "Bullet's current active objective. Update whenever the situation changes — reaching camp, being given a mission, completing a mission, forced departure, entering a new province." }
+    current_objective: { type: "object", properties: { title: { type: "string", description: "Short objective title (2-5 words)" }, description: { type: "string", description: "1-3 line objective reflecting Bullet's active mission right now" } }, description: "Bullet's current active objective. Update whenever the situation changes — reaching camp, being given a mission, completing a mission, forced departure, entering a new province." },
+    advance_sequence: { type: "boolean", description: "Set to true when the current Chapter 1 story sequence's required beats are complete and the story should advance to the next sequence. Only set when the sequence's key events have actually occurred this turn — not just because the player took an action." }
   },
   required: ["narration"]
 };
 
 function buildPrompt(ctx) {
+  const seq = CHAPTER1_SEQUENCES[(ctx.chapter1Sequence || 1) - 1] || CHAPTER1_SEQUENCES[0];
   const p = PROVINCES[ctx.currentProvince] || PROVINCES[618];
   const pullLabel = PULL_LABELS[Math.max(0, Math.min(6, ctx.pullIntensity))] || 'Tug';
   const conditionsStr = ctx.conditions.length
@@ -217,6 +242,13 @@ CURRENT OBJECTIVE (CRITICAL): Always track Bullet's active mission in current_ob
 - When the Pull forces departure: title "Follow the Pull", description "Follow the Pull beyond Red Sand Camp. It will not let you rest here."
 - In later provinces: reflect the current province's survival pressure and moral choice.
 Never leave the objective stale. If the player's situation has changed, update current_objective.
+
+CHAPTER 1 STORY SEQUENCE (CRITICAL):
+Current Sequence: ${ctx.chapter1Sequence || 1} of 15 — ${seq.t}
+${seq.i}
+ADVANCE WHEN: ${seq.a}
+
+STORY SPINE RULE: Guide Bullet through this sequence's required beats. Allow small player choices and outcome variations, but keep the story spine intact. Do NOT skip ahead to future sequences or reveal future beats. When this sequence's required events have occurred, set advance_sequence: true. If the player is still in the middle of this sequence, do NOT set advance_sequence.
 
 PLAYER ACTION:
 ${ctx.action}
@@ -462,6 +494,7 @@ Deno.serve(async (req) => {
     // so the GM escalates the Pull toward departure instead of assigning new
     // camp errands to a player who already finished the arc.
     if (!flags.camp_arc_complete && currentProvince === 618) {
+      if ((flags.chapter1_sequence || 1) >= 13) flags.camp_arc_complete = true;
       const evList = recentEvents || [];
       const hasMissionItem = evList.some(ev => /purif|coil|core|filtrat/i.test((ev.summary || '') + ' ' + (ev.item_used_name || '')));
       const objTitle = ((flags.current_objective || {}).title || '').toLowerCase();
@@ -512,6 +545,7 @@ Deno.serve(async (req) => {
       equippedWeapon: flags.equipped_weapon || '',
       lastWeaponUsed: flags.last_weapon_used || '',
       recentStory,
+      chapter1Sequence: flags.chapter1_sequence || 1,
       action
     });
 
@@ -893,6 +927,16 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Chapter 1 sequence advancement — the LLM signals when the current
+    // sequence's required beats are complete. Increment the sequence tracker.
+    if (result.advance_sequence && currentProvince === 618) {
+      const currentSeq = updatedFlags.chapter1_sequence || 1;
+      if (currentSeq < 15) {
+        updatedFlags.chapter1_sequence = currentSeq + 1;
+        console.log(`[PullGM] Chapter 1 sequence advanced: ${currentSeq} -> ${currentSeq + 1}`);
+      }
+    }
+
     // Save campaign state (parallel with other saves)
     savePromises.push(admin.entities.Campaign.update(campaign_id, {
       world_state: { ...ws, quest_flags: updatedFlags },
@@ -930,6 +974,10 @@ Deno.serve(async (req) => {
     }
     if (updatedFlags.thread_blade && !updatedEquipment.some(e => /thread.*blade|algae.*wrapped.*blade/i.test(e.name))) {
       updatedEquipment.push({ name: "Thread's Algae-Wrapped Blade", qty: 1, notes: 'A blade given by Thread in the underwater dome.' });
+    }
+    // Etched Shard — starting item, always in inventory from turn 1
+    if (!updatedEquipment.some(e => /etched.*shard/i.test(e.name))) {
+      updatedEquipment.push({ name: 'Etched Shard', qty: 1, notes: 'A shard of metal or glass, warm to the touch. Etched with a circle bisected by a jagged line.' });
     }
     if (updatedFlags.patch_cloak && !updatedEquipment.some(e => /patch.*cloak/i.test(e.name))) {
       updatedEquipment.push({ name: "Patch's Cloak", qty: 1, notes: "A healer's cloak. Proof someone once cared whether Bullet survived." });
@@ -976,7 +1024,8 @@ Deno.serve(async (req) => {
       events: result.events || [],
       knowledge_flags: updatedFlags.knowledge_flags || {},
       bullet_named: !!updatedFlags.bullet_named,
-      camp_arc_complete: !!updatedFlags.camp_arc_complete
+      camp_arc_complete: !!updatedFlags.camp_arc_complete,
+      chapter1_sequence: updatedFlags.chapter1_sequence || 1
     });
 
   } catch (error) {

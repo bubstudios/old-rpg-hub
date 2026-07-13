@@ -63,6 +63,9 @@ export const HIDDEN_CLOCKS = [
   { key: 'dreadwraith_adaptation', label: 'Dreadwraith Adaptation', desc: 'The Dreadwraith\'s adaptive evolution.', highIsBad: true, visible: false },
   { key: 'shard_resonance_trail', label: 'Shard Resonance Trail', desc: 'The trail Bullet leaves through shard use.', highIsBad: true, visible: false },
   { key: 'bond_threat', label: 'Bond Threat', desc: 'Province 1 noticing that connection stabilizes Bullet.', highIsBad: true, visible: false },
+  { key: 'mechanical_bird_surveillance', label: 'Mechanical Bird Surveillance', desc: 'The mechanical bird has scanned Bullet and reported to Province 1.', highIsBad: true, visible: false },
+  { key: 'camp_raider_pressure', label: 'Camp Raider Pressure', desc: 'Hidden pressure building toward a raider attack on the camp.', highIsBad: true, visible: false },
+  { key: 'camp_task_danger', label: 'Camp Task Danger', desc: 'Danger level of Shard\'s assigned task.', highIsBad: true, visible: false },
   { key: 'fear_of_self', label: 'Fear of Self', desc: 'Bullet\'s fear of what the Pull makes him do.', highIsBad: true, visible: true },
   { key: 'soul_fracture', label: 'Soul Fracture', desc: 'Damage to Bullet\'s soul.', highIsBad: true, visible: true },
   { key: 'guilt_burden', label: 'Guilt Burden', desc: 'The accumulated weight of guilt.', highIsBad: true, visible: true },
@@ -475,12 +478,14 @@ export const IMPACT_DISPLAY_LEVELS = ['Off', 'Minimal', 'Normal', 'Detailed'];
 export const PULL_INITIAL_STATE = {
   current_province: 618,
   province_history: [],
+  chapter1_sequence: 1,
   campaign_clocks: {
     province_1_alert: 0, hunter_proximity: 0, seeker_frustration: 0,
     dreadwraith_adaptation: 0, shard_resonance_trail: 0, bond_threat: 0,
     council_fracture: 0, ruler_strain: 50, realm_stability: 50,
     bullet_mystery: 0, fear_of_self: 0, soul_fracture: 0,
-    witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100
+    witness_guilt: 0, guilt_burden: 0, bullet_humanity: 100,
+    mechanical_bird_surveillance: 0, camp_raider_pressure: 0, camp_task_danger: 0
   },
   local_clocks: { thirst: 20, heat_exposure: 15, fatigue: 10, camp_trust: 30, purifier_stability: 60, raider_threat: 20, air: 0, pressure: 0, swimming_fatigue: 0 },
   discovered_clocks: ['thirst', 'heat_exposure', 'fatigue'],
@@ -494,11 +499,16 @@ export const PULL_INITIAL_STATE = {
   bullet_named: false,
   camp_arc_complete: false,
   shard_focus_unlocked: false,
-  conditions: [],
+  conditions: [
+    { type: 'dehydration', label: 'Dehydration', severity: 'moderate' },
+    { type: 'burns', label: 'Burns', severity: 'moderate' },
+    { type: 'fatigue', label: 'Fatigue', severity: 'moderate' }
+  ],
   codex_unlocks: ['story', 'objective', 'bullet', 'pull', 'scar', 'etched_shard', 'province_618'],
   npc_relationships: {},
   memories: [],
   guilt_echoes: [],
+  current_objective: { title: 'Survive', description: 'Survive. Find water. Follow the Pull.' },
   phase: 'Lost Survivor'
 };
 
