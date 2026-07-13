@@ -162,6 +162,7 @@ export default function CampaignDetail() {
     if (campaign?.game_system === 'thepull') {
       const impact = dmData?.decision_impact;
       const oldFlags = campaign?.world_state?.quest_flags || {};
+      const oldUf = oldFlags.unlock_flags || {};
 
       // Build unlock notifications from the GM response (spoiler-gated)
       const unlocks = buildUnlockNotifications(dmData, oldFlags, popupSetting);
@@ -170,16 +171,24 @@ export default function CampaignDetail() {
       }
 
       if (impact && impact.is_meaningful) {
-        base44.functions.invoke('campaignData', {
-          op: 'saveDecisionLog',
-          campaign_id: campaignId,
-          chapter: campaign?.current_chapter || 1,
-          decision: decisionText || '',
-          impacts: impact.impacts || [],
-          future_consequence: impact.future_consequence || ''
-        }).catch(() => {});
-        if (popupSetting !== 'off') {
-          setPullImpact(impact);
+        // Suppress duplicate "Task Completed" popup if the task was already completed
+        const isTaskCompleteDupe = oldUf.task_complete && (impact.impacts || []).some(imp =>
+          /task\s*(complet|done|finish)/i.test(imp.label || '') ||
+          /task\s*(complet|done|finish)/i.test(imp.change_label || '') ||
+          /task\s*(complet|done|finish)/i.test(imp.reason || '')
+        );
+        if (!isTaskCompleteDupe) {
+          base44.functions.invoke('campaignData', {
+            op: 'saveDecisionLog',
+            campaign_id: campaignId,
+            chapter: campaign?.current_chapter || 1,
+            decision: decisionText || '',
+            impacts: impact.impacts || [],
+            future_consequence: impact.future_consequence || ''
+          }).catch(() => {});
+          if (popupSetting !== 'off') {
+            setPullImpact(impact);
+          }
         }
       }
       return;

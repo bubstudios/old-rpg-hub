@@ -99,8 +99,8 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     });
   }
 
-  // Water received (priority 2) — major survival moment
-  if (dmData.water_received) {
+  // Water received (priority 2) — major survival moment (ONE-TIME only)
+  if (dmData.water_received && !(oldFlags?.unlock_flags?.water_received)) {
     notifications.push({
       type: 'water',
       title: 'WATER RECEIVED',
@@ -131,8 +131,8 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     }
   }
 
-  // Spark's shard acquired (priority 2)
-  if (dmData.spark_shard_acquired) {
+  // Spark's shard acquired (priority 2) — ONE-TIME only
+  if (dmData.spark_shard_acquired && !oldFlags?.spark_shard) {
     notifications.push({
       type: 'item',
       title: 'INVENTORY UPDATED',
@@ -141,8 +141,10 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     });
   }
 
-  // 3. Codex unlocks (priority 3)
+  // 3. Codex unlocks (priority 3) — only fire for keys NOT already unlocked
+  const oldCodex = new Set(oldFlags?.codex_unlocks || []);
   for (const key of (dmData.codex_unlocks || [])) {
+    if (oldCodex.has(key)) continue; // already discovered — no popup
     const entry = PLAYER_CODEX[key];
     if (entry) {
       notifications.push({
@@ -154,9 +156,11 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     }
   }
 
-  // 4. Item changes (priority 3)
+  // 4. Item changes (priority 3) — skip items already in inventory
+  const oldInventory = new Set((oldFlags?.inventory || []).map(i => (typeof i === 'string' ? i : i?.name || '').toLowerCase().trim()).filter(Boolean));
   for (const ic of (dmData.item_changes || [])) {
     if (ic.action === 'add' && ic.item !== 'Battered Metal Pipe') {
+      if (oldInventory.has((ic.item || '').toLowerCase().trim())) continue; // already have it
       notifications.push({
         type: 'item',
         title: 'INVENTORY UPDATED',
@@ -167,8 +171,12 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
   }
 
   // 5. NPC / bond changes (priority 3 for new NPCs, 4 for relationship changes)
+  // Discovery is ONE-TIME: if the NPC key already exists in npc_relationships,
+  // do NOT show "NPC DISCOVERED" — show only relationship changes instead.
+  const oldNpcRels = oldFlags?.npc_relationships || {};
   for (const nu of (dmData.npc_updates || [])) {
-    if (nu.is_new) {
+    const alreadyKnown = nu.key && !!oldNpcRels[nu.key];
+    if (nu.is_new && !alreadyKnown) {
       notifications.push({
         type: 'bond',
         title: 'NPC DISCOVERED',
@@ -193,7 +201,7 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
   // 5b. Clock discovery (priority 3) — only fire for clocks not already discovered
   const oldDiscovered = new Set(oldFlags?.discovered_clocks || []);
   for (const clockKey of (dmData.discovered_clocks || [])) {
-    if (oldDiscovered.has(clockKey)) continue;
+    if (oldDiscovered.has(clockKey)) continue; // already discovered — no popup
     notifications.push({
       type: 'codex',
       title: 'CLOCK UNLOCKED',

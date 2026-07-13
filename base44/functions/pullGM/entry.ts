@@ -585,6 +585,13 @@ RULES:
 - CLOCK DIRECTION (CRITICAL): Survival danger clocks (thirst, heat_exposure, fatigue, raider_threat, pressure, swimming_fatigue, blood_loss, dreadwraith_threat) — HIGHER = WORSE. Trust/stability clocks (camp_trust, purifier_stability, air, dome_stability, dome_trust, air_supply) — HIGHER = BETTER. When Bullet drinks water, thirst DECREASES (change is negative, e.g. -35). When Bullet earns trust, camp_trust INCREASES (change is positive, e.g. +5). Never set a survival clock to 0 from full in one action, and never set camp_trust above the stage cap.
     - REST RECOVERY (CRITICAL): When Bullet rests, sleeps, waits, or settles in at Red Sand Camp, you MUST return local_clock_changes that reflect recovery: heat_exposure -15 to -25 (shade, shelter), fatigue -10 to -20 (rest), thirst -5 to -10 (if water is available). The camp has shade, water, and shelter — the desert does NOT keep killing Bullet while he rests inside camp. Heat exposure should NEVER stay at Lethal (90+) while Bullet is resting in camp. If Bullet rests overnight or until dark, apply larger reductions (heat -25 to -35, fatigue -20 to -30). Also: if Patch treats Bullet's wounds, return hp_change (+1 to +3) and reduce fatigue by an extra -5. If Spark installs or verifies the purifier component, increase purifier_stability by +15 to +20 and camp_trust by +5.
     - CAMP TRUST APPLICATION (CRITICAL): When you return a decision_impact that mentions "Camp Trust" with a positive change, you MUST also return a corresponding local_clock_changes entry for camp_trust with the same change value. Do NOT show a trust gain in a popup without actually applying it to the camp_trust clock. Example: decision_impact.impacts has {label: "Camp Trust", change: 15} → local_clock_changes MUST have {clock: "camp_trust", change: 15, reason: "Returned with purifier component"}.
+    - ONE-TIME EVENTS (CRITICAL): Discovery and completion events fire ONCE. If a flag is already true in the game state, do NOT re-fire that event. Specifically:
+      * If task_complete is already true: do NOT return decision_impact with "Task Completed" or "Task Complete" — the task is already done. Narrate the current scene (resting, talking, evening interlude) instead.
+      * If an NPC is already in the CURRENT CAST (first_met is true): do NOT return npc_updates with is_new: true for that NPC. They are already known — return relationship_change only if the relationship shifted.
+      * If water_received is already true: do NOT return water_received: true again. Bullet can drink water narratively, but the "WATER RECEIVED" popup should not re-fire.
+      * If a codex entry is already in UNLOCKED CODEX: do NOT return it in codex_unlocks again.
+      * If an item is already in inventory: do NOT return item_changes with action "add" for it — use action "update" if the item changed.
+      Discovery is one-time. Interaction is ongoing. When Bullet rests in camp after completing the task, the response should be about resting, camp evening atmosphere, and NPC interactions — NOT a repeat of task completion or NPC discovery popups.
     - WATER ACKNOWLEDGMENT (CRITICAL): When Bullet receives water (from Shard, a camp member, or any source), you MUST: (1) return water_received: true, (2) return a local_clock_changes entry reducing thirst by 30-50 points (e.g. {clock: "thirst", change: -35, reason: "First water in days"}), (3) optionally reduce heat_exposure by 5 and fatigue by 3. This is mandatory — the player must SEE that getting water mattered. Do not narrate water without also reducing the thirst clock.
 - CAMP TRUST SCALE (CRITICAL): Camp Trust starts at 10 (Wary) — the camp barely tolerates Bullet. It rises GRADUALLY through story events. Use these exact event values as your guide:
   * First enters camp: camp_trust unlocked at 10
@@ -1363,16 +1370,26 @@ Deno.serve(async (req) => {
     // but did NOT return a corresponding local_clock_changes entry for camp_trust,
     // inject the missing change. This prevents the "popup shows +5 but clock
     // doesn't move" bug — every trust popup MUST have a real clock change.
+    // SKIP if the impact is a duplicate of an already-completed one-time event
+    // (e.g. "Returned with purifier component" when task_complete is already true).
     if (result.decision_impact && result.decision_impact.impacts) {
       const hasCampTrustChange = (result.local_clock_changes || []).some(cc => cc.clock === 'camp_trust');
       if (!hasCampTrustChange) {
-        const trustImpact = result.decision_impact.impacts.find(imp =>
-          /camp\s*trust/i.test(imp.label || '') && typeof imp.change === 'number' && imp.change !== 0
-        );
-        if (trustImpact) {
+        const uf = flags.unlock_flags || {};
+        for (const imp of result.decision_impact.impacts) {
+          if (!/camp\s*trust/i.test(imp.label || '')) continue;
+          if (typeof imp.change !== 'number' || imp.change === 0) continue;
+          // Check for duplicate one-time event
+          const reasonText = `${imp.label || ''} ${imp.change_label || ''} ${imp.reason || ''}`.toLowerCase();
+          const isTaskCompleteDupe = uf.task_complete && /task|purif|core|component|returned/i.test(reasonText);
+          if (isTaskCompleteDupe) {
+            console.log('[PullGM] Trust sync: skipped duplicate task completion trust gain (task already complete)');
+            continue;
+          }
           updatedLocalClocks.camp_trust = Math.max(0, Math.min(100,
-            (updatedLocalClocks.camp_trust || 0) + trustImpact.change));
-          console.log(`[PullGM] Trust sync: injected camp_trust ${trustImpact.change > 0 ? '+' : ''}${trustImpact.change} from decision_impact (was missing from local_clock_changes)`);
+            (updatedLocalClocks.camp_trust || 0) + imp.change));
+          console.log(`[PullGM] Trust sync: injected camp_trust ${imp.change > 0 ? '+' : ''}${imp.change} from decision_impact (was missing from local_clock_changes)`);
+          break; // only one camp_trust injection per turn
         }
       }
     }
@@ -1381,10 +1398,20 @@ Deno.serve(async (req) => {
     // If the LLM reports Bullet received water, ensure thirst drops by at least 30.
     // The LLM sometimes narrates water without reducing the thirst clock — this
     // forces a visible reduction so the player sees that getting water mattered.
+    // Also persist as a one-time flag so the frontend popup doesn't re-fire.
     if (result.water_received) {
       const preThirst = localClocks.thirst ?? 75;
       if (preThirst - (updatedLocalClocks.thirst ?? preThirst) < 30) {
         updatedLocalClocks.thirst = Math.max(5, preThirst - 40);
+      }
+      // Mark water_received as a one-time event — if it was already true, clear
+      // it from the response so the frontend doesn't show the popup again.
+      const uf = updatedFlags.unlock_flags || {};
+      if (uf.water_received) {
+        result.water_received = false; // already fired — suppress duplicate popup
+      } else {
+        if (!updatedFlags.unlock_flags) updatedFlags.unlock_flags = {};
+        updatedFlags.unlock_flags.water_received = true;
       }
     }
 
@@ -1432,9 +1459,23 @@ Deno.serve(async (req) => {
     // Patch's cloak acquired (camp rest or Chapter 2 transition)
     if (result.patch_cloak_acquired) updatedFlags.patch_cloak = true;
 
-    // One-time unlock flags — prevent duplicate popups and re-adds
+    // One-time unlock flags — prevent duplicate popups and re-adds.
+    // Also deduplicate: if a flag is ALREADY true in the saved state, clear it
+    // from result.unlock_flags so the frontend doesn't re-fire popups for it.
     if (result.unlock_flags && Object.keys(result.unlock_flags).length) {
-      updatedFlags.unlock_flags = { ...(flags.unlock_flags || {}), ...result.unlock_flags };
+      const oldUf = flags.unlock_flags || {};
+      const newUf = {};
+      for (const [k, v] of Object.entries(result.unlock_flags)) {
+        if (v === true && oldUf[k] === true) {
+          // Already fired — don't pass it back as "new" for popup purposes
+          continue;
+        }
+        newUf[k] = v;
+      }
+      updatedFlags.unlock_flags = { ...oldUf, ...result.unlock_flags };
+      // Replace result.unlock_flags with only the NEW ones, so the frontend
+      // buildUnlockNotifications can check what's actually new this turn.
+      result.unlock_flags = newUf;
     }
 
     // Memory fragments — partial, never full explanation. Also surface as codex
