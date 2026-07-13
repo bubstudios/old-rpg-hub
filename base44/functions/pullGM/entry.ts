@@ -843,8 +843,8 @@ Deno.serve(async (req) => {
     let interludeText = '';
     const savePromises = [];
     if (result.interlude) {
-      const interludeSeq = updatedFlags.chapter1_sequence || flags.chapter1_sequence || 1;
-      const uf = updatedFlags.unlock_flags || flags.unlock_flags || {};
+      const interludeSeq = flags.chapter1_sequence || 1;
+      const uf = { ...(flags.unlock_flags || {}), ...(result.unlock_flags || {}) };
       // Only allow the Province 1 interlude after the raid is resolved (seq >= 11
       // AND raiders_defeated). This prevents it from firing during the task stage
       // or water stage — leaving for the mission is NOT the end of the chapter.
