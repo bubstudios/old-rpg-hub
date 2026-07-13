@@ -218,6 +218,28 @@ const CHAPTER1_STAGES = [
   'water_wall_reached'         // seq 15
 ];
 
+// ─── Stage-Based Pull Override ───
+// FINAL AUTHORITY on Pull intensity and scar state for Chapter 1. Ensures the
+// Pull matches the story stage regardless of what the LLM returned or any
+// premature camp_arc_complete inference. Quest travel (task_assigned,
+// task_in_progress) is service to the camp — the Pull stays calm and allows
+// the detour. Only after the raid is resolved and farewell gifts are given
+// does the Pull escalate toward departure.
+const STAGE_PULL_OVERRIDES = {
+  desert_wake:                  { intensity: 1, scar: 'pulse'  }, // Tug, Pulsing
+  mechanical_bird_scan:         { intensity: 1, scar: 'pulse'  }, // Tug, Pulsing
+  camp_seen:                    { intensity: 0, scar: 'quiet'  }, // Quiet, Quiet
+  camp_intro:                  { intensity: 0, scar: 'quiet'  }, // Quiet, Quiet
+  name_given:                   { intensity: 1, scar: 'pulse'  }, // Present, Warm
+  task_assigned:                { intensity: 1, scar: 'pulse'  }, // Present, Warm — quest travel is service
+  task_in_progress:             { intensity: 1, scar: 'pulse'  }, // Tug, Pulsing — guides without forcing departure
+  stay_request:                 { intensity: 2, scar: 'pulse'  }, // Growing, Aching — begins reminding he can't stay
+  raider_warning:               { intensity: 1, scar: 'pulse'  }, // Suppressed, Tense — immediate danger overrides Pull
+  raider_attack:                { intensity: 3, scar: 'burn'   }, // Burning, Hot — survival/combat state
+  spark_shard_received:         { intensity: 3, scar: 'burn'   }, // Intensifying, Burning — departure is approaching
+  breathing_apparatus_received: { intensity: 4, scar: 'flare'  }  // Commanding, Flaring — next Province is calling
+};
+
 // Code-driven sequence advancement: when the current sequence's required flag
 // is set, auto-advance the sequence even if the LLM didn't set advance_sequence.
 // This makes the stage system deterministic — the CODE owns stage progression,
@@ -823,18 +845,22 @@ Deno.serve(async (req) => {
     // camp errands to a player who already finished the arc.
     if (!flags.camp_arc_complete && currentProvince === 618) {
       if ((flags.chapter1_sequence || 1) >= 13) flags.camp_arc_complete = true;
-      // Only infer camp_arc_complete if Bullet actually RETRIEVED the mission item
-      // (not just discussed it). "Depart" is removed from the objective regex because
-      // leaving camp for the mission is NOT the same as the final chapter departure.
-      const evList = recentEvents || [];
-      const retrievedMissionItem = evList.some(ev =>
-        /retriev|found|obtain|recover|brought back|returned with|secured/i.test(ev.summary || '') &&
-        /purif|coil|core|filtrat/i.test((ev.summary || '') + ' ' + (ev.item_used_name || ''))
-      );
-      const objTitle = ((flags.current_objective || {}).title || '').toLowerCase();
-      const postMission = /return to camp|tighten|follow the pull/.test(objTitle);
-      if (retrievedMissionItem || postMission) {
-        flags.camp_arc_complete = true;
+      // Only infer camp_arc_complete if Bullet RETRIEVED the mission item AND
+      // raiders have been defeated — both are required for the arc to be truly
+      // complete. Do NOT infer from objective title: the LLM can set "Return to
+      // Camp" or "The Pull Tightens" prematurely during the task stage, which
+      // would falsely trigger Pull escalation while Bullet is still on the
+      // approved camp-task route.
+      const uf = flags.unlock_flags || {};
+      if (uf.raiders_defeated) {
+        const evList = recentEvents || [];
+        const retrievedMissionItem = evList.some(ev =>
+          /retriev|found|obtain|recover|brought back|returned with|secured/i.test(ev.summary || '') &&
+          /purif|coil|core|filtrat/i.test((ev.summary || '') + ' ' + (ev.item_used_name || ''))
+        );
+        if (retrievedMissionItem) {
+          flags.camp_arc_complete = true;
+        }
       }
     }
 
@@ -1402,6 +1428,26 @@ Deno.serve(async (req) => {
         updatedFlags.chapter1_sequence = currentSeq + 1;
         updatedFlags.chapter1_stage = CHAPTER1_STAGES[currentSeq] || CHAPTER1_STAGES[0];
         console.log(`[PullGM] Chapter 1 sequence advanced: ${currentSeq} -> ${currentSeq + 1} (LLM-requested)`);
+      }
+    }
+
+    // ─── Stage-Based Pull Override (FINAL AUTHORITY) ───
+    // Ensures Pull intensity and scar state match the story stage, overriding
+    // any LLM error or premature camp_arc_complete inference. Quest travel
+    // (task_assigned, task_in_progress) is service to the camp — the Pull
+    // stays calm and allows the detour. Only after the raid is resolved and
+    // farewell gifts are given does the Pull escalate toward departure.
+    // Stages 13-15 (pull_departure, province1_interlude, water_wall_reached)
+    // use the existing escalation code above — no override needed there.
+    if (currentProvince === 618) {
+      const stage = updatedFlags.chapter1_stage || CHAPTER1_STAGES[(updatedFlags.chapter1_sequence || 1) - 1] || 'desert_wake';
+      const override = STAGE_PULL_OVERRIDES[stage];
+      if (override) {
+        if (override.intensity !== updatedFlags.pull_intensity) {
+          console.log(`[PullGM] Stage override: pull_intensity ${updatedFlags.pull_intensity} -> ${override.intensity} (stage: ${stage})`);
+        }
+        updatedFlags.pull_intensity = override.intensity;
+        updatedFlags.scar_state = override.scar;
       }
     }
 
