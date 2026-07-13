@@ -514,7 +514,7 @@ Deno.serve(async (req) => {
     const llmResponse = await base44.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: RESPONSE_SCHEMA,
-      model: 'claude_sonnet_4_6'
+      model: 'claude_opus_4_8'
     });
 
     // Unwrap response
@@ -943,7 +943,7 @@ Deno.serve(async (req) => {
       codex_unlocks: result.codex_unlocks || [],
       decision_impact: result.decision_impact || null,
       npc_updates: result.npc_updates || [],
-      discovered_clocks: result.discovered_clocks || [],
+      discovered_clocks: (updatedFlags.discovered_clocks || []).filter(c => !((flags.discovered_clocks || []).includes(c))),
       province_transition: validTransition || null,
       enemy_turn: result.enemy_turn || null,
       condition_changes: result.condition_changes || [],

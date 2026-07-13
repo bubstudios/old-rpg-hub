@@ -148,8 +148,10 @@ export function buildUnlockNotifications(dmData, oldFlags, setting) {
     }
   }
 
-  // 5b. Clock discovery (priority 3)
+  // 5b. Clock discovery (priority 3) — only fire for clocks not already discovered
+  const oldDiscovered = new Set(oldFlags?.discovered_clocks || []);
   for (const clockKey of (dmData.discovered_clocks || [])) {
+    if (oldDiscovered.has(clockKey)) continue;
     notifications.push({
       type: 'codex',
       title: 'CLOCK UNLOCKED',
