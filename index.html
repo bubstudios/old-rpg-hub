@@ -63,6 +63,31 @@
             }
           });
         }
+        // Patch JSON.parse to return null for empty/incomplete input instead of
+        // throwing "Unexpected end of input". This is the root-cause catch — any
+        // code (SDK, Vite HMR, fetch responses) that calls JSON.parse('') or
+        // JSON.parse('{broken') will get null back instead of throwing an
+        // uncatchable SyntaxError with no stack trace.
+        var origJSONParse = JSON.parse;
+        JSON.parse = function (text, reviver) {
+          if (typeof text !== 'string' || text.trim() === '') return null;
+          try {
+            return origJSONParse.call(this, text, reviver);
+          } catch (e) {
+            if (e instanceof SyntaxError && /Unexpected end of input/i.test(e.message)) return null;
+            throw e;
+          }
+        };
+        // Patch Response.prototype.json for fetch-based calls with empty bodies
+        if (typeof Response !== 'undefined' && Response.prototype && Response.prototype.json) {
+          var origResponseJson = Response.prototype.json;
+          Response.prototype.json = function () {
+            return origResponseJson.call(this).catch(function (e) {
+              if (e instanceof SyntaxError && /Unexpected end of input/i.test(e.message)) return null;
+              throw e;
+            });
+          };
+        }
         // Also catch errors that escape the WebSocket patch via window.onerror.
         // return true suppresses the default error handling.
         window.onerror = function (msg, url, line, col, error) {
