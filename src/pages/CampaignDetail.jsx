@@ -470,6 +470,21 @@ export default function CampaignDetail() {
             };
           });
         }
+        // Apply rendezvous team tracking to local state
+        if (dmRes.data?.rendezvous_team) {
+          setCampaign(prev => {
+            if (!prev) return prev;
+            const ws = prev.world_state || {};
+            const flags = ws.quest_flags || {};
+            return {
+              ...prev,
+              world_state: {
+                ...ws,
+                quest_flags: { ...flags, rendezvous_team: dmRes.data.rendezvous_team }
+              }
+            };
+          });
+        }
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);

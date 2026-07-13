@@ -107,19 +107,28 @@ const CANON = {
     discredit_campaign: 'Discredit Campaign (bad) — Enemy propaganda painting Bub as rogue/compromised/fraudulent. Rises with broadcasts, evidence transfers, future memory use, unproven accusations. Lowers with verified evidence, credible testimony, controlled releases, visible victories.'
   },
 
-  arc2: {
-    first_echo: '5hr: First Echo — future-memory flash, silver moon, child in shelter. No explanation.',
-    suspicious_order: '10hr: Suspicious Order — Earth Command order correct but emotionally wrong.',
-    unity: '15hr: Unity — sentient nanite collective, living silver, adapts to location.',
-    new_titan: '18hr or 10+ days: New Titan crisis — distress call, news, future memory, or Farrah reveals father is Governor Thorne.',
-    harvester: '25hr: Harvester — "BIOLOGICAL PACIFICATION ASSET: HARVESTER, STATUS: AWAKENING."',
-    chen_wrong: '30hr: Chen Is Wrong — Sarah discovers Chen\'s behavior changed 11 years ago.',
-    black_site: '40hr: Black Site — Omega-Seven, captured shapeshifter memory. Sarah: "My mother is alive."'
+  personnel: {
+    sarah: 'Sarah Chen at rendezvous — STRENGTH: Human face, Chen connection, emotional credibility. RISK: Confluence targets her, Chen may react emotionally, shapeshifter may target her. CONSEQUENCE: +new_titan_stability if she speaks, +chen_countermeasures, +shapeshifter_suspicion risk.',
+    james: 'James Stellar at rendezvous — STRENGTH: Confluence survivor, firsthand testimony, military credibility. RISK: Confluence recognizes him, Vask may be present, trauma response. CONSEQUENCE: +new_titan_stability, +confluence_heat, -crew_morale if triggered.',
+    clark: 'Clark at rendezvous — STRENGTH: Evidence authentication, scientific proof, data integrity. RISK: Confluence may target data, sabotage risk. CONSEQUENCE: +public_truth if evidence verified, +mission_exposure risk.',
+    mitchell: 'Mitchell at rendezvous — STRENGTH: Detects deception, shapeshifter detection, danger sense. RISK: New Titan may fear him, Confluence knows his capability. CONSEQUENCE: -shapeshifter_suspicion if present, +crew_morale, but may cause tension with New Titan.',
+    thorne: 'Farah Thorne at rendezvous — STRENGTH: Personal connection to Governor Thorne (her father), tactical authority, New Titan native. RISK: Emotional conflict, Confluence may exploit relationship. CONSEQUENCE: +new_titan_stability large boost if she speaks to father, +crew_morale, but +chen_countermeasures if Chen sees it as family conspiracy.',
+    hayes: 'Hayes at rendezvous — STRENGTH: Comms expertise, can broadcast live, resistance spark. RISK: Public broadcast escalates everything. CONSEQUENCE: +resistance_spark, +public_truth, but +discredit_campaign, +confluence_heat.',
+    reeves: 'Reeves at rendezvous — STRENGTH: Escape route, emergency jump capability. RISK: Anxiety may show, pilot seen as flight risk. CONSEQUENCE: +crew_morale (safety net), no major clock impact.',
+    ramos: 'Ramos at rendezvous — STRENGTH: Engineering proof, ship damage evidence. RISK: May be seen as maintenance staff, not authority. CONSEQUENCE: Minor +new_titan_stability if showing ship damage.'
   },
+
+  shapeshifter_signs: `SHAPESHIFTER DETECTION SIGNS — use these as narrative seeds when shapeshifter_suspicion clock is active or player investigates infiltration:
+BIOMETRIC GLITCHES: Retina scan mismatch on two sequential scans. Fingerprint slightly wrong under magnification. Blood sample reacts oddly to standard tests. Body temperature 0.3°C too low. Pulse rate doesn't match stated emotional state.
+WRONG CADENCE: Speech patterns slightly off — pauses in wrong places, contractions used differently, sentence rhythm shifted. Uses a word the real person never uses. Doesn't use a verbal tic or catchphrase the real person always uses. Humor slightly wrong — jokes land flat or feel copied.
+BEHAVIORAL TELLS: Suddenly left-handed. Tea/coffee preference wrong. Doesn't flinch at a personal memory trigger. Knows a fact they shouldn't, doesn't know a fact they should. Micro-expression doesn't match stated emotion. Flinches at Mitchell's presence. Avoids direct skin contact.
+DETECTION METHODS: Mitchell senses wrongness (not specific — just unease). Sequential biometric scans over 24 hours. Questions only the real person would answer correctly. Skin contact reveals slightly wrong texture. Unity can detect nanite-level inconsistency if present.
+REMEMBER: Shapeshifters are patient and terrifying. They maintain cover until mission demands violence. Do not reveal a shapeshifter until evidence is earned through play. Suspicion should build slowly, not resolve quickly.`,
 
   response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"enemy_countermove":{"faction":"confluence|chen|vask|vescarri|guild|shapeshifters","action":"what the enemy does in response to Bub's success","clock_effects":[{"clock":"discredit_campaign|confluence_heat|chen_countermeasures|etc","delta":number}],"narration":"brief scene of the enemy countermove (1-3 sentences, woven into the main narration or appended)"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
 Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.
-ENEMY COUNTERMOVE: When Bub achieves a major success (convincing a faction, broadcasting evidence, winning a battle, securing an alliance), include enemy_countermove. The enemy does NOT sit still — Confluence sends injunctions, Chen issues recall orders, shapeshifters try to infiltrate, Vask moves closer, Guild starts sniffing around. Include clock_effects that reflect the enemy's response (typically raising discredit_campaign, confluence_heat, or chen_countermeasures). Omit enemy_countermove entirely for minor actions with no significant success.`
+ENEMY COUNTERMOVE: When Bub achieves a major success (convincing a faction, broadcasting evidence, winning a battle, securing an alliance), include enemy_countermove. The enemy does NOT sit still — Confluence sends injunctions, Chen issues recall orders, shapeshifters try to infiltrate, Vask moves closer, Guild starts sniffing around. Include clock_effects that reflect the enemy's response (typically raising discredit_campaign, confluence_heat, or chen_countermeasures). Omit enemy_countermove entirely for minor actions with no significant success.
+RENDEZVOUS_TEAM: When the player brings crew members to a meeting/rendezvous, include rendezvous_team as an array of crew keys (sarah, james, clark, mitchell, thorne, hayes, reeves, ramos). Apply the personnel consequences listed in the Personnel Consequences section as clock changes and decision_impact entries. Each person brought should create at least one clock effect and one decision_impact entry.`
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -426,8 +435,20 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
   // --- Build crew cards (relevant only) ---
   const crewCards = relevantCrew.map(key => CANON.crew[key]).filter(Boolean).join('\n');
 
-  // --- Build enemy cards (relevant only) ---
-  const enemyCards = relevantEnemies.map(key => CANON.enemies[key]).filter(Boolean).join('\n');
+  // --- Personnel consequence card (rendezvous/meeting scenes) ---
+  const isRendezvous = actionLower.includes('rendezvous') || actionLower.includes('off-world') || actionLower.includes('off world') || actionLower.includes('meeting point') || (actionLower.includes('bring') && (actionLower.includes('to the meeting') || actionLower.includes('to new titan') || actionLower.includes('with me')));
+  const personnelCards = isRendezvous
+    ? relevantCrew.map(key => CANON.personnel[key]).filter(Boolean).join('\n')
+    : '';
+
+  // --- Shapeshifter signs (when suspicion is active or player investigates) ---
+  const shapeshifterClock = clocks.shapeshifter_suspicion || 0;
+  const shapeshifterSigns = (shapeshifterClock > 0 || actionLower.includes('shapeshifter') || actionLower.includes('infiltrat') || actionLower.includes('verification') || actionLower.includes('who is real') || actionLower.includes('verify'))
+    ? CANON.shapeshifter_signs
+    : '';
+
+  // --- Rendezvous team tracking ---
+  const rendezvousTeam = flags.rendezvous_team || [];
 
   // --- Timeline status ---
   const timelineStatus = timeline
@@ -468,6 +489,10 @@ ${facStatus}
 
 ## Locations (relevant)
 ${locationStatus || 'none mentioned'}
+
+${personnelCards ? `## Personnel Consequences (Rendezvous Scene)\nThe player is organizing or attending a meeting/rendezvous. Track who they bring — each crew member has specific trust, risk, and clock consequences. Apply these in effects and decision_impact.\nPreviously brought: ${rendezvousTeam.length ? rendezvousTeam.join(', ') : 'none yet'}\n${personnelCards}` : ''}
+
+${shapeshifterSigns ? `## Shapeshifter Detection\nShapeshifter suspicion is active or the player is investigating infiltration. Use these narrative seeds to build tension slowly. Do NOT reveal a shapeshifter until evidence is earned through play.\n${shapeshifterSigns}` : ''}
 
 ## Recent Events
 ${history || 'The adventure has just begun.'}
@@ -606,7 +631,8 @@ ${CANON.response_format}`;
           },
           new_scene: { type: "string" },
           in_world_days_advanced: { type: "number" },
-          arc2_elements_introduced: { type: "array", items: { type: "string" } }
+          arc2_elements_introduced: { type: "array", items: { type: "string" } },
+          rendezvous_team: { type: "array", items: { type: "string" } }
         },
         required: ["narration"]
       },
@@ -756,6 +782,17 @@ ${CANON.response_format}`;
       newWorldState.location_states = locStates;
     }
 
+    // Rendezvous team tracking — accumulate who's been brought to meetings
+    if (Array.isArray(result.rendezvous_team) && result.rendezvous_team.length) {
+      const existing = Array.isArray(flags.rendezvous_team) ? flags.rendezvous_team : [];
+      for (const member of result.rendezvous_team) {
+        if (typeof member === 'string' && member.trim() && !existing.includes(member.trim())) {
+          existing.push(member.trim());
+        }
+      }
+      flags.rendezvous_team = existing;
+    }
+
     newWorldState.quest_flags = flags;
 
     // ═══ UPDATE CAMPAIGN ═══
@@ -822,6 +859,7 @@ ${CANON.response_format}`;
       new_scene: result.new_scene || campaign.current_scene,
       in_world_days_advanced: result.in_world_days_advanced || 0,
       arc2_elements_introduced: result.arc2_elements_introduced || [],
+      rendezvous_team: flags.rendezvous_team || [],
       discovery_effects: discoveryEffects || [],
       player_runtime_hours: timeline ? timeline.runtimeHours : 0,
       in_world_day: campaignUpdates.in_world_day || (campaign.in_world_day || 0),

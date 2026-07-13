@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Rocket, Shield, Activity, AlertTriangle, Users, FileText, MapPin, ChevronDown, ChevronUp, Lock, Eye, Newspaper } from 'lucide-react';
+import { Rocket, Shield, Activity, AlertTriangle, Users, FileText, MapPin, ChevronDown, ChevronUp, Lock, Eye, Newspaper, UserCheck } from 'lucide-react';
 import { PJ_SHIP_STATS } from '@/lib/pjRules';
 import { codexKey } from '@/lib/pjCodex';
 import { getVisibleMainClocks, findClock, getClockStatus, getClockTier } from '@/lib/pjClocks';
@@ -28,6 +28,7 @@ export default function PJCampaignStatus({ campaign, onOpenCodex }) {
   const evidence = flags.evidence || [];
   const allies = flags.allies || [];
   const enemies = flags.enemies || [];
+  const rendezvousTeam = flags.rendezvous_team || [];
   const currentLocation = flags.current_location || campaign?.current_scene || 'Unknown';
 
   const ntLabel = getNewTitanLabel(campaign);
@@ -44,6 +45,23 @@ export default function PJCampaignStatus({ campaign, onOpenCodex }) {
           <p className="text-[11px] font-body text-foreground truncate">{currentLocation}</p>
         </div>
       </div>
+
+      {/* Rendezvous Team — shown when someone has been brought to a meeting */}
+      {rendezvousTeam.length > 0 && (
+        <div className="pt-1 border-t border-border/30">
+          <div className="flex items-center gap-1.5 mb-1">
+            <UserCheck className="w-3 h-3 text-primary" strokeWidth={1.5} />
+            <span className="text-[9px] font-heading tracking-wide text-muted-foreground">BROUGHT TO MEETING</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {rendezvousTeam.map((m, i) => (
+              <span key={i} className="text-[9px] font-body text-foreground/80 px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">
+                {m}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Campaign Clocks — 4 most relevant for current scene */}
       <div>
