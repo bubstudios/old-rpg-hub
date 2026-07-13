@@ -2157,6 +2157,7 @@ Deno.serve(async (req) => {
       hp_max: bullet.hp_max,
       clock_changes: result.clock_changes || [],
       local_clock_changes: result.local_clock_changes || [],
+      local_clocks: updatedFlags.local_clocks || {},
       water_received: !!result.water_received,
       codex_unlocks: result.codex_unlocks || [],
       decision_impact: result.decision_impact || null,

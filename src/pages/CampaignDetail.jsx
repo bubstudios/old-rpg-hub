@@ -267,14 +267,12 @@ export default function CampaignDetail() {
         is_roll_result: true
       });
       // Apply GM response state changes immediately (same as submitTurn)
+      // Use the FINAL clock values returned by the GM, not LLM deltas
       setCampaign(prev => {
         if (!prev) return prev;
         const ws = prev.world_state || {};
         const flags = ws.quest_flags || {};
-        const localClocks = { ...(flags.local_clocks || {}) };
-        for (const cc of (res.data?.local_clock_changes || [])) {
-          localClocks[cc.clock] = Math.max(0, Math.min(100, (localClocks[cc.clock] || 0) + (cc.change || 0)));
-        }
+        const localClocks = res.data?.local_clocks || { ...(flags.local_clocks || {}) };
         return {
           ...prev,
           world_state: {
@@ -391,15 +389,15 @@ export default function CampaignDetail() {
         // the sidebar (clocks, pull intensity, conditions) updates without
         // waiting for loadData(). The DB is the source of truth — loadData()
         // confirms these values, and the subscription keeps them in sync.
+        // We use the FINAL clock values returned by the GM (after code-enforced
+        // trust floor, stage cap, rest recovery) — NOT the LLM delta changes,
+        // which may not match what was actually saved to the DB.
         setCampaign(prev => {
           if (!prev) return prev;
           const ws = prev.world_state || {};
           const flags = ws.quest_flags || {};
-          const localClocks = { ...(flags.local_clocks || {}) };
-          // Apply local clock changes from the GM response
-          for (const cc of (dmRes.data?.local_clock_changes || [])) {
-            localClocks[cc.clock] = Math.max(0, Math.min(100, (localClocks[cc.clock] || 0) + (cc.change || 0)));
-          }
+          // Use final clock values from the GM response (authoritative)
+          const localClocks = dmRes.data?.local_clocks || { ...(flags.local_clocks || {}) };
           // Apply hidden clock changes
           const campaignClocks = { ...(flags.campaign_clocks || {}) };
           for (const cc of (dmRes.data?.clock_changes || [])) {
