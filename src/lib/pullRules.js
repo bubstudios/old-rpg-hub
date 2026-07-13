@@ -509,7 +509,9 @@ export const PULL_INITIAL_STATE = {
   memories: [],
   guilt_echoes: [],
   current_objective: { title: 'Survive', description: 'Survive. Find water. Follow the Pull.' },
-  phase: 'Lost Survivor'
+  phase: 'Lost Survivor',
+  chapter_status: { chapter_001: 'available' },
+  chapter_handoffs: {}
 };
 
 export const PULL_OPENING_SCENE = `You wake face-down in red sand.

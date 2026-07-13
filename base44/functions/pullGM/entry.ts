@@ -30,6 +30,124 @@ const CANONICAL_PROVINCE_ORDER = [618, 472, 837, 269, 391, 512, 713, 927, 108, 4
 
 const PULL_LABELS = ['Quiet', 'Tug', 'Ache', 'Burn', 'Commanding', 'Blackout Risk', 'Override'];
 
+// ─── Chapter Packets (Chapter Module System) ───
+// Each chapter is a self-contained module. When a chapter ends (province transition),
+// a structured handoff is generated and saved. The next chapter loads ONLY the handoff
+// — not the previous chapter's detailed state. This prevents AI memory failures,
+// spoiler leaks, duplicate items, and wrong weapon attribution.
+const CHAPTER_PACKETS = {
+  1: {
+    carryForwardItems: ['etched shard', 'pipe', 'spark', 'breathing apparatus'],
+    requiredAlive: ['shard', 'spark'],
+    canonicalEvents: [
+      'Bullet woke in red sand with no memory.',
+      'Bullet found the etched shard in his pocket.',
+      'A mechanical bird scanned Bullet and reported to something distant.',
+      'Bullet reached Red Sand Camp.',
+      'Shard named him Bullet after seeing his circular scar.',
+      "Bullet completed Shard's task (retrieving the purifier core).",
+      'Bullet fought raiders with the pipe.',
+      'Spark loaned Bullet her unetched shard.',
+      'Shard gave Bullet breathing apparatus.',
+      'The Pull forced Bullet onward.',
+      'Bullet reached the wall of water.'
+    ],
+    bulletKnowledge: [
+      'He has no memory of who he was.',
+      'The Pull leads him forward through the Provinces.',
+      'The camp survivors also lack true memories — everyone woke here.',
+      'The next Province is water-like and dangerous.',
+      'The breathing apparatus is needed to survive there.'
+    ],
+    playerOnlyKnowledge: [
+      'A distant Leader knows an anomaly appeared in Province 618.',
+      'Bullet has no Nexus record.',
+      'An investigation has been ordered.'
+    ],
+    debts: [
+      'Spark expects Bullet to return someday.',
+      'Shard trusted Bullet enough to help him move on.'
+    ]
+  },
+  2: {
+    carryForwardItems: ['etched shard', 'pipe', 'spark', 'breathing apparatus'],
+    requiredAlive: [],
+    canonicalEvents: [],
+    bulletKnowledge: [],
+    playerOnlyKnowledge: [],
+    debts: []
+  }
+};
+
+// Generate a structured handoff when a chapter ends (province transition fires).
+// This is the ONLY data from the completed chapter that the next chapter receives.
+function generateChapterHandoff(flags, equipment, chapterNum) {
+  const packet = CHAPTER_PACKETS[chapterNum];
+  if (!packet) return null;
+
+  const chapterId = 'chapter_' + String(chapterNum).padStart(3, '0');
+  const nextChapterId = 'chapter_' + String(chapterNum + 1).padStart(3, '0');
+
+  const carryPatterns = packet.carryForwardItems.map(item =>
+    new RegExp(item.replace(/[-\s]/g, '.*'), 'i')
+  );
+  const inventory = (equipment || [])
+    .filter(e => carryPatterns.some(p => p.test(e.name)))
+    .map(e => e.name);
+
+  const npcRels = flags.npc_relationships || {};
+  const knownPeople = Object.entries(npcRels)
+    .filter(([, npc]) => npc.first_met)
+    .map(([key, npc]) => ({
+      key, name: npc.name || key, role: npc.role || '', status: npc.status || 'Alive'
+    }));
+
+  const variableOutcomes = {};
+  if (chapterNum === 1) {
+    variableOutcomes.cowboyStatus = (npcRels.cowboy?.status || 'Unknown').toLowerCase();
+    variableOutcomes.rivetStatus = (npcRels.rivet?.status || 'Unknown').toLowerCase();
+    variableOutcomes.campTrust = (flags.local_clocks || {}).camp_trust ?? 30;
+    variableOutcomes.campDamage = (flags.local_clocks || {}).raider_threat ?? 20;
+  }
+
+  const conditions = flags.conditions || [];
+  return {
+    completedChapter: chapterId,
+    nextChapter: nextChapterId,
+    bullet: {
+      name: flags.bullet_named ? 'Bullet' : 'The Stranger',
+      trueIdentityKnown: false,
+      condition: conditions.length > 2 ? 'injured but mobile' : 'worn but standing',
+      scarStatus: flags.scar_state || 'burning',
+      pullStatus: (flags.pull_intensity || 1) >= 4 ? 'intensifying' : 'present'
+    },
+    inventory,
+    knownPeople,
+    requiredAlive: packet.requiredAlive,
+    variableOutcomes,
+    canonicalEvents: packet.canonicalEvents,
+    bulletKnowledge: packet.bulletKnowledge,
+    playerOnlyKnowledge: packet.playerOnlyKnowledge,
+    debts: packet.debts
+  };
+}
+
+// Format a handoff for the AI prompt — compact summary so the AI knows what
+// happened in the previous chapter without loading all the detailed state.
+function formatHandoffForPrompt(handoff) {
+  if (!handoff) return '(No previous chapter handoff — this is the first chapter.)';
+  const lines = [];
+  lines.push(`Completed: ${handoff.completedChapter}`);
+  lines.push(`Bullet: ${handoff.bullet?.name} — ${handoff.bullet?.condition}, scar ${handoff.bullet?.scarStatus}, pull ${handoff.bullet?.pullStatus}`);
+  if (handoff.inventory?.length) lines.push(`Carried Items: ${handoff.inventory.join(', ')}`);
+  if (handoff.knownPeople?.length) lines.push(`People Remembered: ${handoff.knownPeople.map(n => `${n.name} (${n.role}, ${n.status})`).join('; ')}`);
+  if (handoff.debts?.length) lines.push(`Debts: ${handoff.debts.join(' ')}`);
+  if (handoff.canonicalEvents?.length) lines.push(`What Happened:\n${handoff.canonicalEvents.map(e => `  - ${e}`).join('\n')}`);
+  if (handoff.bulletKnowledge?.length) lines.push(`Bullet Knows:\n${handoff.bulletKnowledge.map(k => `  - ${k}`).join('\n')}`);
+  if (handoff.playerOnlyKnowledge?.length) lines.push(`Player-Only Knowledge (Bullet does NOT see/know these):\n${handoff.playerOnlyKnowledge.map(k => `  - ${k}`).join('\n')}`);
+  return lines.join('\n');
+}
+
 // ─── Chapter 1 Story Spine ───
 // 15 required sequences the GM must guide Bullet through. The prompt only
 // includes the CURRENT sequence's instruction, preventing the LLM from
@@ -182,6 +300,10 @@ RULES:
   * MEMORY fragments (e.g. 'to end its torment') unlock via memory_unlocks — partial, never a full explanation.
   * ITEM UNLOCKS fire ONCE: Spark's shard (after the tent scene), breathing apparatus (after Shard gives it at dawn), Patch's cloak (during camp rest or Chapter 2 transition), Thread's blade (after Thread gives it in the dome). Set the corresponding flag (spark_shard_acquired / breathing_gear_acquired / patch_cloak_acquired / thread_blade_acquired) and add the item via item_changes the FIRST time only. If the item already exists, update the card — do NOT re-add or re-popup.
 - INTERLUDE CUTSCENES (CRITICAL): Some beats are player-only — Bullet cannot see or react to them. Deliver these via the 'interlude' field (e.g. the Leader on a distant throne, operatives discussing 'the anomaly', the metal bird scanning Bullet). The interlude is shown to the player BEFORE the main narration. It does NOT update Bullet's state — no clocks, codex, items, HP, knowledge flags, or objectives. The player may learn atmospheric partial truths (a powerful figure elsewhere, Bullet is an anomaly, someone wants him investigated). NEVER reveal Michael, Father's identity, the Garden, or the full hidden truth in an interlude — keep it to 'elsewhere,' 'a distant throne,' 'the one who watches.' Narrative fear in main narration ('something was watching') is allowed; formal status unlocks (Hunted, Province 1 Alert, Hunter Proximity) are NEVER shown to the player — those are hidden GM clocks only.
+
+PREVIOUS CHAPTER HANDOFF (CRITICAL — Chapter Module System):
+This is the ONLY data from the previous chapter you receive. Do NOT reference events, NPCs, or details from previous chapters beyond what is listed here. Do NOT invent continuity from previous chapters — if it is not in the handoff, Bullet does not remember it in detail.
+${formatHandoffForPrompt(ctx.previousHandoff)}
 
 CURRENT GAME STATE:
 Province: ${ctx.currentProvince} — ${p.n}
@@ -459,8 +581,15 @@ Deno.serve(async (req) => {
     // Load recent journal entries
     const entries = await admin.entities.JournalEntry.filter({ campaign_id }, '-created_date', 8);
 
-    // Load recent canonical events (structured action ledger — the source of truth for what actually happened)
-    const recentEventsRaw = await admin.entities.EventLog.filter({ campaign_id }, '-created_date', 20);
+    // Load recent canonical events — CHAPTER-FILTERED: only events from the current chapter.
+    // This is the chapter module system: each chapter is self-contained. The handoff from
+    // the previous chapter provides the summary of what happened before, not the raw events.
+    const currentChapterNum = campaign.current_chapter || 1;
+    let recentEventsRaw = await admin.entities.EventLog.filter({ campaign_id, chapter: currentChapterNum }, '-created_date', 20);
+    // Fallback: if no events for this chapter yet (first turn of a new chapter), use empty list
+    if (!recentEventsRaw || recentEventsRaw.length === 0) {
+      recentEventsRaw = [];
+    }
     const recentEvents = recentEventsRaw.reverse();
 
     // Pre-load all campaign NPCs once (avoids per-NPC filter calls during upsert)
@@ -509,6 +638,13 @@ Deno.serve(async (req) => {
       flags.discovered_clocks = ['thirst', 'heat_exposure', 'fatigue'];
     }
 
+    // ─── Chapter Module System: Load previous chapter handoff ───
+    // When starting a new chapter, the AI receives ONLY the handoff from the previous
+    // chapter — not the full detailed state. This prevents memory failures and spoiler leaks.
+    const chapterHandoffs = flags.chapter_handoffs || {};
+    const prevChapterId = 'chapter_' + String(currentChapterNum - 1).padStart(3, '0');
+    const previousHandoff = chapterHandoffs[prevChapterId] || null;
+
     // Build recent story
     const recentStory = entries.reverse().map(e => {
       if (e.entry_type === 'narration') return `GM: ${(e.narration || '').substring(0, 300)}`;
@@ -546,6 +682,7 @@ Deno.serve(async (req) => {
       lastWeaponUsed: flags.last_weapon_used || '',
       recentStory,
       chapter1Sequence: flags.chapter1_sequence || 1,
+      previousHandoff,
       action
     });
 
@@ -937,6 +1074,22 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── Chapter Module System: Generate handoff on chapter completion ───
+    // When a province transition fires (chapter end), generate a structured handoff
+    // and save it. The next chapter loads ONLY this handoff — not the full state.
+    let chapterComplete = false;
+    let handoffData = null;
+    if (validTransition) {
+      handoffData = generateChapterHandoff(updatedFlags, [...(bullet.equipment || []), ...(charUpdates.equipment || [])], currentChapterNum);
+      if (handoffData) {
+        const completedChapterId = 'chapter_' + String(currentChapterNum).padStart(3, '0');
+        updatedFlags.chapter_handoffs = { ...(flags.chapter_handoffs || {}), [completedChapterId]: handoffData };
+        updatedFlags.chapter_status = { ...(flags.chapter_status || {}), [completedChapterId]: 'completed' };
+        chapterComplete = true;
+        console.log('[PullGM] Chapter ' + currentChapterNum + ' complete — handoff saved for ' + completedChapterId);
+      }
+    }
+
     // Save campaign state (parallel with other saves)
     savePromises.push(admin.entities.Campaign.update(campaign_id, {
       world_state: { ...ws, quest_flags: updatedFlags },
@@ -1025,7 +1178,9 @@ Deno.serve(async (req) => {
       knowledge_flags: updatedFlags.knowledge_flags || {},
       bullet_named: !!updatedFlags.bullet_named,
       camp_arc_complete: !!updatedFlags.camp_arc_complete,
-      chapter1_sequence: updatedFlags.chapter1_sequence || 1
+      chapter1_sequence: updatedFlags.chapter1_sequence || 1,
+      chapter_complete: chapterComplete,
+      handoff: handoffData
     });
 
   } catch (error) {

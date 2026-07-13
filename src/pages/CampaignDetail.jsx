@@ -36,6 +36,8 @@ import PullCodex from '@/components/pull/PullCodex';
 import PullDecisionImpact from '@/components/pull/PullDecisionImpact';
 import PullUnlockNotifications from '@/components/pull/PullUnlockNotifications';
 import PullWorldState from '@/components/pull/PullWorldState';
+import ChapterCompleteScreen from '@/components/pull/ChapterCompleteScreen';
+import { getNextChapter } from '@/lib/pullChapters';
 import { buildUnlockNotifications } from '@/lib/pullUnlockNotifications';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -83,6 +85,8 @@ export default function CampaignDetail() {
   const [pullCodexOpen, setPullCodexOpen] = useState(false);
   const [pullImpact, setPullImpact] = useState(null);
   const [pullUnlocks, setPullUnlocks] = useState([]);
+  const [chapterComplete, setChapterComplete] = useState(null);
+  const [continuingChapter, setContinuingChapter] = useState(false);
   const feedRef = useRef(null);
 
   useEffect(() => {
@@ -250,6 +254,10 @@ export default function CampaignDetail() {
       processDecisionImpact(res.data, rollResult?.summary);
       setLatestResult(res.data);
       setProcessing(false);
+      if (res.data?.chapter_complete && res.data?.handoff) {
+        const completedNum = parseInt((res.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
+        setChapterComplete({ handoff: res.data.handoff, chapterNumber: completedNum });
+      }
       await loadData();
       setLatestResult(null);
     } catch (e) {
@@ -345,6 +353,10 @@ export default function CampaignDetail() {
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
         setProcessing(false);
+        if (dmRes.data?.chapter_complete && dmRes.data?.handoff) {
+          const completedNum = parseInt((dmRes.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
+          setChapterComplete({ handoff: dmRes.data.handoff, chapterNumber: completedNum });
+        }
         await loadData();
         setLatestResult(null);
       }
@@ -375,6 +387,28 @@ export default function CampaignDetail() {
       toast.success('Round reset.');
     } catch (e) {
       toast.error('Failed to reset round');
+    }
+  }
+
+  async function handleContinueToNextChapter() {
+    if (!chapterComplete) return;
+    setContinuingChapter(true);
+    try {
+      const nextCh = getNextChapter(chapterComplete.chapterNumber);
+      if (nextCh?.openingNarration) {
+        await base44.entities.JournalEntry.create({
+          campaign_id: campaignId,
+          entry_type: 'narration',
+          narration: nextCh.openingNarration,
+          chapter: chapterComplete.chapterNumber + 1
+        });
+      }
+      await loadData();
+      setChapterComplete(null);
+    } catch (e) {
+      toast.error('Failed to start next chapter');
+    } finally {
+      setContinuingChapter(false);
     }
   }
 
@@ -900,6 +934,13 @@ export default function CampaignDetail() {
           <PullUnlockNotifications
             notifications={pullUnlocks}
             onDismiss={() => setPullUnlocks([])}
+          />
+          <ChapterCompleteScreen
+            open={!!chapterComplete}
+            handoff={chapterComplete?.handoff}
+            chapterNumber={chapterComplete?.chapterNumber || 1}
+            onContinue={handleContinueToNextChapter}
+            continuing={continuingChapter}
           />
         </>
       )}
