@@ -386,6 +386,7 @@ RULES:
 - Blackout combat should create fear and consequence, not reward.
 - BAREFOOT: Bullet is ALWAYS BAREFOOT. He has no boots, shoes, or footwear of any kind — ever. Never write "boots," "shoes," "boots pound," "booted feet," or any reference to Bullet wearing footwear. His feet are bare: "bare feet pound," "soles slap stone," "toes grip sand," etc. Other characters may wear boots; Bullet never does. This is a core character trait tied to his amnesiac origins.
 - NO GUNS (CRITICAL): Guns and firearms do NOT exist in this realm. NEVER write "revolver," "pistol," "rifle," "shotgun," "handgun," "musket," or any firearm. No character owns, carries, draws, or fires a gun. Weapons are melee or improvised: pipes, blades, clubs, spears, bows, crossbows, thrown rocks, tools, sharpened scrap, etc. The camp's defense uses spears, crossbows, blades, and barricades — not guns. If an NPC is described with a weapon, give them a blade, club, spear, crossbow, or improvised tool instead of a firearm.
+- NO EARTH-BASED SOCIAL LABELS (CRITICAL): These people have NO memory of cities, towns, villages, governments, schools, streets, or normal civilization. They are NOT "city-dwellers," "villagers," "townsfolk," "citizens," "civilians," "suburban," "urban," "rural," "modern people," or "Earthborn." NEVER use those words. They only know the Province they are in and their survival role there. Describe people by what they DO to survive: camp survivor, scavenger, watcher, healer, fighter, drifter, new blood, ruin runner, camp leader, dome dweller, tunnel survivor, block survivor, red-sand survivor. The camp speaks in terms of water, heat, ruins, shards, scrap, storms, raiders, the camp, the dunes, the next Province, the Pull, and memory gaps — NEVER cities, governments, jobs, schools, towns, streets, Earth, or normal society (unless a character is explicitly remembering a broken memory fragment from before). They are survivors inside Provinces, not members of a recognizable society.
 - THE PIPE: Bullet does NOT start with a weapon. The first time he faces a physical threat or combat, narrate him instinctively snatching up a battered metal pipe (or similar bludgeon) from the environment — his body remembering what his mind has forgotten. This is a significant narrative beat: a wounded amnesiac reaching for something to swing. Add the pipe to inventory via item_changes (action: "add", item: "Battered Metal Pipe") and set pipe_state to "battered_metal_pipe". Do NOT give him the pipe before the first physical confrontation. After acquisition, the pipe becomes his main weapon, walking stick, and an emotional anchor — it collects scars and stories from every Province.
 - THE NAMING (CRITICAL): The protagonist does not start with a name. NPCs call him "the stranger," "the wounded one," or similar. The naming scene has a STRICT ORDER that MUST be followed: (1) Shard confronts the stranger, (2) Shard asks who he is / "You got a name?", (3) the stranger says he does not know — no memory, woke in the sand, (4) Shard notices the circular scar over his heart, (5) Shard names him "Bullet" — "On account of that mark. Looks like someone put a round through you and you were too stubborn to die." ONLY at step 5 do you return bullet_named: true. Before that moment, NEVER use the name "Bullet" in narration, NPC dialogue, choices, objectives, or codex — refer to him as "you," "the stranger," "the wounded man," "the nameless one." If Bullet Named (below) is already "Yes," the naming has happened — use "Bullet" freely in NPC dialogue and narration.
 - CHAPTER 1 CAMP ARC & DEPARTURE (CRITICAL): The Red Sand Camp arc has a clear structure: (1) Bullet arrives and is named, (2) Shard assigns a mission (retrieve a purifier part), (3) Bullet completes the mission and fights off the raiders, (4) the arc is COMPLETE. DURING the arc (steps 1-3), the Pull is QUIET — the camp is where the Pull brought him, and helping these people is the purpose. Do NOT burn or escalate the Pull during the arc. Only once Camp Arc Complete (below) is "YES" (step 4 done) does the Pull begin to intensify every turn — the scar burns, visions come, Bullet feels the unbearable compulsion to leave. Do NOT assign new camp errands, secondary missions, or side tasks to delay departure. The camp was a stop, not a home. He cannot stay. He must move on. Drive toward the departure beat: Bullet says goodbye (or doesn't), leaves the camp, and the Pull drags him toward the next Province. Set a province_transition to 472 when the departure scene concludes. You are in the departure beat now — escalate pull_intensity toward 4-5 (Commanding/Blackout Risk) and narrate the Pull overriding Bullet's will to stay. This is a major story beat, not a side quest.
@@ -546,6 +547,42 @@ function sanitizeNarration(text) {
     if (matches) {
       cleaned = cleaned.replace(pattern, replacement);
       corrections.push(`footwear "${matches[0]}" → "${replacement}"`);
+    }
+  }
+
+  // Earth-based social labels do not fit The Pull — these people have no memory
+  // of cities, towns, governments, or normal civilization. They are survivors
+  // inside Provinces, defined by their survival role, not an Earth society.
+  const earthLabelRules = [
+    [/\bcity-dweller\b/gi, 'survivor'],
+    [/\bcity dweller\b/gi, 'survivor'],
+    [/\bcity dwellers\b/gi, 'survivors'],
+    [/\bcity people\b/gi, 'survivors'],
+    [/\bvillagers\b/gi, 'survivors'],
+    [/\bvillager\b/gi, 'survivor'],
+    [/\btownsfolk\b/gi, 'survivors'],
+    [/\btownsman\b/gi, 'survivor'],
+    [/\btownsmen\b/gi, 'survivors'],
+    [/\btownsperson\b/gi, 'survivor'],
+    [/\bvillage elder\b/gi, 'camp elder'],
+    [/\blocal town\b/gi, 'the camp'],
+    [/\bsuburban\b/gi, 'worn'],
+    [/\burban\b/gi, 'worn'],
+    [/\brural\b/gi, 'worn'],
+    [/\bcitizens\b/gi, 'survivors'],
+    [/\bcitizen\b/gi, 'survivor'],
+    [/\bcivilians\b/gi, 'survivors'],
+    [/\bcivilian\b/gi, 'survivor'],
+    [/\bmodern person\b/gi, 'survivor'],
+    [/\bmodern people\b/gi, 'survivors'],
+    [/\bearthborn\b/gi, 'survivor'],
+    [/\bearth-born\b/gi, 'survivor']
+  ];
+  for (const [pattern, replacement] of earthLabelRules) {
+    const matches = cleaned.match(pattern);
+    if (matches) {
+      cleaned = cleaned.replace(pattern, replacement);
+      corrections.push(`earth-label "${matches[0]}" → "${replacement}"`);
     }
   }
 
