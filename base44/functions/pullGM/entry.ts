@@ -408,6 +408,17 @@ Deno.serve(async (req) => {
     const codexUnlocks = flags.codex_unlocks || [];
     const currentProvince = flags.current_province || 618;
 
+    // Campaigns that predate the bullet_named flag may have already had the naming
+    // scene — Shard met Bullet and is interacting with him (giving gear, talking
+    // casually). Infer the flag so the GM keeps using "Bullet" instead of reverting
+    // to "the stranger." Shard names him at first meeting when she sees the scar.
+    if (!flags.bullet_named) {
+      const shardRel = (flags.npc_relationships || {}).shard;
+      if (shardRel && (shardRel.first_met || (shardRel.player_knowledge && shardRel.player_knowledge.length > 0))) {
+        flags.bullet_named = true;
+      }
+    }
+
     // Reset prematurely discovered clocks for campaigns still at the opening
     if ((campaign.current_chapter || 1) === 1 && Object.keys(flags.npc_relationships || {}).length === 0) {
       flags.discovered_clocks = ['thirst', 'heat_exposure', 'fatigue'];
