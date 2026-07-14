@@ -509,13 +509,76 @@ export default function CampaignDetail() {
       } : prev);
 
       if (data.dm_processing) {
-        // The DM is reportedly processing, but the round might be stuck.
-        // Auto-reset so the player isn't permanently blocked, and restore their
-        // action text so they can resend immediately.
-        await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
-        if (!isAgree) setAction(actionText);
-        toast('A stuck round was cleared — resending your command...');
+        // The DM is still processing the previous turn. Wait and retry
+        // instead of clearing the round (which would interfere with the
+        // in-progress DM call). The submitAction backend has a 90s auto-reset
+        // for truly stuck flags, so we just need to be patient.
+        setCampaign(prev => prev ? { ...prev, dm_processing: true } : prev);
+        let retried = false;
+        for (let attempt = 0; attempt < 8; attempt++) {
+          await new Promise(r => setTimeout(r, 3000));
+          const retryRes = await base44.functions.invoke('campaignData', {
+            op: 'submitAction',
+            campaign_id: campaignId,
+            acting_character_id: myCharacter.id,
+            action: actionText,
+            is_agree: isAgree
+          });
+          const retryData = retryRes.data;
+          if (!retryData.dm_processing) {
+            // DM finished — re-enter the normal flow with the retry data
+            setCampaign(prev => prev ? {
+              ...prev,
+              pending_actions: retryData.pending_actions || prev.pending_actions,
+              dm_processing: !!retryData.should_invoke_dm
+            } : prev);
+            if (retryData.should_invoke_dm) {
+              const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : campaign?.game_system === 'pathfinder' ? 'pathfinderTurn' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+              const dmRes = await base44.functions.invoke(dmFunc, {
+                campaign_id: campaignId,
+                action: retryData.combined_action,
+                acting_character_id: myCharacter.id,
+                skip_action_log: true
+              });
+              await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+              setCampaign(prev => {
+                if (!prev) return prev;
+                const ws = prev.world_state || {};
+                const flags = ws.quest_flags || {};
+                const campaignClocks = { ...(flags.campaign_clocks || {}) };
+                for (const cc of (dmRes.data?.clock_changes || [])) {
+                  campaignClocks[cc.clock] = Math.max(0, Math.min(100, (campaignClocks[cc.clock] || 0) + (cc.change || 0)));
+                }
+                return {
+                  ...prev,
+                  pending_actions: [],
+                  dm_processing: false,
+                  world_state: {
+                    ...ws,
+                    quest_flags: {
+                      ...flags,
+                      campaign_clocks: campaignClocks,
+                      ...(dmRes.data?.active_operations ? { active_operations: dmRes.data.active_operations } : {})
+                    }
+                  }
+                };
+              });
+              processDecisionImpact(dmRes.data, actionText);
+              setLatestResult(dmRes.data);
+              await loadData();
+              setLatestResult(null);
+              retried = true;
+            }
+            break;
+          }
+        }
+        if (!retried) {
+          // Still stuck after 24 seconds — force-clear and restore the action
+          await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+          setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+          if (!isAgree) setAction(actionText);
+          toast.error('The DM was still processing. Please try sending your command again.');
+        }
         return;
       }
 
