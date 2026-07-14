@@ -1371,8 +1371,9 @@ Extract:
       // Atomically append (preserves concurrent submissions from different players)
       await admin.entities.Campaign.updateMany({ id: campaign_id }, { $push: { pending_actions: newEntry } });
 
-      // Log the player's action as a journal entry so the whole party sees it in real time
-      if (!agree) {
+      // For Pathfinder Journeys, skip the action echo — the DM narration describes
+      // the order and crew response instead of echoing it as separate dialogue.
+      if (!agree && campaign.game_system !== 'pathfinder') {
         await base44.entities.JournalEntry.create({
           campaign_id,
           entry_type: 'action',

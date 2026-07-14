@@ -596,11 +596,12 @@ ${timelineStatus}
 
 ## ORDER HANDLING
 When the player gives a command or order (not a question), the narration MUST:
-1. Show the relevant crew responding to the order — not just echo Bub words back.
-2. Describe what actions are being taken as a result of the order.
-3. Always include decision_impact with clock changes and consequences.
-4. If the order starts a new task or operation, include it in active_operations.
-The player should never have to wonder whether an order worked.
+1. Do NOT start by repeating the player's command as Bub dialogue. The command is already known — jump straight to the crew response.
+2. Show the relevant crew responding to the order with their own dialogue and actions.
+3. Describe what actions are being taken as a result of the order.
+4. Always include decision_impact with clock changes and consequences.
+5. If the order starts a new task or operation, include it in active_operations.
+The player should never have to wonder whether an order worked. Show confirmation, crew response, and consequences.
 
 Respond as the GM with the JSON object.`;
 }
