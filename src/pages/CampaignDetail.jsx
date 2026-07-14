@@ -173,33 +173,41 @@ export default function CampaignDetail() {
     toast.success('Command ready — review and send when ready.');
   }
 
-  async function handleCrewAdvice(advisor) {
+  async function handleCrewAction(advisor, actionText) {
     if (processing || posting) return;
-    const advice = getAdvisorAdvice(campaign, advisor.key);
-    if (!advice) return;
-    const adviceText = formatCrewAdvice(advisor, advice);
-    if (!adviceText) return;
-    setPosting(true);
-    const tempEntry = {
-      entry_type: 'discussion',
-      narration: adviceText,
-      acting_character_name: advisor.name
-    };
-    setEntries(prev => [...prev, tempEntry]);
-    try {
-      await base44.functions.invoke('campaignData', {
-        op: 'postDiscussion',
-        campaign_id: campaignId,
-        message: adviceText,
-        acting_character_name: advisor.name
-      });
-      await reloadEntries();
-    } catch (e) {
-      toast.error('Failed to get crew advice');
-      setEntries(prev => prev.slice(0, -1));
-    } finally {
-      setPosting(false);
+    if (!hasBillingAccess) {
+      setPurchaseOpen(true);
+      return;
     }
+    setPosting(true);
+    // Post the crew member's advice as a discussion entry for journal context
+    const advice = getAdvisorAdvice(campaign, advisor.key);
+    if (advice && typeof advice !== 'string') {
+      const adviceText = formatCrewAdvice(advisor, advice);
+      const tempEntry = {
+        entry_type: 'discussion',
+        narration: adviceText,
+        acting_character_name: advisor.name
+      };
+      setEntries(prev => [...prev, tempEntry]);
+      try {
+        await base44.functions.invoke('campaignData', {
+          op: 'postDiscussion',
+          campaign_id: campaignId,
+          message: adviceText,
+          acting_character_name: advisor.name
+        });
+      } catch (e) {
+        // Continue even if advice posting fails
+      }
+    }
+    setPosting(false);
+    // Submit the chosen action as a regular game command
+    await submitTurn(actionText, false);
+  }
+
+  function handleDiscuss(advisor, questionText) {
+    handleSuggestAction(questionText);
   }
 
   function processDecisionImpact(dmData, decisionText) {
@@ -381,15 +389,11 @@ export default function CampaignDetail() {
     const submittedAction = action.trim();
     setAction('');
 
-    // Crew advice — route to crew advice system instead of normal action
+    // Crew advice — open the crew advice dialog with action buttons
     if (campaign?.game_system === 'pathfinder') {
       const intent = detectCrewAdviceIntent(submittedAction);
       if (intent.isAdvice) {
-        if (intent.advisor) {
-          await handleCrewAdvice(intent.advisor);
-        } else {
-          setCrewAdviceOpen(true);
-        }
+        setCrewAdviceOpen(true);
         return;
       }
     }
@@ -1214,7 +1218,8 @@ export default function CampaignDetail() {
             open={crewAdviceOpen}
             onOpenChange={setCrewAdviceOpen}
             campaign={campaign}
-            onCrewAdvice={handleCrewAdvice}
+            onCrewAction={handleCrewAction}
+            onDiscuss={handleDiscuss}
           />
         </>
       )}

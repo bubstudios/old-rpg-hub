@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Users, ChevronRight, Lightbulb, AlertTriangle } from 'lucide-react';
+import { Users, AlertTriangle, MessageCircle, X, ArrowLeft } from 'lucide-react';
 import { getAllAdvice } from '@/lib/pjCrewAdvice';
 
 const ICON_MAP = {
@@ -18,18 +18,43 @@ const ICON_MAP = {
   Stethoscope: Users
 };
 
-export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewAdvice }) {
+const FOLLOW_UP_QUESTIONS = [
+  'What part worries you most?',
+  'Which option is safest?',
+  'What would you do in my position?'
+];
+
+function getFirstName(name) {
+  return name.replace(/^(Cmdr|Lt|Ens|Prof|Dr|Chief|Lt\.)\s+/, '').split(' ')[0];
+}
+
+export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewAction, onDiscuss }) {
   const [advice, setAdvice] = useState([]);
+  const [dismissed, setDismissed] = useState({});
+  const [discussing, setDiscussing] = useState(null);
 
   useEffect(() => {
     if (open && campaign) {
       setAdvice(getAllAdvice(campaign));
+      setDismissed({});
+      setDiscussing(null);
     }
   }, [open, campaign]);
 
-  function handleAsk(advisor) {
-    onCrewAdvice?.(advisor);
+  function handleAction(advisor, actionText) {
+    onCrewAction?.(advisor, actionText);
     onOpenChange(false);
+  }
+
+  function handleFollowUp(advisor, question) {
+    const firstName = getFirstName(advisor.name);
+    const questionText = `${firstName}, ${question.toLowerCase()}`;
+    onDiscuss?.(advisor, questionText);
+    onOpenChange(false);
+  }
+
+  function handleDismiss(key) {
+    setDismissed(prev => ({ ...prev, [key]: true }));
   }
 
   return (
@@ -42,13 +67,15 @@ export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewA
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-xs text-muted-foreground font-body leading-relaxed mb-3">
-          The bridge crew offers their read on the current situation. Each officer advises from their area of expertise — listen to the people who know things you don't.
+        <p className="text-xs text-muted-foreground font-body leading-relaxed mb-2">
+          These are recommendations, not automatic orders. Click an action to issue the command.
+          Multiple crew members may recommend different approaches — you do not have to follow all advice.
         </p>
 
         <div className="space-y-2.5">
-          {advice.map((a) => {
+          {advice.filter(a => !dismissed[a.key]).map((a) => {
             const Icon = ICON_MAP[a.icon] || Users;
+            const isDiscussing = discussing === a.key;
             return (
               <div
                 key={a.key}
@@ -66,23 +93,13 @@ export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewA
                     </p>
                   )}
                 </div>
+
                 <div className="px-3 py-2.5">
                   {a.available ? (
                     <>
                       <p className="text-sm font-body italic text-foreground/85 leading-relaxed">
                         "{a.advice.quote}"
                       </p>
-
-                      {a.advice.recommendedActions?.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          <p className="text-[9px] font-heading tracking-wide text-muted-foreground">RECOMMENDED ACTIONS</p>
-                          <ol className="text-xs font-body text-foreground/75 leading-relaxed list-decimal list-inside space-y-0.5">
-                            {a.advice.recommendedActions.map((action, i) => (
-                              <li key={i}>{action}</li>
-                            ))}
-                          </ol>
-                        </div>
-                      )}
 
                       {a.advice.riskWarning && (
                         <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-500/90 font-body">
@@ -91,12 +108,54 @@ export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewA
                         </div>
                       )}
 
-                      <button
-                        onClick={() => handleAsk(a)}
-                        className="mt-2.5 flex items-center gap-1 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <Lightbulb className="w-3 h-3" /> ASK {a.name.toUpperCase()} <ChevronRight className="w-3 h-3" />
-                      </button>
+                      {isDiscussing ? (
+                        <div className="mt-2.5 space-y-1.5">
+                          <p className="text-[9px] font-heading tracking-wide text-muted-foreground">FOLLOW-UP QUESTIONS</p>
+                          {FOLLOW_UP_QUESTIONS.map((q, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleFollowUp(a, q)}
+                              className="block w-full text-left text-xs font-body text-foreground/75 hover:text-primary transition-colors py-1 px-2 rounded hover:bg-primary/5"
+                            >
+                              "{q}"
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => setDiscussing(null)}
+                            className="flex items-center gap-1 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-foreground transition-colors mt-1.5"
+                          >
+                            <ArrowLeft className="w-3 h-3" /> Back to actions
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-2.5 space-y-1.5">
+                          <p className="text-[9px] font-heading tracking-wide text-muted-foreground">RECOMMENDED ACTIONS</p>
+                          {a.advice.recommendedActions?.map((action, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleAction(a, action)}
+                              className="block w-full text-left text-xs font-body text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors px-2.5 py-2 rounded border border-border/30 hover:border-primary/30"
+                            >
+                              {action}
+                            </button>
+                          ))}
+
+                          <div className="flex gap-3 mt-2">
+                            <button
+                              onClick={() => setDiscussing(a.key)}
+                              className="flex items-center gap-1 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-primary transition-colors"
+                            >
+                              <MessageCircle className="w-3 h-3" /> DISCUSS
+                            </button>
+                            <button
+                              onClick={() => handleDismiss(a.key)}
+                              className="flex items-center gap-1 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <X className="w-3 h-3" /> DISMISS
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <p className="text-xs font-body italic text-muted-foreground leading-relaxed py-1">
