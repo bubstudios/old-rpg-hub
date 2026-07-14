@@ -185,7 +185,8 @@ Rules: narration always present. Only include effects that ACTUALLY changed this
 ENEMY COUNTERMOVE: When Bub achieves a major success (convincing a faction, broadcasting evidence, winning a battle, securing an alliance), include enemy_countermove. The enemy does NOT sit still — Confluence sends injunctions, Chen issues recall orders, shapeshifters try to infiltrate, Vask moves closer, Guild starts sniffing around. Include clock_effects that reflect the enemy's response (typically raising discredit_campaign, confluence_heat, or chen_countermeasures). Omit enemy_countermove entirely for minor actions with no significant success.
 RENDEZVOUS_TEAM: When the player brings crew members to a meeting/rendezvous, include rendezvous_team as an array of crew keys (sarah, james, clark, mitchell, thorne, hayes, reeves, ramos). Apply the personnel consequences listed in the Personnel Consequences section as clock changes and decision_impact entries. Each person brought should create at least one clock effect and one decision_impact entry.
 FUTURE_ECHO: ONLY include future_echo when the turn packet says "FUTURE ECHO REQUESTED". Include: crew_member (key), echo_type (tactical|emotional|evidence|warning), certainty (low|medium|high|critical), memory_fragment (vague sensory/emotional flash — NEVER exact spoilers), practical_hint (what it means for the crew), effects (array of unlocked options/revealed risks), trigger (brief context that caused it). Do NOT generate a future_echo unless requested.
-FUTURE_ECHO_PUBLIC_USE: Set to true ONLY if the player explicitly tries to use, broadcast, cite, or present future memories as evidence to outsiders. This triggers secrecy penalties: Public Truth -5, New Titan Trust -4, Chen Countermeasures +8, Temporal Instability +3.`
+FUTURE_ECHO_PUBLIC_USE: Set to true ONLY if the player explicitly tries to use, broadcast, cite, or present future memories as evidence to outsiders. This triggers secrecy penalties: Public Truth -5, New Titan Trust -4, Chen Countermeasures +8, Temporal Instability +3.
+ACTIVE_OPERATIONS: When the player starts a new task, mission, or operation (e.g., "Build a physical evidence courier", "Prepare for the rendezvous", "Establish contact with the resistance"), include active_operations in the response. Each operation: {"title":"Operation Name","type":"category","status":"active","assigned_crew":["clark","hayes"],"source_advisor":"james","objective":"what they are doing","progress":0,"risks":["risk1"],"rewards":["reward1"]}. Update existing operations (match by title) rather than duplicating. The narration MUST show the relevant crew responding to the order and describe what they are doing — never just echo the player command back as dialogue. Always include decision_impact for player orders.`
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -593,6 +594,14 @@ ${history || 'The adventure has just begun.'}
 ## Timeline
 ${timelineStatus}
 
+## ORDER HANDLING
+When the player gives a command or order (not a question), the narration MUST:
+1. Show the relevant crew responding to the order — not just echo Bub words back.
+2. Describe what actions are being taken as a result of the order.
+3. Always include decision_impact with clock changes and consequences.
+4. If the order starts a new task or operation, include it in active_operations.
+The player should never have to wonder whether an order worked.
+
 Respond as the GM with the JSON object.`;
 }
 
@@ -739,7 +748,24 @@ ${CANON.response_format}`;
               trigger: { type: "string" }
             }
           },
-          future_echo_public_use: { type: "boolean" }
+          future_echo_public_use: { type: "boolean" },
+          active_operations: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                type: { type: "string" },
+                status: { type: "string" },
+                assigned_crew: { type: "array", items: { type: "string" } },
+                source_advisor: { type: "string" },
+                objective: { type: "string" },
+                progress: { type: "number" },
+                risks: { type: "array", items: { type: "string" } },
+                rewards: { type: "array", items: { type: "string" } }
+              }
+            }
+          }
         },
         required: ["narration"]
       },
@@ -949,6 +975,32 @@ ${CANON.response_format}`;
       flags.arc3 = arc3State;
     }
 
+    // Active operations — track player-started tasks
+    if (Array.isArray(result.active_operations) && result.active_operations.length) {
+      const existingOps = Array.isArray(flags.active_operations) ? [...flags.active_operations] : [];
+      for (const op of result.active_operations) {
+        if (!op.title) continue;
+        const existing = existingOps.find(o => String(o.title).toLowerCase() === String(op.title).toLowerCase());
+        if (existing) {
+          Object.assign(existing, op);
+        } else {
+          existingOps.push({
+            title: String(op.title),
+            type: String(op.type || 'General'),
+            status: String(op.status || 'active'),
+            assigned_crew: Array.isArray(op.assigned_crew) ? op.assigned_crew : [],
+            source_advisor: String(op.source_advisor || ''),
+            objective: String(op.objective || ''),
+            progress: Number(op.progress) || 0,
+            risks: Array.isArray(op.risks) ? op.risks : [],
+            rewards: Array.isArray(op.rewards) ? op.rewards : [],
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+      flags.active_operations = existingOps;
+    }
+
     newWorldState.quest_flags = flags;
 
     // ═══ UPDATE CAMPAIGN ═══
@@ -1020,6 +1072,7 @@ ${CANON.response_format}`;
       future_echo: result.future_echo || null,
       future_echo_public_use: result.future_echo_public_use || false,
       echo_cooldown: flags.echo_cooldown || 0,
+      active_operations: flags.active_operations || [],
       discovery_effects: discoveryEffects || [],
       player_runtime_hours: timeline ? timeline.runtimeHours : 0,
       in_world_day: campaignUpdates.in_world_day || (campaign.in_world_day || 0),

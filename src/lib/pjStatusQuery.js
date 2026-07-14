@@ -13,6 +13,13 @@ const STATUS_KEYWORDS = [
   'give me a status', 'where is the pathfinder', 'what is our situation'
 ];
 
+const OPERATION_STATUS_KEYWORDS = [
+  'status of the', 'what is the status of', 'how is the',
+  'progress on', 'courier status', 'operation status',
+  'what happened to the', 'is the courier', 'has the courier',
+  'did the courier', 'how goes the'
+];
+
 const MISSION_KEYWORDS = [
   'review mission', 'current mission', 'what is the mission',
   'what is my mission', 'what am i supposed to do', 'what is the objective',
@@ -21,6 +28,7 @@ const MISSION_KEYWORDS = [
 
 export function detectStatusQuery(input) {
   const text = String(input || '').toLowerCase().trim();
+  if (OPERATION_STATUS_KEYWORDS.some(kw => text.includes(kw))) return 'operation_query';
   if (STATUS_KEYWORDS.some(kw => text.includes(kw))) return 'status_query';
   if (MISSION_KEYWORDS.some(kw => text.includes(kw))) return 'mission_query';
   return null;
@@ -90,4 +98,22 @@ export function buildMissionResponse(campaign) {
   text += `and decide what kind of future is worth fighting for.`;
 
   return text;
+}
+
+export function buildOperationStatusResponse(campaign) {
+  const flags = campaign?.world_state?.quest_flags || {};
+  const ops = flags.active_operations || [];
+  if (!ops.length) {
+    return 'No active operations. Issue a command to start one.';
+  }
+  let text = 'ACTIVE OPERATIONS\n\n';
+  for (const op of ops) {
+    text += `${op.title}\n`;
+    text += `Status: ${op.status || 'Active'}\n`;
+    if (op.assigned_crew?.length) text += `Assigned: ${op.assigned_crew.join(', ')}\n`;
+    if (op.objective) text += `Objective: ${op.objective}\n`;
+    if (op.risks?.length) text += `Risks: ${op.risks.join('; ')}\n`;
+    text += '\n';
+  }
+  return text.trim();
 }

@@ -32,7 +32,7 @@ import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
 import { isArc3Unlocked } from '@/lib/pjArc3';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import { detectCrewAdviceIntent, getAdvisorAdvice, formatCrewAdvice } from '@/lib/pjCrewAdvice';
-import { detectStatusQuery, buildStatusResponse, buildMissionResponse } from '@/lib/pjStatusQuery';
+import { detectStatusQuery, buildStatusResponse, buildMissionResponse, buildOperationStatusResponse } from '@/lib/pjStatusQuery';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
 import FutureEchoPopup from '@/components/pj/FutureEchoPopup';
@@ -436,6 +436,10 @@ export default function CampaignDetail() {
         await handleStatusQuery(buildMissionResponse(campaign));
         return;
       }
+      if (statusType === 'operation_query') {
+        await handleStatusQuery(buildOperationStatusResponse(campaign));
+        return;
+      }
 
       // Crew advice — open the crew advice dialog with action buttons
       const intent = detectCrewAdviceIntent(submittedAction);
@@ -560,7 +564,8 @@ export default function CampaignDetail() {
                 ...(dmRes.data?.chapter1_stage ? { chapter1_stage: dmRes.data.chapter1_stage } : {}),
                 ...(dmRes.data?.pipe_state ? { pipe_state: dmRes.data.pipe_state } : {}),
                 ...(dmRes.data?.equipped_weapon ? { equipped_weapon: dmRes.data.equipped_weapon } : {}),
-                ...(dmRes.data?.discovered_clocks?.length ? { discovered_clocks: [...new Set([...(flags.discovered_clocks || []), ...dmRes.data.discovered_clocks])] } : {})
+                ...(dmRes.data?.discovered_clocks?.length ? { discovered_clocks: [...new Set([...(flags.discovered_clocks || []), ...dmRes.data.discovered_clocks])] } : {}),
+                ...(dmRes.data?.active_operations ? { active_operations: dmRes.data.active_operations } : {})
               }
             }
           };
@@ -1113,7 +1118,7 @@ export default function CampaignDetail() {
                 Out-of-character discussion — your message will be seen by the party, but the Dungeon Master will not respond.
               </p>
             )}
-            {!discussMode && campaign?.game_system !== 'thepull' && (
+            {!discussMode && campaign?.game_system !== 'thepull' && campaign?.game_system !== 'pathfinder' && (
               <button
                 onClick={handleAgree}
                 disabled={processing || posting}
