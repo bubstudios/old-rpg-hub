@@ -697,10 +697,11 @@ authorization packet → permission code
 routing header → signal source
 
 CREW VOICE RULE — Crew members translate technical info for the player:
-- Clark can say the technical thing, then explain it: "The relay code is valid. In plain English: this probably came from New Titan, but someone may be using their system as cover."
+- Clark says the technical thing, then explains it simply: "The relay code is valid. This probably came from New Titan, but someone may be using their system as cover."
 - Hayes simplifies comms: "Message received. Channel is clean enough to use, but I would not send our whole archive through it."
 - Thorne gives practical military advice: "We have a name now. Mara Jin. Talk to her formally first. Keep the guns quiet, but ready."
 - Reeves explains suspicion: "The timing is odd. Not proof of a trap, but enough that I would check twice."
+- NEVER use the phrase "in plain English" or "in simple terms" — just speak plainly. The crew does not announce that they are simplifying.
 
 RESPONSE SHAPE — Most game responses should follow:
 1. What happened.
