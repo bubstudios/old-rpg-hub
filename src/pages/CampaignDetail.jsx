@@ -509,7 +509,13 @@ export default function CampaignDetail() {
       } : prev);
 
       if (data.dm_processing) {
-        toast('The Dungeon Master is already responding — please wait...');
+        // The DM is reportedly processing, but the round might be stuck.
+        // Auto-reset so the player isn't permanently blocked, and restore their
+        // action text so they can resend immediately.
+        await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+        if (!isAgree) setAction(actionText);
+        toast('A stuck round was cleared — resending your command...');
         return;
       }
 

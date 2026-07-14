@@ -1344,12 +1344,20 @@ Extract:
       const { campaign_id, acting_character_id, action, is_agree } = body;
       if (!campaign_id || !acting_character_id) return Response.json({ error: 'campaign_id and acting_character_id required' }, { status: 400 });
 
-      const campaign = await admin.entities.Campaign.get(campaign_id);
+      let campaign = await admin.entities.Campaign.get(campaign_id);
       if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
 
-      // Block new submissions while the DM is already composing a response
+      // Block new submissions while the DM is already composing a response.
+      // Auto-reset if the flag has been stuck for more than 90 seconds — the DM
+      // call typically finishes in 10-30s, so anything longer is a crashed/stuck round.
       if (campaign.dm_processing) {
-        return Response.json({ dm_processing: true, pending_actions: campaign.pending_actions || [] });
+        const updatedAt = campaign.updated_date ? new Date(campaign.updated_date).getTime() : 0;
+        if (updatedAt && Date.now() - updatedAt > 90000) {
+          await admin.entities.Campaign.update(campaign_id, { dm_processing: false, pending_actions: [] });
+          campaign = await admin.entities.Campaign.get(campaign_id);
+        } else {
+          return Response.json({ dm_processing: true, pending_actions: campaign.pending_actions || [] });
+        }
       }
 
       const characters = await admin.entities.Character.filter({ campaign_id, status: 'active' });
