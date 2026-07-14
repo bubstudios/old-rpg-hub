@@ -1379,15 +1379,14 @@ Extract:
       // Atomically append (preserves concurrent submissions from different players)
       await admin.entities.Campaign.updateMany({ id: campaign_id }, { $push: { pending_actions: newEntry } });
 
-      // For Pathfinder Journeys, skip the action echo — the DM narration describes
-      // the order and crew response instead of echoing it as separate dialogue.
-      if (!agree && campaign.game_system !== 'pathfinder') {
-        await base44.entities.JournalEntry.create({
-          campaign_id,
-          entry_type: 'action',
-          player_action: actionText,
-          acting_character_name: myChar.name,
-          chapter: campaign.current_chapter
+      // For Pathfinder Journeys (solo game), bypass the round system entirely.
+      // Invoke the DM immediately — no waiting for other party members.
+      if (campaign.game_system === 'pathfinder') {
+        await admin.entities.Campaign.update(campaign_id, { dm_processing: true, pending_actions: [] });
+        return Response.json({
+          should_invoke_dm: true,
+          combined_action: actionText,
+          pending_actions: []
         });
       }
 
