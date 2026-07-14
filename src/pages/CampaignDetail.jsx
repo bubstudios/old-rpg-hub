@@ -27,6 +27,8 @@ import StorySoFarModal from '@/components/pj/StorySoFarModal';
 import CodexDialog from '@/components/pj/CodexDialog';
 import MissionsPanel from '@/components/pj/MissionsPanel';
 import OperationsPanel from '@/components/pj/OperationsPanel';
+import KimelonScanner from '@/components/pj/KimelonScanner';
+import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
@@ -49,7 +51,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb, Sparkles, Crosshair
+  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb, Sparkles, Crosshair, ScanLine, Scale
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -84,6 +86,8 @@ export default function CampaignDetail() {
   const [codexEntryKey, setCodexEntryKey] = useState(null);
   const [missionsOpen, setMissionsOpen] = useState(false);
   const [operationsOpen, setOperationsOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [burdenOpen, setBurdenOpen] = useState(false);
   const [crewAdviceOpen, setCrewAdviceOpen] = useState(false);
   const [decisionImpact, setDecisionImpact] = useState(null);
   const [decisionLogOpen, setDecisionLogOpen] = useState(false);
@@ -712,6 +716,22 @@ export default function CampaignDetail() {
           )}
           {campaign?.game_system === 'pathfinder' && (
             <button
+              onClick={() => setScannerOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ScanLine className="w-3.5 h-3.5" strokeWidth={1.5} /> Scanner
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
+              onClick={() => setBurdenOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Scale className="w-3.5 h-3.5" strokeWidth={1.5} /> Burden
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
               onClick={() => setCrewAdviceOpen(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -1134,6 +1154,17 @@ export default function CampaignDetail() {
             onOpenChange={setOperationsOpen}
             campaign={campaign}
             onSuggestAction={handleSuggestAction}
+          />
+          <KimelonScanner
+            open={scannerOpen}
+            onOpenChange={setScannerOpen}
+            campaign={campaign}
+            onSuggestAction={handleSuggestAction}
+          />
+          <CommandBurdenLog
+            open={burdenOpen}
+            onOpenChange={setBurdenOpen}
+            campaign={campaign}
           />
           <CrewAdviceDialog
             open={crewAdviceOpen}

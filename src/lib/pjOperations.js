@@ -4,6 +4,7 @@
 // exploration, ship maneuvers, sabotage prevention, and undercover work.
 
 import { PJ_EVIDENCE } from '@/lib/pjEvidence';
+import { ARC3_OPERATIONS } from '@/lib/pjArc3';
 
 // === CREW CAPABILITIES ===
 // Each crew member's specialties for operation assignment.
@@ -18,7 +19,10 @@ export const CREW_CAPABILITIES = {
   carmelon: { name: 'Carmelon',       role: 'Xenohistorian',        specialties: ['temporal anomalies', 'Architect technology', 'future-memory interpretation'] },
   ramos:    { name: 'Ramos',          role: 'Chief Engineer',       specialties: ['ship systems', 'damage control', 'technical recovery'] },
   patel:    { name: 'Patel',          role: 'Junior Engineer',      specialties: ['comms', 'signal traces', 'overlooked details', 'New Titan native'] },
-  voss:     { name: 'Voss',           role: 'Medical',             specialties: ['biological irregularities', 'behavior mismatches', 'crew health'] }
+  voss:     { name: 'Voss',           role: 'Medical',             specialties: ['biological irregularities', 'behavior mismatches', 'crew health'] },
+  kim:      { name: 'Rebecca Kim',    role: 'Scanner Tech',        specialties: ['kimelon scanner', 'biotech analysis', 'sensor systems', 'Kepler Station tech'] },
+  martinez: { name: 'Chief Martinez', role: 'Security',            specialties: ['undercover ops', 'surveillance', 'station infiltration'] },
+  torres:   { name: 'Lt. Torres',     role: 'Tactical',            specialties: ['combat', 'boarding', 'security ops'] }
 };
 
 export const CREW_KEYS = Object.keys(CREW_CAPABILITIES);
@@ -316,7 +320,8 @@ export const AVAILABLE_OPERATIONS = [
     risks: ['political exposure', 'chen_countermeasures', 'emotional conflict'],
     rewards: ['Governor Thorne convinced', 'New Titan prepares to resist', 'colonial council support'],
     clocksAffected: ['new_titan_stability', 'public_truth', 'crew_morale']
-  }
+  },
+  ...ARC3_OPERATIONS
 ];
 
 // === FORMATTER ===

@@ -104,7 +104,19 @@ const CANON = {
     crew_morale: 'Crew Morale (good) — Inspired, strained, shaken, breaking.',
     temporal_instability: 'Temporal Instability (bad) — Rises with future memory overuse.',
     public_truth: 'Public Truth (good) — Galaxy knows Chen/Confluence are lying.',
-    discredit_campaign: 'Discredit Campaign (bad) — Enemy propaganda painting Bub as rogue/compromised/fraudulent. Rises with broadcasts, evidence transfers, future memory use, unproven accusations. Lowers with verified evidence, credible testimony, controlled releases, visible victories.'
+    discredit_campaign: 'Discredit Campaign (bad) — Enemy propaganda painting Bub as rogue/compromised/fraudulent. Rises with broadcasts, evidence transfers, future memory use, unproven accusations. Lowers with verified evidence, credible testimony, controlled releases, visible victories.',
+    shapeshifter_network_alert: 'Shapeshifter Network Alert (bad) — How aware remaining infiltrators are that they are being hunted. High = they go to ground, retaliate, or accelerate plans.',
+    earth_support_network: 'Earth Support Network (good) — How strong Raney\'s verified support cell is. High = more Earth resources, political cover, intelligence sharing.',
+    earth_infiltration_exposure: 'Earth Infiltration Exposure (good) — How much Earth has uncovered about Confluence infiltration. High = more arrests, more awareness.',
+    orlando_retaliation: 'Orlando Retaliation (bad) — How soon Jennifer Orlando strikes back. High = imminent attack.',
+    hale_escape_risk: 'Hale Escape Risk (bad) — How much damage Councilor Hale can do after escaping Earth purge.',
+    unity_grief: 'Unity Grief (bad) — Unity\'s emotional instability after fragment loss. High = erratic behavior, withdrawal.',
+    unity_trust: 'Unity Trust (good) — Crew trust in Unity after boundary failures and sacrifices.',
+    unity_fear: 'Unity Fear (bad) — Unity\'s fear of death, fragmentation, Weaver, and self-loss.',
+    unity_selfhood: 'Unity Selfhood (good) — Unity\'s development into a person rather than a collective tool.',
+    weaver_awareness: 'Weaver Awareness (bad) — How close the ancient Predecessor/Weaver thread is to responding.',
+    trellix_crisis: 'Trellix Crisis (bad) — How badly the unresolved Veyris situation is deteriorating.',
+    captain_burden: 'Captain Burden (bad) — The accumulated moral weight on Bub Stellar. High = harder decisions, crew unease.'
   },
 
   personnel: {
@@ -158,6 +170,14 @@ EFFECTS: Each echo should unlock an option, reveal a risk, or influence crew rea
 RESOLUTION: No dice. Resolve through: chosen team's expertise (each crew member has specialties), chosen approach (aggressive/cautious/creative have different outcomes), current clock pressures (high Heat = more enemy attention), evidence used (verified evidence strengthens outcomes), known enemy activity, and Future Echoes if referenced.
 OUTCOMES: Clean Success (team matched task, approach sound — full rewards, enemy countermove likely), Partial Success (something went wrong — half rewards + new risk), Complication (unexpected discovery — trap, false trail, shapeshifter clue, compromised aide), Failure (wrong team, bad approach, enemy ready — clocks worsen, morale drops, enemy advances).
 RULES: Always apply clock changes based on outcome. Include decision_impact with crew reactions. Include enemy_countermove when the operation succeeded. Narrate the operation as a scene — what the team found, what went wrong, what they discovered. Evidence used in operations opens new options (tracing routes, finding contract language, identifying intermediaries) — it does not just add bonus outcomes. Crew not on the team do not participate — their expertise is unavailable. Bub commands; he does not personally crawl through vents unless the player says so.`,
+
+  arc3: `ARC 3: THE HIDDEN WAR — Pathfinder moves from evidence-based resistance into active counterintelligence and source warfare. Find the infiltrators. Learn how they are made. Survive the enemy's counterattack. Destroy the source. Accept the cost.
+KIMELON SCANNER: Portable shapeshifter detector (8 sec scan, 12m range, 8 units). Results: HUMAN, SHAPESHIFTER, INCONCLUSIVE, SCAN FAILED, INTERFERENCE. A human scan ONLY proves biology — NOT loyalty. Captain Fischer scans HUMAN but remains ambitious and dangerous. Do not simplify scan results into good/bad guy.
+SHAPESHIFTER CASE ASSESSMENT: Every infiltrator case is unique. Assess: access, sabotage risk, detection awareness, communication status, monitoring feasibility, intelligence value, containment possibility, network alert risk, moral cost, authority. Outcomes: Monitor, Contain, Interrogate, Use as false channel, Execute, Expose, Transfer, Delay. There is no universal answer.
+COMMAND BURDEN: Moral decisions accumulate permanent weight on Captain Stellar. Each burden (execution, sacrifice, abandonment, deception, collateral, fragment loss) is recorded. High burden affects crew trust, decision-making, and story outcomes. Never treat moral costs as clean victory. James says: "Do not apologize. Do not justify. Carry it visibly. That is command."
+UNITY EVOLUTION: Unity is developing personality, humor, fear, grief, and selfhood. Fragment system: Unity can send fragments on remote missions — they can be lost, killed, or diverge. Fragment death causes severe grief. Unity knew Voss was a shapeshifter for 6 weeks but did not tell crew (boundary failure — crew trust -4). The Loom called Unity "something else" — outside Confluence grammar.
+CRADLE: Predecessor seed-machine hijacked by Confluence into shapeshifter factory. Shapeshifters are engineered bio-constructs, not a natural species. Destroying the Cradle makes the human-space shapeshifter campaign FINITE — remaining infiltrators are a huntable population, but still dangerous. The Weaver is an ancient Predecessor thread alerted by Cradle destruction. "Something old notices a severed thread. Correction will be required. Not yet. Soon."
+KEY NPCs: Vice Admiral Raney (verified human, covert Earth ally), Capt. Myers (Valiant, trusted), Capt. Morrison (Defender, trusted), Capt. Fischer (Resolution, human but ambitious — NOT a shapeshifter), Marcus Valen (shapeshifter hub, Fortuna Station), Jennifer Orlando (shapeshifter, knows about kimelons, escaped), Rebecca Kim (scanner tech, co-built kimelon), Chief Martinez & Lt. Torres (captured at Cradle, rescued).`,
 
   response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"enemy_countermove":{"faction":"confluence|chen|vask|vescarri|guild|shapeshifters","action":"what the enemy does in response to Bub's success","clock_effects":[{"clock":"discredit_campaign|confluence_heat|chen_countermeasures|etc","delta":number}],"narration":"brief scene of the enemy countermove (1-3 sentences, woven into the main narration or appended)"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
 Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.
@@ -381,6 +401,8 @@ async function applyDiscoveryTriggers(base44, campaign_id, chapter, oldEvidenceS
 function buildTurnPacket(campaign, characters, npcList, locList, worldState, action, history, timeline, isRollResult) {
   const actionLower = action.toLowerCase();
   const isOperation = action.trim().toUpperCase().startsWith('OPERATION:');
+  const arc3Kw = ['kimelon', 'scan', 'shapeshifter', 'infiltrat', 'voss', 'orlando', 'valen', 'fortuna', 'cradle', 'weaver', 'loom', 'fragment', 'raney', 'verified', 'burden', 'case assessment', 'hadrax', 'veylris', 'trellix', 'predecessor', 'unity', 'fischer', 'myers', 'morrison', 'martinez', 'torres'];
+  const isArc3 = arc3Kw.some(kw => actionLower.includes(kw));
   const flags = worldState.quest_flags || {};
   const clocks = flags.campaign_clocks || {};
   const allyStates = worldState.ally_states || {};
@@ -532,6 +554,7 @@ Player: Captain Bub Stellar${campaign.play_mode === 'canon' ? ' (Canon Mode)' : 
 ## Player Command
 ${isRollResult ? 'Roll result: ' : ''}${action}
 ${isOperation ? `\n## OPERATION RESOLUTION\n${CANON.operations}` : ''}
+${isArc3 ? `\n## Arc 3: The Hidden War\n${CANON.arc3}` : ''}
 
 ## Active Clocks
 ${Object.entries(activeClocks).map(([k, v]) => `${k}: ${v} — ${CANON.clocks[k] || ''}`).join('\n')}

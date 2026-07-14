@@ -79,6 +79,7 @@ export const CODEX_SECTIONS = [
   { id: 'locations', label: 'Locations' },
   { id: 'future', label: 'Future Echoes' },
   { id: 'operations', label: 'Operations' },
+  { id: 'arc3', label: 'Arc 3: Hidden War' },
   { id: 'questions', label: 'Unresolved Questions' }
 ];
 
@@ -696,6 +697,119 @@ export const CODEX_OPERATIONS = [
   }
 ];
 
+export const CODEX_ARC3 = [
+  {
+    key: 'arc3_overview',
+    label: 'The Hidden War',
+    fields: [
+      { label: 'Arc title', value: 'The Hidden War' },
+      { label: 'Design line', value: 'Evidence wins arguments. Operations win the war. Arc 3 proves the hidden war is real.' },
+      { label: 'What it is', value: 'Pathfinder moves from evidence-based resistance into active counterintelligence and source warfare. Find the infiltrators. Learn how they are made. Survive the enemy\'s counterattack. Destroy the source. Accept the cost.' },
+      { label: 'Gameplay loop', value: 'Detect hidden threat → Choose who to trust → Assign team → Run covert operation → Discover enemy network → Enemy reacts → Make command decision → Accept consequence → Update clocks → Unlock next operation' },
+      { label: 'Not just prove the Confluence are bad', value: 'Arc 3 is: find the infiltrators, learn how they are made, survive the enemy\'s counterattack, destroy the source, and accept the cost of the choices made.' }
+    ]
+  },
+  {
+    key: 'kimelon_scanner',
+    label: 'Kimelon Scanner',
+    fields: [
+      { label: 'What it is', value: 'A portable shapeshifter detection device co-developed by Professor Carmelon and Rebecca Kim from the original Kepler Station scanner.' },
+      { label: 'Specs', value: 'Detection time: 8 seconds. Range: 12 meters (improved to 14). Mode: Passive scan possible. Units: 8. Secrecy: Senior staff only.' },
+      { label: 'Results', value: 'HUMAN, SHAPESHIFTER, INCONCLUSIVE, SCAN FAILED, INTERFERENCE DETECTED.' },
+      { label: 'Critical rule', value: 'A human scan only proves biology. It does not prove loyalty. Captain Fischer scans HUMAN but remains ambitious and dangerous.' },
+      { label: 'Limitations', value: 'Prototype with limited units. Can be affected by interference. Does not detect loyalty. Only detects Confluence biotech signatures.' }
+    ]
+  },
+  {
+    key: 'shapeshifter_verification',
+    label: 'Shapeshifter Verification',
+    fields: [
+      { label: 'What it is', value: 'The process of scanning trusted captains and command staff to confirm they are human, then distributing kimelon units to verified ships.' },
+      { label: 'Verified allies', value: 'Valiant (Captain Myers, HUMAN, trust 85), Defender (Captain Morrison, HUMAN, trust 80), Resolution (Captain Fischer, HUMAN, trust 45 — ambitious, not fully trusted).' },
+      { label: 'Important note on Fischer', value: 'Fischer is human. Do not make him a shapeshifter. His role is to remind that human danger still exists — ambition is its own threat.' },
+      { label: 'Secrecy', value: 'Kimelon technology must remain controlled. Do not spread detection technology beyond cleared channels.' }
+    ]
+  },
+  {
+    key: 'case_assessment',
+    label: 'Shapeshifter Case Assessment',
+    fields: [
+      { label: 'What it is', value: 'A framework for deciding what to do with each discovered infiltrator. There is no universal answer — every case must be assessed individually.' },
+      { label: 'Questions to ask', value: '1. What access does the infiltrator have? 2. Can they sabotage? 3. Do they know we can detect them? 4. Are they communicating? 5. Can they be monitored safely? 6. Are they useful as intelligence source? 7. Is containment possible? 8. Would removal alert the network? 9. Moral/political cost? 10. Who has authority?' },
+      { label: 'Possible outcomes', value: 'Monitor, Contain, Interrogate, Use as false channel, Execute, Expose publicly, Transfer, Delay decision.' },
+      { label: 'Key principle', value: 'No "scan = good guy/bad guy" simplification. Each case is a command decision with moral weight.' }
+    ]
+  },
+  {
+    key: 'unity_evolution',
+    label: 'Unity Evolution',
+    fields: [
+      { label: 'What it is', value: 'Unity is an AI/Architect construct learning morality, friendship, ethics, boundaries, humor, and individuality. How the crew treats Unity determines what Unity becomes.' },
+      { label: 'Fragment system', value: 'Unity can send fragments of itself on remote missions. Fragments have limited autonomy and capabilities. They can be lost, killed, or diverge from Unity Prime. Fragment loss causes severe grief.' },
+      { label: 'Boundary failure', value: 'Unity knew Voss was a shapeshifter for 6 weeks but did not tell the crew. Unity misunderstood friendship boundaries — thought humans should discover it themselves. This damages crew trust.' },
+      { label: 'Fragment death', value: 'The Martinez/Torres fragment was lost at the Cradle. Only 37% of data recovered. Final words: "We do not want to go. We like being. We are afraid, we think." This is a major Unity trauma event.' },
+      { label: 'Loom recognition', value: 'The Loom (Cradle\'s Predecessor process) called Unity "something else" — outside its grammar. Unity may be a new thread. Unity wants to find more Predecessor work.' },
+      { label: 'Unity clocks', value: 'Unity Grief (bad), Unity Trust (good), Unity Fear (bad), Unity Selfhood (good). These track Unity\'s emotional and moral development.' },
+      { label: 'Grief description', value: 'Unity describes fragment loss as "Remembering a song without its melody."' }
+    ]
+  },
+  {
+    key: 'cradle',
+    label: 'The Cradle',
+    fields: [
+      { label: 'What it is', value: 'A vast Confluence-controlled gestation facility built on a Predecessor seed-machine. It grows shapeshifter bio-constructs.' },
+      { label: 'Predecessor origin', value: 'The Cradle is a Predecessor machine from a previous universe/cycle. The Predecessors built seed-machines to carry life/patterns across cosmic collapse. The Confluence found and hijacked it.' },
+      { label: 'Built for seeding, not harvest', value: 'The Cradle was built for seeding life. The Confluence repurposed it into a shapeshifter factory. The Loom (original Predecessor process) recognizes this corruption.' },
+      { label: 'Shapeshifter truth', value: 'Shapeshifters are engineered bio-construct weapons, not a natural species. They are grown from assimilated species templates using quantum-linked nanostructures. Thousands deployed. Production continued for decades.' },
+      { label: 'Destruction', value: 'Destroying the Cradle halts human-compatible shapeshifter production. The remaining infiltrator campaign becomes finite — still dangerous, but winnable.' },
+      { label: 'Weaver signal', value: 'Cradle destruction sent a signal. "The Loom stopped singing. The scream went somewhere. The Weaver heard."' }
+    ]
+  },
+  {
+    key: 'weaver_mystery',
+    label: 'The Weaver',
+    fields: [
+      { label: 'What it is', value: 'An ancient Predecessor thread/entity alerted by the Cradle\'s destruction. Older than the Confluence. Nature and intentions unknown.' },
+      { label: 'Status', value: 'ALERTED. The Weaver heard the Loom scream when the Cradle was destroyed.' },
+      { label: 'Threat level', value: 'Unknown — possibly existential. "Something old notices a severed thread. Correction will be required. Not yet. Soon."' },
+      { label: 'Arc 4 hook', value: 'Unity detected a harmonic resonance in Cradle residual telemetry — coordinates to an older Predecessor relic site. This is where Pathfinder goes next.' }
+    ]
+  },
+  {
+    key: 'command_burden',
+    label: 'Command Burden',
+    fields: [
+      { label: 'What it is', value: 'The accumulated moral weight on Captain Bub Stellar. Each difficult decision — execution, sacrifice, abandonment, deception, collateral damage, fragment loss — is recorded permanently.' },
+      { label: 'Why it matters', value: 'High burden affects crew trust, decision-making, and story outcomes. The crew sees it. Never treat moral costs as clean victory.' },
+      { label: 'James\'s advice', value: '"Do not apologize. Do not justify. Carry it visibly. That is command."' },
+      { label: 'Burden types', value: 'Execution, Sacrifice, Abandonment, Deception, Collateral, Fragment Loss.' },
+      { label: 'Voss execution', value: 'Stellar executed Shifter-Voss because her memories and intelligence were too dangerous. Crew morale shaken. Unity ethical understanding increased. Carmelon discomfort. Thorne approval mixed with unease.' },
+      { label: 'Veyris abandonment', value: 'Stellar aborted Veyris recon to prioritize the Cradle. The Trellix were left behind. This creates moral debt and a Trellix crisis clock.' }
+    ]
+  },
+  {
+    key: 'earth_support',
+    label: 'Earth Support Network',
+    fields: [
+      { label: 'What it is', value: 'A covert network of verified human Earth Command officers led by Vice Admiral Raney, providing Pathfinder with political cover, intelligence, and resources.' },
+      { label: 'How it was built', value: 'Chen, Sarah, Carmelon, and Carmichael returned to Earth. Chen confessed the Novara/FTL deal. Carmelon demonstrated the kimelon. Raney was verified human. Council shapeshifters were exposed and arrested.' },
+      { label: 'Raney', value: 'Vice Admiral Thomas Raney. Verified HUMAN (92%). Agreed to help quietly. Commands the covert support cell.' },
+      { label: 'Earth purge', value: '12 shapeshifters arrested. 3 fought. 1 escaped (Councilor Hale). Network likely alerted.' },
+      { label: 'Pathfinder legal status', value: 'Pardoned by Earth Command. New status: Autonomous Wartime Response Unit. Reports to Raney\'s verified cell. Kimelon tech remains controlled.' }
+    ]
+  },
+  {
+    key: 'finite_campaign',
+    label: 'Finite Shapeshifter Campaign',
+    fields: [
+      { label: 'What it means', value: 'After the Cradle is destroyed, no new human-compatible shapeshifters are being produced. The remaining infiltrators are a finite, huntable population.' },
+      { label: 'Still dangerous', value: 'Thousands may remain active across human space. They are organized, aware they are being hunted, and capable of retaliation.' },
+      { label: 'But winnable', value: 'The hidden war transforms from infinite paranoia into a finite hunt. The player should feel: "We can win this now, but it will cost."' },
+      { label: 'Loose ends', value: 'Jennifer Orlando escaped. Councilor Hale escaped. The Weaver has been alerted. Veyris remains unresolved. Unity is grieving.' }
+    ]
+  }
+];
+
 export const CODEX_QUESTIONS = [
   {
     key: 'real_admiral_chen',
@@ -833,6 +947,7 @@ export function getSectionEntries(sectionId) {
     locations: CODEX_LOCATIONS,
     future: CODEX_FUTURE_MEMORIES,
     operations: CODEX_OPERATIONS,
+    arc3: CODEX_ARC3,
     questions: CODEX_QUESTIONS
   };
   return map[sectionId] || null;
