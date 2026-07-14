@@ -109,6 +109,35 @@ export const CREW_ADVISORS = [
   }
 ];
 
+const CREW_NAME_KEYWORDS = {
+  sarah: ['sarah', 'chen'],
+  james: ['james', 'stellar', 'grandfather', 'grandpa'],
+  clark: ['clark'],
+  mitchell: ['mitchell', 'eagle'],
+  thorne: ['thorne', 'farah'],
+  hayes: ['hayes'],
+  reeves: ['reeves'],
+  ramos: ['ramos'],
+  carmelon: ['carmelon', 'professor'],
+  patel: ['patel']
+};
+
+export function detectCrewAdviceIntent(input) {
+  const normalized = String(input || '').toLowerCase();
+  const isAdviceRequest = normalized.includes('ask') &&
+    (normalized.includes('advice') || normalized.includes('recommend') ||
+     normalized.includes('what do you think') || normalized.includes('thoughts') ||
+     normalized.includes('what should'));
+  if (!isAdviceRequest) return { isAdvice: false };
+  for (const [key, keywords] of Object.entries(CREW_NAME_KEYWORDS)) {
+    if (keywords.some(kw => normalized.includes(kw))) {
+      const advisor = CREW_ADVISORS.find(a => a.key === key);
+      if (advisor) return { isAdvice: true, advisor };
+    }
+  }
+  return { isAdvice: true, advisor: null };
+}
+
 export function getAdvisorAdvice(campaign, advisorKey) {
   const advisor = CREW_ADVISORS.find(a => a.key === advisorKey);
   if (!advisor) return null;

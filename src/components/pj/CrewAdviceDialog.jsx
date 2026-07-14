@@ -15,7 +15,7 @@ const ICON_MAP = {
   Wrench: Users
 };
 
-export default function CrewAdviceDialog({ open, onOpenChange, campaign, onSuggestAction }) {
+export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewAdvice }) {
   const [advice, setAdvice] = useState([]);
 
   useEffect(() => {
@@ -25,8 +25,7 @@ export default function CrewAdviceDialog({ open, onOpenChange, campaign, onSugge
   }, [open, campaign]);
 
   function handleAsk(advisor) {
-    const command = `Ask ${advisor.name} for advice on the current situation.`;
-    onSuggestAction?.(command);
+    onCrewAdvice?.(advisor);
     onOpenChange(false);
   }
 

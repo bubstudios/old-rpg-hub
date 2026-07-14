@@ -31,6 +31,7 @@ import KimelonScanner from '@/components/pj/KimelonScanner';
 import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
 import { isArc3Unlocked } from '@/lib/pjArc3';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
+import { detectCrewAdviceIntent, getAdvisorAdvice } from '@/lib/pjCrewAdvice';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
 import FutureEchoPopup from '@/components/pj/FutureEchoPopup';
@@ -170,6 +171,33 @@ export default function CampaignDetail() {
     setCodexOpen(false);
     setStoryOpen(false);
     toast.success('Command ready — review and send when ready.');
+  }
+
+  async function handleCrewAdvice(advisor) {
+    if (processing || posting) return;
+    const adviceText = getAdvisorAdvice(campaign, advisor.key);
+    if (!adviceText) return;
+    setPosting(true);
+    const tempEntry = {
+      entry_type: 'discussion',
+      narration: adviceText,
+      acting_character_name: advisor.name
+    };
+    setEntries(prev => [...prev, tempEntry]);
+    try {
+      await base44.functions.invoke('campaignData', {
+        op: 'postDiscussion',
+        campaign_id: campaignId,
+        message: adviceText,
+        acting_character_name: advisor.name
+      });
+      await reloadEntries();
+    } catch (e) {
+      toast.error('Failed to get crew advice');
+      setEntries(prev => prev.slice(0, -1));
+    } finally {
+      setPosting(false);
+    }
   }
 
   function processDecisionImpact(dmData, decisionText) {
@@ -350,6 +378,19 @@ export default function CampaignDetail() {
     }
     const submittedAction = action.trim();
     setAction('');
+
+    // Crew advice — route to crew advice system instead of normal action
+    if (campaign?.game_system === 'pathfinder') {
+      const intent = detectCrewAdviceIntent(submittedAction);
+      if (intent.isAdvice) {
+        if (intent.advisor) {
+          await handleCrewAdvice(intent.advisor);
+        } else {
+          setCrewAdviceOpen(true);
+        }
+        return;
+      }
+    }
 
     if (discussMode) {
       setPosting(true);
@@ -1171,7 +1212,7 @@ export default function CampaignDetail() {
             open={crewAdviceOpen}
             onOpenChange={setCrewAdviceOpen}
             campaign={campaign}
-            onSuggestAction={handleSuggestAction}
+            onCrewAdvice={handleCrewAdvice}
           />
         </>
       )}
