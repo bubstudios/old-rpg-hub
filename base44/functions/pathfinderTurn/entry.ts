@@ -429,6 +429,7 @@ function buildTurnPacket(campaign, characters, npcList, locList, worldState, act
     if (actionLower.includes(kw) && !relevantEnemies.includes(key)) relevantEnemies.push(key);
   }
   if (relevantEnemies.length === 0) relevantEnemies.push('confluence');
+  const enemyCards = relevantEnemies.map(key => CANON.enemies[key]).filter(Boolean).join('\n');
 
   // --- Select relevant evidence ---
   const evKw = { 'prometheus': 'prometheus_warning', 'james testimony': 'james_testimony', 'james stellar testimony': 'james_testimony', 'korath': 'korath_database', 'novara': 'novara_transaction', 'sakura': 'sakura_chen_exchange', 'titan claim': 'new_titan_claim', 'new titan claim': 'new_titan_claim', 'sarah testimony': 'sarah_chen_testimony', 'sarah chen testimony': 'sarah_chen_testimony', 'sanctuary archive': 'sanctuary_archive' };
