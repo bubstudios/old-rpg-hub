@@ -491,6 +491,7 @@ export default function CampaignDetail() {
     }
     setProcessing(true);
     setLatestResult(null);
+    let dmCompleted = false;
     try {
       const res = await base44.functions.invoke('campaignData', {
         op: 'submitAction',
@@ -565,6 +566,7 @@ export default function CampaignDetail() {
               });
               processDecisionImpact(dmRes.data, actionText);
               setLatestResult(dmRes.data);
+              dmCompleted = true;
               await loadData();
               setLatestResult(null);
               retried = true;
@@ -591,6 +593,7 @@ export default function CampaignDetail() {
           skip_action_log: true
         });
         await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+        dmCompleted = true; // DM call succeeded — don't restore action text on post-DM errors
         // Apply GM response state changes to the local campaign immediately so
         // the sidebar (clocks, pull intensity, conditions) updates without
         // waiting for loadData(). The DB is the source of truth — loadData()
@@ -715,12 +718,14 @@ export default function CampaignDetail() {
       // else: waiting for other party members — the pending state updates via subscription
     } catch (e) {
       // If the DM call failed after dm_processing was claimed, reset the round so the campaign doesn't get stuck
-      try {
-        await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
-      } catch { /* ignore */ }
-      toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
-      if (!isAgree) setAction(actionText);
+      if (!dmCompleted) {
+        try {
+          await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+          setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+        } catch { /* ignore */ }
+        toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
+        if (!isAgree) setAction(actionText);
+      }
     } finally {
       setProcessing(false);
       processingRef.current = false;
