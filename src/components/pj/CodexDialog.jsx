@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   BookOpen, Target, Users, Heart, AlertTriangle, FileText, Activity,
-  Flag, MapPin, Clock, HelpCircle, Lock, ChevronDown, ChevronUp, Compass, Package, Info
+  Flag, MapPin, Clock, HelpCircle, Lock, ChevronDown, ChevronUp, Compass, Package, Info,
+  Crosshair, ScanLine
 } from 'lucide-react';
+import { isArc3Unlocked } from '@/lib/pjArc3';
 import {
   CODEX_SECTIONS, STORY_SO_FAR_TEXT, SANDBOX_INTRO_TEXT, CURRENT_MISSION,
   getSectionEntries, PJ_EPISODES, CODEX_LOCATIONS, isLocationVisible,
@@ -22,7 +24,8 @@ import { PJ_EVIDENCE, isEvidenceVisible, isEvidenceDiscovered, USAGE_CLOCK_FRAME
 const SECTION_ICONS = {
   story: BookOpen, mission: Target, crew: Users, allies: Heart,
   enemies: AlertTriangle, evidence: FileText, clocks: Activity,
-  factions: Flag, locations: MapPin, future: Clock, questions: HelpCircle
+  factions: Flag, locations: MapPin, future: Clock, questions: HelpCircle,
+  operations: Crosshair, arc3: ScanLine
 };
 
 export default function CodexDialog({ open, onOpenChange, initialSection, initialEntryKey, campaign, onSuggestAction }) {
@@ -66,7 +69,7 @@ export default function CodexDialog({ open, onOpenChange, initialSection, initia
           {/* Section sidebar */}
           <div className="sm:w-48 sm:shrink-0 border-b sm:border-b-0 sm:border-r border-border/40 overflow-y-auto">
             <div className="flex sm:flex-col gap-1 p-2 overflow-x-auto sm:overflow-x-visible">
-              {CODEX_SECTIONS.map((s) => {
+              {CODEX_SECTIONS.filter(s => s.id !== 'arc3' || isArc3Unlocked(campaign)).map((s) => {
                 const Icon = SECTION_ICONS[s.id] || BookOpen;
                 const active = section === s.id;
                 return (

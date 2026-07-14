@@ -9,6 +9,7 @@ import {
   AVAILABLE_OPERATIONS, OPERATION_TYPES, CREW_CAPABILITIES, CREW_KEYS,
   getOperationType, getAvailableEvidence, formatOperationCommand
 } from '@/lib/pjOperations';
+import { isArc3Unlocked } from '@/lib/pjArc3';
 
 const TYPE_ICONS = {
   covert: Eye, recon: Search, rescue: Heart, evidence_recovery: FileText,
@@ -23,9 +24,11 @@ export default function OperationsPanel({ open, onOpenChange, campaign, onSugges
   const [selectedApproach, setSelectedApproach] = useState({});
   const [selectedEvidence, setSelectedEvidence] = useState({});
 
-  const operations = filter === 'all'
+  const arc3Ready = isArc3Unlocked(campaign);
+  const operations = (filter === 'all'
     ? AVAILABLE_OPERATIONS
-    : AVAILABLE_OPERATIONS.filter(op => op.type === filter);
+    : AVAILABLE_OPERATIONS.filter(op => op.type === filter)
+  ).filter(op => !op.requiresArc3 || arc3Ready);
 
   function toggleTeam(opId, crewKey) {
     setSelectedTeam(prev => {

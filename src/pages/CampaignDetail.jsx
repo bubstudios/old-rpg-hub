@@ -29,6 +29,7 @@ import MissionsPanel from '@/components/pj/MissionsPanel';
 import OperationsPanel from '@/components/pj/OperationsPanel';
 import KimelonScanner from '@/components/pj/KimelonScanner';
 import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
+import { isArc3Unlocked } from '@/lib/pjArc3';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
@@ -714,7 +715,7 @@ export default function CampaignDetail() {
               <Crosshair className="w-3.5 h-3.5" strokeWidth={1.5} /> Ops
             </button>
           )}
-          {campaign?.game_system === 'pathfinder' && (
+          {campaign?.game_system === 'pathfinder' && isArc3Unlocked(campaign) && (
             <button
               onClick={() => setScannerOpen(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
@@ -722,7 +723,7 @@ export default function CampaignDetail() {
               <ScanLine className="w-3.5 h-3.5" strokeWidth={1.5} /> Scanner
             </button>
           )}
-          {campaign?.game_system === 'pathfinder' && (
+          {campaign?.game_system === 'pathfinder' && isArc3Unlocked(campaign) && (
             <button
               onClick={() => setBurdenOpen(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"

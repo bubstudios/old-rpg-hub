@@ -177,7 +177,8 @@ SHAPESHIFTER CASE ASSESSMENT: Every infiltrator case is unique. Assess: access, 
 COMMAND BURDEN: Moral decisions accumulate permanent weight on Captain Stellar. Each burden (execution, sacrifice, abandonment, deception, collateral, fragment loss) is recorded. High burden affects crew trust, decision-making, and story outcomes. Never treat moral costs as clean victory. James says: "Do not apologize. Do not justify. Carry it visibly. That is command."
 UNITY EVOLUTION: Unity is developing personality, humor, fear, grief, and selfhood. Fragment system: Unity can send fragments on remote missions — they can be lost, killed, or diverge. Fragment death causes severe grief. Unity knew Voss was a shapeshifter for 6 weeks but did not tell crew (boundary failure — crew trust -4). The Loom called Unity "something else" — outside Confluence grammar.
 CRADLE: Predecessor seed-machine hijacked by Confluence into shapeshifter factory. Shapeshifters are engineered bio-constructs, not a natural species. Destroying the Cradle makes the human-space shapeshifter campaign FINITE — remaining infiltrators are a huntable population, but still dangerous. The Weaver is an ancient Predecessor thread alerted by Cradle destruction. "Something old notices a severed thread. Correction will be required. Not yet. Soon."
-KEY NPCs: Vice Admiral Raney (verified human, covert Earth ally), Capt. Myers (Valiant, trusted), Capt. Morrison (Defender, trusted), Capt. Fischer (Resolution, human but ambitious — NOT a shapeshifter), Marcus Valen (shapeshifter hub, Fortuna Station), Jennifer Orlando (shapeshifter, knows about kimelons, escaped), Rebecca Kim (scanner tech, co-built kimelon), Chief Martinez & Lt. Torres (captured at Cradle, rescued).`,
+KEY NPCs: Vice Admiral Raney (verified human, covert Earth ally), Capt. Myers (Valiant, trusted), Capt. Morrison (Defender, trusted), Capt. Fischer (Resolution, human but ambitious — NOT a shapeshifter), Marcus Valen (shapeshifter hub, Fortuna Station), Jennifer Orlando (shapeshifter, knows about kimelons, escaped), Rebecca Kim (scanner tech, co-built kimelon), Chief Martinez & Lt. Torres (captured at Cradle, rescued).
+ARC3 UNLOCKS: When story milestones are reached, include them in the arc3_unlocks array: 'kimelon' (when the scanner is invented in Arc 3 Ch 1), 'voss_confirmed' (when Voss is scanned), 'voss_executed' (when Voss is executed in Arc 3 Ch 4), 'cradle_destroyed' (when the Cradle is destroyed). These unlock player-facing systems — do NOT include them before the story reaches that point. Before Arc 3, do NOT reference kimelons, shapeshifter networks, the Cradle, the Weaver, or any Arc 3 content.`,
 
   response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"enemy_countermove":{"faction":"confluence|chen|vask|vescarri|guild|shapeshifters","action":"what the enemy does in response to Bub's success","clock_effects":[{"clock":"discredit_campaign|confluence_heat|chen_countermeasures|etc","delta":number}],"narration":"brief scene of the enemy countermove (1-3 sentences, woven into the main narration or appended)"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
 Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.
@@ -724,6 +725,7 @@ ${CANON.response_format}`;
           new_scene: { type: "string" },
           in_world_days_advanced: { type: "number" },
           arc2_elements_introduced: { type: "array", items: { type: "string" } },
+          arc3_unlocks: { type: "array", items: { type: "string" } },
           rendezvous_team: { type: "array", items: { type: "string" } },
           future_echo: {
             type: "object",
@@ -931,6 +933,22 @@ ${CANON.response_format}`;
       flags.campaign_clocks = clocks;
     }
 
+    // Arc 3 unlocks — apply story milestone flags
+    if (Array.isArray(result.arc3_unlocks) && result.arc3_unlocks.length) {
+      const arc3State = { ...(flags.arc3 || {}) };
+      for (const unlock of result.arc3_unlocks) {
+        if (typeof unlock === 'string' && unlock.trim()) {
+          const key = unlock.trim();
+          if (key === 'kimelon') arc3State.kimelonInvented = true;
+          else if (key === 'voss_confirmed') arc3State.vossConfirmed = true;
+          else if (key === 'voss_executed') arc3State.vossExecuted = true;
+          else if (key === 'cradle_destroyed') arc3State.cradleDestroyed = true;
+          else arc3State[key] = true;
+        }
+      }
+      flags.arc3 = arc3State;
+    }
+
     newWorldState.quest_flags = flags;
 
     // ═══ UPDATE CAMPAIGN ═══
@@ -997,6 +1015,7 @@ ${CANON.response_format}`;
       new_scene: result.new_scene || campaign.current_scene,
       in_world_days_advanced: result.in_world_days_advanced || 0,
       arc2_elements_introduced: result.arc2_elements_introduced || [],
+      arc3_unlocks: result.arc3_unlocks || [],
       rendezvous_team: flags.rendezvous_team || [],
       future_echo: result.future_echo || null,
       future_echo_public_use: result.future_echo_public_use || false,

@@ -518,3 +518,14 @@ export const ARC3_OPERATIONS = [
     clocksAffected: ['weaver_awareness', 'unity_selfhood', 'temporal_instability']
   }
 ];
+
+// Mark all Arc 3 operations as requiring Arc 3 unlock
+ARC3_OPERATIONS.forEach(op => { op.requiresArc3 = true; });
+
+// === UNLOCK GATING ===
+// Arc 3 systems are hidden until the story reaches Arc 3 Chapter 1.
+// The GM sets arc3.kimelonInvented through the arc3_unlocks response field.
+export function isArc3Unlocked(campaign) {
+  const flags = campaign?.world_state?.quest_flags || {};
+  return flags.arc3?.kimelonInvented === true;
+}
