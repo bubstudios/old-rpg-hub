@@ -657,6 +657,191 @@ export function detectCrewAdviceIntent(input) {
   return { isAdvice: true, advisor: null };
 }
 
+// === STATE GATES ===
+// Rendezvous-specific advice must only appear once the game has actually
+// reached the rendezvous stage. On a fresh start, crew should advise on
+// identification, channel security, and evidence preparation — not on
+// approach corridors, ambush routes, or physical couriers to a meeting.
+
+const RENDEZVOUS_TERMS = [
+  'rendezvous',
+  'meeting site',
+  'approach route',
+  'approach corridor',
+  'approach vector',
+  'off-world meeting',
+  'physical copy to the',
+  'physical evidence to the',
+  'physical evidence only',
+  'ambush along the',
+  'rendezvous path',
+  'to the rendezvous',
+  'at the rendezvous',
+  'to the meeting',
+  'decoy route',
+  'exit vector ready before you arrive'
+];
+
+export function hasRendezvousContext(campaign) {
+  const flags = campaign?.world_state?.quest_flags || {};
+  const locStates = campaign?.world_state?.location_states || {};
+  // Rendezvous is unlocked when the off-world rendezvous location is UNLOCKED+
+  const rendezvousLocState = locStates.off_world_rendezvous;
+  if (rendezvousLocState && ['UNLOCKED', 'ACTIVE', 'VISITED', 'COMPLETED'].includes(rendezvousLocState)) {
+    return true;
+  }
+  // Or if rendezvous_team has entries (crew has been brought to a meeting)
+  if (Array.isArray(flags.rendezvous_team) && flags.rendezvous_team.length > 0) {
+    return true;
+  }
+  return false;
+}
+
+// Fresh-start advice for each advisor — used when generated advice contains
+// rendezvous terms but the game hasn't reached the rendezvous stage yet.
+const FRESH_START_ADVICE = {
+  sarah: {
+    quote: "Before we transmit anything sensitive, let me check the channel. If Chen-linked relays are watching, we may already be compromised. Send only basic identification until I verify the handshake.",
+    recommendedActions: [
+      'Verify the New Titan comm channel for Chen-linked relay interference',
+      'Send only basic identification until the channel is confirmed secure',
+      'Check for Chen protocol signatures in recent transmissions',
+      'Prepare a counter-narrative in case Chen moves first'
+    ]
+  },
+  james: {
+    quote: "The Confluence process is legal, not military. They win by making surrender the only reasonable option. Your job is to make resistance the reasonable option. Give people a plan, not just a warning.",
+    recommendedActions: [
+      'Frame resistance as the practical choice, not the heroic one',
+      'Use Confluence procedure knowledge to find legal weaknesses',
+      'Prepare testimony that is calm and factual, not emotional',
+      'Give New Titan a concrete defense plan they can believe in'
+    ]
+  },
+  clark: {
+    quote: "We need credibility before volume. A short, clean evidence summary will do more than a flood of frightening claims. Give me the best piece and I'll make it airtight.",
+    recommendedActions: [
+      'Prepare a short, verifiable evidence summary — not the full archive',
+      'Separate confirmed proof from future-memory claims',
+      'Document chain of custody for each piece of evidence',
+      'Keep evidence ready but do not transmit until the channel is verified'
+    ]
+  },
+  mitchell: {
+    quote: "Mitchell gives a low warning chirp. James translates: \"He says the sky feels crowded. Not attack-crowded. Listening-crowded.\"",
+    recommendedActions: [
+      'Run a passive sector scan for silent observers',
+      "Keep Pathfinder's emissions low to avoid detection",
+      'Watch for unusual traffic patterns in the sector',
+      'Position Mitchell where he can observe incoming transmissions'
+    ]
+  },
+  thorne: {
+    quote: "New Titan is cautious because they have to be. We are arriving with thirty-seven refugee ships and a story that sounds impossible. Keep the first message calm, and do not overwhelm them with everything at once.",
+    recommendedActions: [
+      'Send a controlled identification to New Titan',
+      'Keep Sanctuary ships in a non-threatening formation',
+      'Prepare an evidence summary, not the full archive',
+      'Have Sarah verify the channel before sending anything sensitive'
+    ]
+  },
+  hayes: {
+    quote: "Nobody knows yet. One broadcast could change everything — or it could get dismissed as alien propaganda. Let me prepare a controlled release with context and verification. We need people to believe, not just hear.",
+    recommendedActions: [
+      'Prepare a controlled identification broadcast for New Titan',
+      'Keep emissions low — do not attract attention yet',
+      'Have a counter-narrative ready in case Chen moves first',
+      'Mask all sensitive traffic as routine communications'
+    ]
+  },
+  reeves: {
+    quote: "If we need to leave fast, give me a heading. I can have us in jumpspace in ninety seconds — but I need to know where we're going. A blind jump is worse than staying put.",
+    recommendedActions: [
+      'Identify two possible jump destinations in case of emergency',
+      'Pre-calculate jump coordinates for emergency extraction',
+      'Keep the engines warm and the path clear',
+      'Minimize active sensor usage to avoid detection'
+    ]
+  },
+  carmelon: {
+    quote: "The future is not a map. It's a memory of something that hasn't happened yet. We can learn from it, but we cannot follow it like a road. The moment we treat it as instructions, we stop making choices — and that's when we lose.",
+    recommendedActions: [
+      'Use future-memories as context, not commands',
+      'Document all Architect anomalies for future study',
+      'Keep temporal knowledge crew-only — do not broadcast',
+      'Monitor for any temporal instability from future-memory use'
+    ]
+  },
+  ramos: {
+    quote: "I can mask our signature, rig a burst transmitter, or harden the hull — but not all three at once. Pick one. And tell me before you need it, not after.",
+    recommendedActions: [
+      'Choose a system priority: stealth, comms, or defense',
+      'Minimize engine heat output to reduce signature',
+      'Prepare emergency systems for rapid FTL jump if needed',
+      'Keep non-essential systems powered down'
+    ]
+  },
+  patel: {
+    quote: "I can pull records from my family contacts on the surface. Nothing official — just what people are saying, what they're seeing, what the colony control isn't telling the public. Sometimes the small details are the ones that matter.",
+    recommendedActions: [
+      "Use Patel's New Titan contacts for ground-level intelligence",
+      'Cross-reference colonial comm traffic for overlooked details',
+      'Monitor family channels for colony morale and conditions',
+      'Look for patterns in routine administrative traffic'
+    ]
+  },
+  voss: {
+    quote: "Crew health is stable. I'm monitoring for fatigue, stress reactions, and any signs of exposure to unknown pathogens. If we encounter alien biology, I want samples before we let anyone touch it. Medical protocols exist for a reason.",
+    recommendedActions: [
+      'Maintain standard medical screening protocols',
+      'Monitor crew health after away missions',
+      'Keep medical supplies fully stocked',
+      'Schedule routine medical screenings for the crew'
+    ]
+  }
+};
+
+function adviceHasRendezvousTerms(advice) {
+  if (!advice || typeof advice === 'string') return false;
+  const text = [
+    advice.quote || '',
+    ...(advice.recommendedActions || []),
+    advice.riskWarning || ''
+  ].join(' ').toLowerCase();
+  return RENDEZVOUS_TERMS.some(term => text.includes(term));
+}
+
+// Post-process generated advice: if it contains rendezvous terms but the game
+// hasn't reached the rendezvous stage, replace with fresh-start alternatives.
+function applyStateGate(advice, advisorKey, campaign) {
+  if (typeof advice === 'string') return advice; // unavailable message
+  if (!advice) return advice;
+
+  const hasRendezvous = hasRendezvousContext(campaign);
+  if (hasRendezvous) return advice; // Rendezvous stage reached — all advice is valid
+
+  if (adviceHasRendezvousTerms(advice)) {
+    const freshStart = FRESH_START_ADVICE[advisorKey];
+    if (freshStart) return freshStart;
+  }
+
+  // Even if the quote is fine, filter out any rendezvous-specific actions
+  const filteredActions = (advice.recommendedActions || []).filter(action => {
+    const lower = String(action).toLowerCase();
+    return !RENDEZVOUS_TERMS.some(term => lower.includes(term));
+  });
+
+  if (filteredActions.length === 0) {
+    // All actions were rendezvous-specific — use fresh-start actions
+    const freshStart = FRESH_START_ADVICE[advisorKey];
+    if (freshStart) return { ...advice, recommendedActions: freshStart.recommendedActions };
+  } else if (filteredActions.length < (advice.recommendedActions || []).length) {
+    return { ...advice, recommendedActions: filteredActions };
+  }
+
+  return advice;
+}
+
 // === ADVICE RETRIEVAL ===
 
 export function getAdvisorAdvice(campaign, advisorKey) {
@@ -667,7 +852,8 @@ export function getAdvisorAdvice(campaign, advisorKey) {
     return getUnavailableReason(advisorKey, campaign);
   }
 
-  return advisor.generateAdvice(campaign);
+  const advice = advisor.generateAdvice(campaign);
+  return applyStateGate(advice, advisorKey, campaign);
 }
 
 export function getAllAdvice(campaign) {
@@ -676,7 +862,7 @@ export function getAllAdvice(campaign) {
     const available = isCrewAvailable(a.key, campaign);
     let advice;
     if (available) {
-      advice = a.generateAdvice(campaign);
+      advice = applyStateGate(a.generateAdvice(campaign), a.key, campaign);
     } else {
       advice = getUnavailableReason(a.key, campaign);
     }

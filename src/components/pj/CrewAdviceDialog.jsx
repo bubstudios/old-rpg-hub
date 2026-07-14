@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Users, AlertTriangle, MessageCircle, X, ArrowLeft } from 'lucide-react';
+import { Users, AlertTriangle, MessageCircle, X, ArrowLeft, RefreshCw } from 'lucide-react';
 import { getAllAdvice } from '@/lib/pjCrewAdvice';
 
 const ICON_MAP = {
@@ -33,13 +33,19 @@ export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewA
   const [dismissed, setDismissed] = useState({});
   const [discussing, setDiscussing] = useState(null);
 
-  useEffect(() => {
-    if (open && campaign) {
+  const refreshAdvice = useCallback(() => {
+    if (campaign) {
       setAdvice(getAllAdvice(campaign));
       setDismissed({});
       setDiscussing(null);
     }
-  }, [open, campaign]);
+  }, [campaign]);
+
+  useEffect(() => {
+    if (open && campaign) {
+      refreshAdvice();
+    }
+  }, [open, campaign, refreshAdvice]);
 
   function handleAction(advisor, actionText) {
     onCrewAction?.(advisor, actionText);
@@ -67,7 +73,16 @@ export default function CrewAdviceDialog({ open, onOpenChange, campaign, onCrewA
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-xs text-muted-foreground font-body leading-relaxed mb-2">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <p className="text-xs text-muted-foreground font-body leading-relaxed flex-1">
+            Advice is based on the current mission state. Refresh after major decisions.
+          </p>
+          <Button variant="ghost" size="sm" onClick={refreshAdvice} className="text-muted-foreground hover:text-foreground h-7 px-2 shrink-0">
+            <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+          </Button>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground/70 font-body leading-relaxed mb-2">
           These are recommendations, not automatic orders. Click an action to issue the command.
           Multiple crew members may recommend different approaches — you do not have to follow all advice.
         </p>
