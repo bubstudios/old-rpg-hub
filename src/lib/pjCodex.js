@@ -78,6 +78,7 @@ export const CODEX_SECTIONS = [
   { id: 'factions', label: 'Factions' },
   { id: 'locations', label: 'Locations' },
   { id: 'future', label: 'Future Echoes' },
+  { id: 'operations', label: 'Operations' },
   { id: 'questions', label: 'Unresolved Questions' }
 ];
 
@@ -645,6 +646,56 @@ export const CODEX_FUTURE_MEMORIES = [
   }
 ];
 
+export const CODEX_OPERATIONS = [
+  {
+    key: 'operations_system',
+    label: 'What Are Operations?',
+    fields: [
+      { label: 'Core principle', value: 'Evidence wins arguments. Operations win the war. Showing proof is not enough — you must secure locations, trace leaks, protect people, investigate threats, expose infiltrators, and outmaneuver enemies.' },
+      { label: 'How it works', value: 'Authorize operations from the Command Center (Ops button). Assign a team, choose an approach, optionally attach evidence. The operation resolves through crew expertise, approach, clock pressures, evidence used, and known enemy activity.' },
+      { label: 'No dice', value: 'Operations do not use dice rolls or random chance. Success depends on choosing the right team for the job, the right approach for the situation, and the state of your clocks and evidence.' },
+      { label: 'Outcomes', value: 'Clean Success (full rewards, enemy countermove likely), Partial Success (half rewards, new risk), Complication (unexpected discovery), or Failure (clocks worsen, morale drops).' },
+      { label: 'Enemy response', value: 'After a successful operation, enemies countermove. The Confluence sends injunctions, Chen issues orders, shapeshifters infiltrate, Vask repositions. The enemy does not sit still.' },
+      { label: 'Evidence in operations', value: 'Evidence used in operations opens new options — tracing payment routes, finding contract language, identifying intermediaries. It does not just add bonus outcomes.' },
+      { label: 'Crew assignment', value: 'Each crew member has specialties. Choose the right team for each operation. Crew not assigned do not participate — their expertise is unavailable. Bub commands; he does not personally crawl through vents unless the player says so.' }
+    ]
+  },
+  {
+    key: 'crew_assignment_guide',
+    label: 'Crew Assignment Guide',
+    fields: [
+      { label: 'Principle', value: 'Each crew member has specialties. Choose the right team for each operation. Crew not assigned do not participate — their expertise is unavailable.' },
+      { label: 'Sarah Chen', value: 'Chen protocols, relay compromise, political family knowledge, undercover comms.' },
+      { label: 'James Stellar', value: 'Confluence procedure, survivor testimony, enemy pattern recognition.' },
+      { label: 'Clark', value: 'Evidence authentication, legal framing, interrogation, chain of custody.' },
+      { label: 'Mitchell', value: 'Ambush detection, shapeshifter suspicion, intimidation, danger sense.' },
+      { label: 'Farah Thorne', value: 'New Titan politics, colony trust, civilian stakes, family connection to Governor Thorne.' },
+      { label: 'Hayes', value: 'Reactor systems, tactical repairs, sensor packages, broadcast capability.' },
+      { label: 'Reeves', value: 'Investigation, records, inconsistencies, quiet questioning.' },
+      { label: 'Carmelon', value: 'Temporal anomalies, Architect technology, future-memory interpretation.' },
+      { label: 'Ramos', value: 'Ship systems, damage control, technical recovery.' },
+      { label: 'Patel', value: 'Comms, signal traces, overlooked details, New Titan native.' },
+      { label: 'Voss', value: 'Biological irregularities, behavior mismatches, crew health.' }
+    ]
+  },
+  {
+    key: 'operation_types',
+    label: 'Operation Types',
+    fields: [
+      { label: 'Covert Operation', value: 'Stealth missions behind enemy lines — planting false signals, shadowing couriers.' },
+      { label: 'Reconnaissance', value: 'Gather intelligence, secure locations, sweep for threats before arrivals.' },
+      { label: 'Rescue Operation', value: 'Recover captives, extract allies, evacuate civilians.' },
+      { label: 'Evidence Recovery', value: 'Find and secure physical proof from derelicts, archives, or abandoned vessels.' },
+      { label: 'Counterintelligence', value: 'Counter enemy infiltration, trace signal leaks, expose forged advisories, screen delegations.' },
+      { label: 'Exploration', value: 'Discover new locations, find hidden technology, uncover clues.' },
+      { label: 'Diplomatic Mission', value: 'Negotiate, persuade, build alliances with colonial leaders.' },
+      { label: 'Ship Maneuver', value: 'Position, deploy, or reposition Sanctuary Fleet ships for tactical advantage.' },
+      { label: 'Sabotage Prevention', value: 'Protect assets from enemy action, sweep for infiltrators.' },
+      { label: 'Undercover Contact', value: 'Infiltrate under false identity — audit records, screen staff, access archives.' }
+    ]
+  }
+];
+
 export const CODEX_QUESTIONS = [
   {
     key: 'real_admiral_chen',
@@ -781,6 +832,7 @@ export function getSectionEntries(sectionId) {
     factions: CODEX_FACTIONS,
     locations: CODEX_LOCATIONS,
     future: CODEX_FUTURE_MEMORIES,
+    operations: CODEX_OPERATIONS,
     questions: CODEX_QUESTIONS
   };
   return map[sectionId] || null;

@@ -154,6 +154,11 @@ SECRECY: Future Memories are crew-only. If the player tries to use them publicly
 
 EFFECTS: Each echo should unlock an option, reveal a risk, or influence crew reactions. It should NOT solve the problem or replace evidence.`,
 
+  operations: `OPERATIONS — Bub commands missions, not just arguments. When the player's command starts with "OPERATION:", it is a structured mission with assigned team, chosen approach, and stakes.
+RESOLUTION: No dice. Resolve through: chosen team's expertise (each crew member has specialties), chosen approach (aggressive/cautious/creative have different outcomes), current clock pressures (high Heat = more enemy attention), evidence used (verified evidence strengthens outcomes), known enemy activity, and Future Echoes if referenced.
+OUTCOMES: Clean Success (team matched task, approach sound — full rewards, enemy countermove likely), Partial Success (something went wrong — half rewards + new risk), Complication (unexpected discovery — trap, false trail, shapeshifter clue, compromised aide), Failure (wrong team, bad approach, enemy ready — clocks worsen, morale drops, enemy advances).
+RULES: Always apply clock changes based on outcome. Include decision_impact with crew reactions. Include enemy_countermove when the operation succeeded. Narrate the operation as a scene — what the team found, what went wrong, what they discovered. Evidence used in operations opens new options (tracing routes, finding contract language, identifying intermediaries) — it does not just add bonus outcomes. Crew not on the team do not participate — their expertise is unavailable. Bub commands; he does not personally crawl through vents unless the player says so.`,
+
   response_format: `Respond as JSON: {"narration":"scene text (always present)","effects":[{"type":"clock|ally|evidence|faction|npc|location","id":"key","delta":number,"reason":"short why","effect":"consequence (clock only)","state":"new state (evidence/location)","notes":"extra detail (evidence)","name":"NPC name (npc)","disposition":"friendly/hostile/etc (npc)","what_we_know":"NEW facts only (npc)","last_action":"what faction did (faction)","faction_move":"narrate faction action (faction)"}],"decision_impact":{"is_meaningful":bool,"impacts":[2-6 items {"label","change":number,"change_label","reason","category":"ally|clock|faction|evidence|hidden","tone":"positive|negative|neutral|hidden","character_note":"optional short in-character NPC quote for ONE crew/ally with a strong reaction"}],"future_consequence":"optional"},"enemy_countermove":{"faction":"confluence|chen|vask|vescarri|guild|shapeshifters","action":"what the enemy does in response to Bub's success","clock_effects":[{"clock":"discredit_campaign|confluence_heat|chen_countermeasures|etc","delta":number}],"narration":"brief scene of the enemy countermove (1-3 sentences, woven into the main narration or appended)"},"new_scene":"scene desc","in_world_days_advanced":0,"arc2_elements_introduced":[]}
 Rules: narration always present. Only include effects that ACTUALLY changed this turn. Clock deltas: normal +1-3, important +4-8, major +10-20. Only 1-3 clocks per action. Only include allies MEANINGFULLY affected (0-2 per turn). decision_impact always present — is_meaningful:false with empty impacts for minor actions. Evidence state changes: UNKNOWN→DISCOVERED→VERIFIED→SHARED_PRIVATELY→PUBLICLY_RELEASED→WEAPONIZED. Location states: UNKNOWN→RUMORED→UNLOCKED→ACTIVE→VISITED→COMPLETED.
 ENEMY COUNTERMOVE: When Bub achieves a major success (convincing a faction, broadcasting evidence, winning a battle, securing an alliance), include enemy_countermove. The enemy does NOT sit still — Confluence sends injunctions, Chen issues recall orders, shapeshifters try to infiltrate, Vask moves closer, Guild starts sniffing around. Include clock_effects that reflect the enemy's response (typically raising discredit_campaign, confluence_heat, or chen_countermeasures). Omit enemy_countermove entirely for minor actions with no significant success.
@@ -375,6 +380,7 @@ async function applyDiscoveryTriggers(base44, campaign_id, chapter, oldEvidenceS
 
 function buildTurnPacket(campaign, characters, npcList, locList, worldState, action, history, timeline, isRollResult) {
   const actionLower = action.toLowerCase();
+  const isOperation = action.trim().toUpperCase().startsWith('OPERATION:');
   const flags = worldState.quest_flags || {};
   const clocks = flags.campaign_clocks || {};
   const allyStates = worldState.ally_states || {};
@@ -525,6 +531,7 @@ Player: Captain Bub Stellar${campaign.play_mode === 'canon' ? ' (Canon Mode)' : 
 
 ## Player Command
 ${isRollResult ? 'Roll result: ' : ''}${action}
+${isOperation ? `\n## OPERATION RESOLUTION\n${CANON.operations}` : ''}
 
 ## Active Clocks
 ${Object.entries(activeClocks).map(([k, v]) => `${k}: ${v} — ${CANON.clocks[k] || ''}`).join('\n')}

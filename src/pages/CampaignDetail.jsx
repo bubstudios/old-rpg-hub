@@ -26,6 +26,7 @@ import PJCampaignStatus from '@/components/PJCampaignStatus';
 import StorySoFarModal from '@/components/pj/StorySoFarModal';
 import CodexDialog from '@/components/pj/CodexDialog';
 import MissionsPanel from '@/components/pj/MissionsPanel';
+import OperationsPanel from '@/components/pj/OperationsPanel';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
@@ -48,7 +49,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
   MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb, Sparkles
+  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb, Sparkles, Crosshair
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -82,6 +83,7 @@ export default function CampaignDetail() {
   const [codexSection, setCodexSection] = useState(null);
   const [codexEntryKey, setCodexEntryKey] = useState(null);
   const [missionsOpen, setMissionsOpen] = useState(false);
+  const [operationsOpen, setOperationsOpen] = useState(false);
   const [crewAdviceOpen, setCrewAdviceOpen] = useState(false);
   const [decisionImpact, setDecisionImpact] = useState(null);
   const [decisionLogOpen, setDecisionLogOpen] = useState(false);
@@ -702,6 +704,14 @@ export default function CampaignDetail() {
           )}
           {campaign?.game_system === 'pathfinder' && (
             <button
+              onClick={() => setOperationsOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Crosshair className="w-3.5 h-3.5" strokeWidth={1.5} /> Ops
+            </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <button
               onClick={() => setCrewAdviceOpen(true)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -1116,6 +1126,12 @@ export default function CampaignDetail() {
           <MissionsPanel
             open={missionsOpen}
             onOpenChange={setMissionsOpen}
+            campaign={campaign}
+            onSuggestAction={handleSuggestAction}
+          />
+          <OperationsPanel
+            open={operationsOpen}
+            onOpenChange={setOperationsOpen}
             campaign={campaign}
             onSuggestAction={handleSuggestAction}
           />
