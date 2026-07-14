@@ -31,7 +31,7 @@ import KimelonScanner from '@/components/pj/KimelonScanner';
 import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
 import { isArc3Unlocked } from '@/lib/pjArc3';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
-import { detectCrewAdviceIntent, getAdvisorAdvice } from '@/lib/pjCrewAdvice';
+import { detectCrewAdviceIntent, getAdvisorAdvice, formatCrewAdvice } from '@/lib/pjCrewAdvice';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
 import FutureEchoPopup from '@/components/pj/FutureEchoPopup';
@@ -175,7 +175,9 @@ export default function CampaignDetail() {
 
   async function handleCrewAdvice(advisor) {
     if (processing || posting) return;
-    const adviceText = getAdvisorAdvice(campaign, advisor.key);
+    const advice = getAdvisorAdvice(campaign, advisor.key);
+    if (!advice) return;
+    const adviceText = formatCrewAdvice(advisor, advice);
     if (!adviceText) return;
     setPosting(true);
     const tempEntry = {

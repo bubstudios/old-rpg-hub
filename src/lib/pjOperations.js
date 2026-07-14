@@ -347,6 +347,83 @@ EVIDENCE ATTACHED: ${evText}
 Resolve this operation based on crew expertise, chosen approach, current clock pressures, and known enemy activity. Narrate the outcome and apply all consequences.`;
 }
 
+// === CREW SCORING FOR OPERATIONS ===
+// Scores each crew member for a given operation based on expertise match,
+// operation type bonuses, and availability. Used to recommend teams.
+
+import { isCrewAvailable } from '@/lib/pjCrewAdvice';
+import { CREW_PROFILES } from '@/lib/pjCrewProfiles';
+
+const TYPE_BONUSES = {
+  counterintel: { sarah: 25, reeves: 20, patel: 15 },
+  evidence_recovery: { clark: 25, james: 15, reeves: 10 },
+  recon: { mitchell: 25, reeves: 15, hayes: 10 },
+  rescue: { mitchell: 20, thorne: 15, ramos: 10 },
+  covert: { sarah: 20, hayes: 15, mitchell: 10 },
+  diplomatic: { thorne: 25, sarah: 15, clark: 10 },
+  ship_maneuver: { ramos: 25, reeves: 15, hayes: 10 },
+  sabotage_prevention: { mitchell: 25, ramos: 15, clark: 10 },
+  undercover: { reeves: 25, patel: 15, voss: 10 },
+  exploration: { carmelon: 25, mitchell: 15, clark: 10 }
+};
+
+export function scoreCrewForOperation(crewKey, operation, campaign) {
+  const profile = CREW_PROFILES[crewKey];
+  if (!profile) return -999;
+
+  if (!isCrewAvailable(crewKey, campaign)) return -999;
+
+  let score = 0;
+
+  // Score based on expertise matching operation text
+  const opText = [
+    operation.title || '',
+    operation.objective || '',
+    operation.location || '',
+    ...(operation.risks || []),
+    ...(operation.approaches || [])
+  ].join(' ').toLowerCase();
+
+  for (const exp of profile.expertise) {
+    const expWords = exp.toLowerCase().split(/\s+/);
+    if (expWords.some(w => w.length > 3 && opText.includes(w))) score += 20;
+  }
+
+  for (const pri of profile.priorities) {
+    const priWords = pri.toLowerCase().split(/\s+/);
+    if (priWords.some(w => w.length > 3 && opText.includes(w))) score += 10;
+  }
+
+  // Location-based bonuses
+  const loc = (operation.location || '').toLowerCase();
+  if (loc.includes('new titan') && crewKey === 'thorne') score += 25;
+  if (loc.includes('new titan') && crewKey === 'patel') score += 15;
+  if (loc.includes('confluence') && crewKey === 'james') score += 20;
+  if (loc.includes('sanctuary') && crewKey === 'carmelon') score += 15;
+
+  // Operation type bonuses
+  const typeBonus = TYPE_BONUSES[operation.type]?.[crewKey] || 0;
+  score += typeBonus;
+
+  return score;
+}
+
+export function getRecommendedTeam(operation, campaign) {
+  const crewKeys = Object.keys(CREW_PROFILES);
+  const scored = crewKeys.map(key => ({
+    key,
+    name: CREW_PROFILES[key].displayName,
+    role: CREW_PROFILES[key].role,
+    expertise: CREW_PROFILES[key].expertise,
+    score: scoreCrewForOperation(key, operation, campaign),
+    available: isCrewAvailable(key, campaign)
+  }));
+
+  return scored
+    .filter(c => c.available && c.score > 0)
+    .sort((a, b) => b.score - a.score);
+}
+
 // === EVIDENCE LIST (for attachment selection) ===
 export function getAvailableEvidence() {
   return PJ_EVIDENCE.map(e => ({ key: e.key, label: e.label }));
