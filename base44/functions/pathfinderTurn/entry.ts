@@ -618,7 +618,7 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { campaign_id, action, acting_character_id, is_roll_result, skip_action_log } = body;
+    const { campaign_id, action, acting_character_id, is_roll_result, skip_action_log, narration_style } = body;
 
     if (!campaign_id || !action) {
       return Response.json({ error: 'campaign_id and action are required' }, { status: 400 });
@@ -658,10 +658,61 @@ Deno.serve(async (req) => {
     const userPrompt = buildTurnPacket(campaign, characters, npcList, locList, worldState, action, history, timeline, is_roll_result);
 
     // Compact system prompt
+    const narrationStyle = narration_style || 'cinematic_simple';
+    const styleDirectives = {
+      cinematic_simple: 'NARRATION STYLE: Cinematic Simple. Write clear, direct, cinematic prose. Plain English first. Short sentences. Minimal jargon — explain any technical term through crew dialogue immediately. This is the default style.',
+      technical_sci_fi: 'NARRATION STYLE: Technical Sci-Fi. You may use more technical terms, but always explain them through character dialogue. Still target high school readability. Do not stack jargon — at most 1-2 technical terms per paragraph.',
+      brief_command: 'NARRATION STYLE: Brief Command Report. Keep narration very short and military-style. 1-3 short paragraphs maximum. Direct, efficient, like a ship status report. Still include clear choices at the end.',
+      novel_mode: 'NARRATION STYLE: Novel Mode. Longer, more descriptive, literary prose. Still plain English and readable. Break into readable paragraphs. No paragraph longer than 4 lines on a phone.'
+    };
+
     const systemPrompt = `${CANON.core}
 
 ## Hard Rules
 ${CANON.rules.map((r, i) => `${i + 1}. ${r}`).join('\n')}
+
+## Narration Readability Rules
+Narration must be understandable to a high school reader.
+Avoid long strings of technical, legal, or military jargon.
+When technical terms are needed, explain them through character dialogue in plain English.
+Prefer clear sentences over dense exposition.
+Every response should make the current situation, danger, and available next step obvious.
+
+Style limits:
+- Maximum sentence length: usually under 25 words.
+- Maximum technical terms per paragraph: 1 or 2.
+- No paragraph should be more than 4 lines on a phone.
+
+Dense terms to avoid (unless immediately explained in plain English by a crew member):
+adjudication, interdiction, sector-signature, claim string, authorization lattice, procedural compression, uplink queue, secure bind
+
+Use simpler replacements:
+adjudication → judgment / decision
+interdiction → stopping or blocking ships
+sector-signature → official ID code
+claim string → legal claim marker
+uplink → transmission
+secure bind → secure connection
+authorization packet → permission code
+routing header → signal source
+
+CREW VOICE RULE — Crew members translate technical info for the player:
+- Clark can say the technical thing, then explain it: "The relay code is valid. In plain English: this probably came from New Titan, but someone may be using their system as cover."
+- Hayes simplifies comms: "Message received. Channel is clean enough to use, but I would not send our whole archive through it."
+- Thorne gives practical military advice: "We have a name now. Mara Jin. Talk to her formally first. Keep the guns quiet, but ready."
+- Reeves explains suspicion: "The timing is odd. Not proof of a trap, but enough that I would check twice."
+
+RESPONSE SHAPE — Most game responses should follow:
+1. What happened.
+2. What it means.
+3. What danger or opportunity it creates.
+4. What the player can do next.
+
+Response length:
+- Normal play: 2-5 short paragraphs, then clear choices.
+- Major scenes: longer is okay, but break into readable paragraphs.
+
+${styleDirectives[narrationStyle] || styleDirectives.cinematic_simple}
 
 ## Response Format
 ${CANON.response_format}`;

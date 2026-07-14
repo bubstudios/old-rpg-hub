@@ -98,6 +98,7 @@ export default function CampaignDetail() {
   const [futureEcho, setFutureEcho] = useState(null);
   const [futureEchoLogOpen, setFutureEchoLogOpen] = useState(false);
   const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
+  const [narrationStyle, setNarrationStyle] = useState(() => localStorage.getItem('pj_narration_style') || 'cinematic_simple');
   const [pullCodexOpen, setPullCodexOpen] = useState(false);
   const [pullImpact, setPullImpact] = useState(null);
   const [pullUnlocks, setPullUnlocks] = useState([]);
@@ -343,7 +344,8 @@ export default function CampaignDetail() {
         campaign_id: campaignId,
         action: rollResult.summary,
         acting_character_id: myCharacter.id,
-        is_roll_result: true
+        is_roll_result: true,
+        narration_style: narrationStyle
       });
       // Apply GM response state changes immediately (same as submitTurn)
       // Use the FINAL clock values returned by the GM, not LLM deltas
@@ -539,7 +541,8 @@ export default function CampaignDetail() {
                 campaign_id: campaignId,
                 action: retryData.combined_action,
                 acting_character_id: myCharacter.id,
-                skip_action_log: true
+                skip_action_log: true,
+                narration_style: narrationStyle
               });
               await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
               setCampaign(prev => {
@@ -590,7 +593,8 @@ export default function CampaignDetail() {
           campaign_id: campaignId,
           action: data.combined_action,
           acting_character_id: myCharacter.id,
-          skip_action_log: true
+          skip_action_log: true,
+          narration_style: narrationStyle
         });
         await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
         dmCompleted = true; // DM call succeeded — don't restore action text on post-DM errors
@@ -927,6 +931,19 @@ export default function CampaignDetail() {
             >
               <Gavel className="w-3.5 h-3.5" strokeWidth={1.5} /> Decisions
             </button>
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <select
+              value={narrationStyle}
+              onChange={(e) => { setNarrationStyle(e.target.value); localStorage.setItem('pj_narration_style', e.target.value); }}
+              className="text-[10px] font-heading tracking-wider border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground rounded px-2 py-1.5 cursor-pointer"
+              title="Narration Style"
+            >
+              <option value="cinematic_simple">Cinematic</option>
+              <option value="technical_sci_fi">Technical</option>
+              <option value="brief_command">Brief</option>
+              <option value="novel_mode">Novel</option>
+            </select>
           )}
           {campaign?.game_system !== 'thepull' && (
             <button

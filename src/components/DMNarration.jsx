@@ -1,5 +1,6 @@
 import { ScrollText } from 'lucide-react';
 import DiceRoller from './DiceRoller';
+import { enforceReadableNarration } from '@/lib/pjNarrationFilter';
 
 export default function DMNarration({ narration, diceRolls }) {
   if (!narration) return null;
@@ -20,7 +21,7 @@ export default function DMNarration({ narration, diceRolls }) {
         </div>
 
         <div className="tome-text text-[15px] sm:text-base whitespace-pre-wrap">
-          {narration}
+          {enforceReadableNarration(narration)}
         </div>
 
         {diceRolls && diceRolls.length > 0 && (
