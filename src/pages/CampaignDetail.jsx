@@ -32,6 +32,7 @@ import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
 import { isArc3Unlocked } from '@/lib/pjArc3';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
 import { detectCrewAdviceIntent, getAdvisorAdvice, formatCrewAdvice } from '@/lib/pjCrewAdvice';
+import { detectStatusQuery, buildStatusResponse, buildMissionResponse } from '@/lib/pjStatusQuery';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
 import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
 import FutureEchoPopup from '@/components/pj/FutureEchoPopup';
@@ -68,6 +69,7 @@ export default function CampaignDetail() {
   const [action, setAction] = useState('');
   const [processing, setProcessing] = useState(false);
   const processingRef = useRef(false);
+  const lastInputRef = useRef({ text: '', timestamp: 0 });
   const [latestResult, setLatestResult] = useState(null);
   const [diceOpen, setDiceOpen] = useState(false);
   const [discussMode, setDiscussMode] = useState(false);
@@ -380,8 +382,39 @@ export default function CampaignDetail() {
     }
   }
 
+  function isDuplicateInput(text) {
+    const last = lastInputRef.current;
+    if (last.text === text && Date.now() - last.timestamp < 5000) return true;
+    lastInputRef.current = { text, timestamp: Date.now() };
+    return false;
+  }
+
+  async function handleStatusQuery(responseText) {
+    setPosting(true);
+    const tempEntry = {
+      entry_type: 'discussion',
+      narration: responseText,
+      acting_character_name: 'Status Report'
+    };
+    setEntries(prev => [...prev, tempEntry]);
+    try {
+      await base44.functions.invoke('campaignData', {
+        op: 'postDiscussion',
+        campaign_id: campaignId,
+        message: responseText,
+        acting_character_name: 'Status Report'
+      });
+      await reloadEntries();
+    } catch (e) {
+      toast.error('Failed to generate status response');
+      setEntries(prev => prev.slice(0, -1));
+    } finally {
+      setPosting(false);
+    }
+  }
+
   async function handleAction() {
-    if (!action.trim() || processing || posting) return;
+    if (!action.trim() || processing || posting || processingRef.current) return;
     if (!hasBillingAccess) {
       setPurchaseOpen(true);
       return;
@@ -389,8 +422,22 @@ export default function CampaignDetail() {
     const submittedAction = action.trim();
     setAction('');
 
-    // Crew advice — open the crew advice dialog with action buttons
+    // Duplicate submission protection
+    if (isDuplicateInput(submittedAction)) return;
+
+    // Status query — answer from game state, don't echo as dialogue or send to DM
     if (campaign?.game_system === 'pathfinder') {
+      const statusType = detectStatusQuery(submittedAction);
+      if (statusType === 'status_query') {
+        await handleStatusQuery(buildStatusResponse(campaign));
+        return;
+      }
+      if (statusType === 'mission_query') {
+        await handleStatusQuery(buildMissionResponse(campaign));
+        return;
+      }
+
+      // Crew advice — open the crew advice dialog with action buttons
       const intent = detectCrewAdviceIntent(submittedAction);
       if (intent.isAdvice) {
         setCrewAdviceOpen(true);
