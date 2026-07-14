@@ -31,6 +31,8 @@ import KimelonScanner from '@/components/pj/KimelonScanner';
 import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
 import { isArc3Unlocked } from '@/lib/pjArc3';
 import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
+import PendingEventInterrupt from '@/components/pj/PendingEventInterrupt';
+import PendingEventsPanel from '@/components/pj/PendingEventsPanel';
 import { detectCrewAdviceIntent, getAdvisorAdvice, formatCrewAdvice } from '@/lib/pjCrewAdvice';
 import { detectStatusQuery, buildStatusResponse, buildMissionResponse, buildOperationStatusResponse } from '@/lib/pjStatusQuery';
 import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
@@ -99,6 +101,7 @@ export default function CampaignDetail() {
   const [futureEchoLogOpen, setFutureEchoLogOpen] = useState(false);
   const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
   const [narrationStyle, setNarrationStyle] = useState(() => localStorage.getItem('pj_narration_style') || 'cinematic_simple');
+  const [pendingInterrupts, setPendingInterrupts] = useState([]);
   const [pullCodexOpen, setPullCodexOpen] = useState(false);
   const [pullImpact, setPullImpact] = useState(null);
   const [pullUnlocks, setPullUnlocks] = useState([]);
@@ -125,7 +128,7 @@ export default function CampaignDetail() {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
-  }, [entries, latestResult, processing]);
+  }, [entries, latestResult, processing, pendingInterrupts]);
 
   // Live-sync journal entries (discussion, narration, and declared actions) across the party
   useEffect(() => {
@@ -157,6 +160,29 @@ export default function CampaignDetail() {
     }
   }, [campaign, campaignId]);
 
+  // Real-time pending events timer — checks for real_time events every 15s
+  useEffect(() => {
+    if (campaign?.game_system !== 'pathfinder') return;
+    const interval = setInterval(() => {
+      const pendingEvents = campaign?.world_state?.quest_flags?.pending_events || [];
+      const now = Date.now();
+      const readyRealTime = pendingEvents.filter(e =>
+        e && e.status === 'pending' &&
+        e.trigger?.mode === 'real_time' &&
+        e.trigger?.fire_at &&
+        now >= new Date(e.trigger.fire_at).getTime()
+      );
+      if (readyRealTime.length) {
+        setPendingInterrupts(prev => {
+          const existing = new Set(prev.map(e => e.id));
+          const newOnes = readyRealTime.filter(e => !existing.has(e.id));
+          return newOnes.length ? [...prev, ...newOnes] : prev;
+        });
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [campaign]);
+
   function openCodex(section, entryKey) {
     setStoryOpen(false);
     setCodexSection(section);
@@ -174,6 +200,11 @@ export default function CampaignDetail() {
     setCodexOpen(false);
     setStoryOpen(false);
     toast.success('Command ready — review and send when ready.');
+  }
+
+  function handleInterruptAction(event, action) {
+    setPendingInterrupts(prev => prev.filter(e => e.id !== event.id));
+    submitTurn(action, false);
   }
 
   async function handleCrewAction(advisor, actionText) {
@@ -370,6 +401,12 @@ export default function CampaignDetail() {
       });
       processDecisionImpact(res.data, rollResult?.summary);
       setLatestResult(res.data);
+      if (res.data?.ready_events?.length) {
+        setPendingInterrupts(prev => {
+          const existing = new Set(prev.map(e => e.id));
+          return [...prev, ...res.data.ready_events.filter(e => !existing.has(e.id))];
+        });
+      }
       setProcessing(false);
       if (res.data?.chapter_complete && res.data?.handoff && res.data?.chapter1_stage === 'water_wall_reached') {
         const completedNum = parseInt((res.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
@@ -569,6 +606,12 @@ export default function CampaignDetail() {
               });
               processDecisionImpact(dmRes.data, actionText);
               setLatestResult(dmRes.data);
+              if (dmRes.data?.ready_events?.length) {
+                setPendingInterrupts(prev => {
+                  const existing = new Set(prev.map(e => e.id));
+                  return [...prev, ...dmRes.data.ready_events.filter(e => !existing.has(e.id))];
+                });
+              }
               dmCompleted = true;
               await loadData();
               setLatestResult(null);
@@ -711,6 +754,12 @@ export default function CampaignDetail() {
         }
         processDecisionImpact(dmRes.data, actionText);
         setLatestResult(dmRes.data);
+        if (dmRes.data?.ready_events?.length) {
+          setPendingInterrupts(prev => {
+            const existing = new Set(prev.map(e => e.id));
+            return [...prev, ...dmRes.data.ready_events.filter(e => !existing.has(e.id))];
+          });
+        }
         setProcessing(false);
         if (dmRes.data?.chapter_complete && dmRes.data?.handoff && dmRes.data?.chapter1_stage === 'water_wall_reached') {
           const completedNum = parseInt((dmRes.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
@@ -1024,6 +1073,14 @@ export default function CampaignDetail() {
             {latestResult && !processing && (
               <DMNarration narration={latestResult.narration} diceRolls={latestResult.dice_rolls} />
             )}
+            {pendingInterrupts.map((event, i) => (
+              <PendingEventInterrupt
+                key={event.id || i}
+                event={event}
+                onAction={handleInterruptAction}
+                onDismiss={(ev) => setPendingInterrupts(prev => prev.filter(e => e.id !== ev.id))}
+              />
+            ))}
           </div>
 
           {/* Action input */}
@@ -1276,6 +1333,9 @@ export default function CampaignDetail() {
 
           {campaign?.game_system === 'pathfinder' && (
             <PJCampaignStatus campaign={campaign} onOpenCodex={openCodex} />
+          )}
+          {campaign?.game_system === 'pathfinder' && (
+            <PendingEventsPanel events={campaign?.world_state?.quest_flags?.pending_events || []} />
           )}
 
           {myCharacter && (

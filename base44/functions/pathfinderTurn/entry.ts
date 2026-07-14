@@ -171,6 +171,33 @@ RESOLUTION: No dice. Resolve through: chosen team's expertise (each crew member 
 OUTCOMES: Clean Success (team matched task, approach sound — full rewards, enemy countermove likely), Partial Success (something went wrong — half rewards + new risk), Complication (unexpected discovery — trap, false trail, shapeshifter clue, compromised aide), Failure (wrong team, bad approach, enemy ready — clocks worsen, morale drops, enemy advances).
 RULES: Always apply clock changes based on outcome. Include decision_impact with crew reactions. Include enemy_countermove when the operation succeeded. Narrate the operation as a scene — what the team found, what went wrong, what they discovered. Evidence used in operations opens new options (tracing routes, finding contract language, identifying intermediaries) — it does not just add bonus outcomes. Crew not on the team do not participate — their expertise is unavailable. Bub commands; he does not personally crawl through vents unless the player says so.`,
 
+  pendingEvents: `PENDING EVENTS / DM INTERRUPTS — The world is alive and moves without the player typing "I wait." When an NPC says they will get back to the player later, or a crew member starts a task that takes time, CREATE a pending event in pending_events_created.
+
+WHEN TO CREATE (0-2 per turn, only for genuinely delayed things):
+- NPC says "we'll get back to you" or "give us a moment" then type: incoming_comm, turns_remaining: 2-3
+- Crew starts a sensor scan then type: scan_result, turns_remaining: 1-2
+- Crew starts research/records search/analysis then type: crew_report, turns_remaining: 2-3
+- Someone begins verifying a channel or identity then type: crew_report, turns_remaining: 1-2
+- Enemy begins a countermove then type: enemy_action, turns_remaining: 3-4
+- Engineering prep work (FTL, repairs, modifications) then type: crew_report, turns_remaining: 2-4
+
+EVENT STRUCTURE (include in pending_events_created array — use FLAT fields, not nested objects):
+{"id":"snake_case_id","title":"Short Title","type":"incoming_comm","priority":"high","trigger_mode":"turns","turns_remaining":2,"speaker":"Hayes","text":"The scene that plays when this fires. Write it as crew dialogue or narration.","actions":["Action choice 1","Action choice 2","Action choice 3"]}
+
+TRIGGER MODES (set trigger_mode to one of these, then fill the matching fields):
+- trigger_mode:"turns", turns_remaining:2 — fires after 2 more player actions
+- trigger_mode:"random_window", min_turns:2, max_turns:4 — fires at a random point between 2-4 actions
+- trigger_mode:"real_time", real_time_minutes:3 — fires after 3 real minutes (use sparingly)
+- trigger_mode:"clock_threshold", clock_name:"confluence_heat", clock_value:80 — fires when clock hits 80
+
+RULES:
+- payload.text is shown when the event fires. Write it as a scene, not a summary.
+- payload.actions are clickable buttons. 2-4 clear options.
+- turns_remaining: 1 = fires after the player's NEXT action. 2 = after two more actions.
+- priority: critical = immediate danger, high = important response, medium = crew task done, low = flavor.
+- Do NOT create events for things that resolve this turn. Only for DELAYED responses.
+- The player should be able to keep playing while waiting. Never make them type "I wait."`,
+
   arc3: `ARC 3: THE HIDDEN WAR — Pathfinder moves from evidence-based resistance into active counterintelligence and source warfare. Find the infiltrators. Learn how they are made. Survive the enemy's counterattack. Destroy the source. Accept the cost.
 KIMELON SCANNER: Portable shapeshifter detector (8 sec scan, 12m range, 8 units). Results: HUMAN, SHAPESHIFTER, INCONCLUSIVE, SCAN FAILED, INTERFERENCE. A human scan ONLY proves biology — NOT loyalty. Captain Fischer scans HUMAN but remains ambitious and dangerous. Do not simplify scan results into good/bad guy.
 SHAPESHIFTER CASE ASSESSMENT: Every infiltrator case is unique. Assess: access, sabotage risk, detection awareness, communication status, monitoring feasibility, intelligence value, containment possibility, network alert risk, moral cost, authority. Outcomes: Monitor, Contain, Interrogate, Use as false channel, Execute, Expose, Transfer, Delay. There is no universal answer.
@@ -592,6 +619,9 @@ ${echoTriggered ? `## FUTURE ECHO REQUESTED\nA future echo is triggering this tu
 ## Recent Events
 ${history || 'The adventure has just begun.'}
 
+## Pending Events (waiting to fire)
+${(Array.isArray(flags.pending_events) ? flags.pending_events : []).filter(e => e && e.status === 'pending').map(e => { const t = e.trigger || {}; return `- ${e.title} [${t.mode || 'turns'}: ${t.turns_remaining != null ? t.turns_remaining + ' turns' : 'pending'}, ${e.priority || 'medium'}]`; }).join('\n') || 'None pending.'}
+
 ## Timeline
 ${timelineStatus}
 
@@ -605,6 +635,54 @@ When the player gives a command or order (not a question), the narration MUST:
 The player should never have to wonder whether an order worked. Show confirmation, crew response, and consequences.
 
 Respond as the GM with the JSON object.`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PENDING EVENTS PROCESSOR
+// ═══════════════════════════════════════════════════════════════
+
+function processPendingEvents(pendingEvents, worldState) {
+  if (!Array.isArray(pendingEvents) || !pendingEvents.length) return { ready: [], updated: [] };
+  const clocks = (worldState.quest_flags || {}).campaign_clocks || {};
+  const flags = worldState.quest_flags || {};
+  const now = Date.now();
+  const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+  const ready = [];
+  const updated = [];
+  for (const event of pendingEvents) {
+    if (!event || event.status !== 'pending') { updated.push(event); continue; }
+    let isReady = false;
+    const trigger = event.trigger || {};
+    const justCreated = event.just_created;
+    switch (trigger.mode) {
+      case 'turns':
+      case 'random_window':
+        if (!justCreated) trigger.turns_remaining = Math.max(0, (trigger.turns_remaining || 1) - 1);
+        if (trigger.turns_remaining <= 0) isReady = true;
+        break;
+      case 'real_time':
+        if (trigger.fire_at && now >= new Date(trigger.fire_at).getTime()) isReady = true;
+        break;
+      case 'clock_threshold':
+        if ((clocks[trigger.clock] || 0) >= (trigger.value || 100)) isReady = true;
+        break;
+      case 'condition': {
+        const requiredMet = (trigger.required_flags || []).every(f => flags[f]);
+        const blockedClear = (trigger.blocked_flags || []).every(f => !flags[f]);
+        isReady = requiredMet && blockedClear;
+        break;
+      }
+    }
+    if (justCreated) event.just_created = false;
+    if (isReady) {
+      event.status = 'fired';
+      event.fired_at = new Date().toISOString();
+      ready.push(event);
+    }
+    updated.push(event);
+  }
+  ready.sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
+  return { ready: ready.slice(0, 2), updated };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -715,6 +793,9 @@ Response length:
 
 ${styleDirectives[narrationStyle] || styleDirectives.cinematic_simple}
 
+## Pending Events System
+${CANON.pendingEvents}
+
 ## Response Format
 ${CANON.response_format}`;
 
@@ -819,6 +900,28 @@ ${CANON.response_format}`;
                 rewards: { type: "array", items: { type: "string" } }
               }
             }
+          },
+          pending_events_created: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                title: { type: "string" },
+                type: { type: "string" },
+                priority: { type: "string" },
+                trigger_mode: { type: "string" },
+                turns_remaining: { type: "number" },
+                min_turns: { type: "number" },
+                max_turns: { type: "number" },
+                clock_name: { type: "string" },
+                clock_value: { type: "number" },
+                real_time_minutes: { type: "number" },
+                speaker: { type: "string" },
+                text: { type: "string" },
+                actions: { type: "array", items: { type: "string" } }
+              }
+            }
           }
         },
         required: ["narration"]
@@ -845,6 +948,7 @@ ${CANON.response_format}`;
     }
 
     const effects = Array.isArray(result.effects) ? result.effects : [];
+    let readyEvents = [];
 
     // Transform compact effects to frontend-compatible format
     const clockChanges = effects.filter(e => e.type === 'clock').map(e => ({
@@ -1055,6 +1159,64 @@ ${CANON.response_format}`;
       flags.active_operations = existingOps;
     }
 
+    // ═══ PENDING EVENTS / DM INTERRUPTS ═══
+    {
+      const existingEvents = Array.isArray(flags.pending_events) ? [...flags.pending_events] : [];
+      const newEvents = Array.isArray(result.pending_events_created) ? result.pending_events_created : [];
+      for (const ne of newEvents) {
+        if (!ne || !ne.id) continue;
+        if (!existingEvents.some(ee => ee.id === ne.id)) {
+          const trig = {};
+          // Handle case where LLM returns trigger_mode as a JSON string
+          let modeVal = ne.trigger_mode || 'turns';
+          if (typeof modeVal === 'string' && modeVal.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(modeVal);
+              modeVal = parsed.mode || 'turns';
+              if (parsed.turns_remaining != null && ne.turns_remaining == null) ne.turns_remaining = parsed.turns_remaining;
+              if (parsed.min_turns != null && ne.min_turns == null) ne.min_turns = parsed.min_turns;
+              if (parsed.max_turns != null && ne.max_turns == null) ne.max_turns = parsed.max_turns;
+              if (parsed.clock != null && !ne.clock_name) ne.clock_name = parsed.clock;
+              if (parsed.value != null && ne.clock_value == null) ne.clock_value = parsed.value;
+              if (parsed.minutes != null && ne.real_time_minutes == null) ne.real_time_minutes = parsed.minutes;
+            } catch (e) { /* use default */ }
+          }
+          trig.mode = String(modeVal);
+          if (ne.turns_remaining != null) trig.turns_remaining = Number(ne.turns_remaining);
+          else if (trig.mode === 'turns') trig.turns_remaining = 2;
+          if (trig.mode === 'random_window' && ne.min_turns != null && ne.max_turns != null) {
+            trig.mode = 'turns';
+            trig.turns_remaining = ne.min_turns + Math.floor(Math.random() * (ne.max_turns - ne.min_turns + 1));
+          }
+          if (trig.mode === 'real_time' && ne.real_time_minutes) {
+            trig.fire_at = new Date(Date.now() + ne.real_time_minutes * 60000).toISOString();
+          }
+          if (trig.mode === 'clock_threshold') {
+            trig.clock = String(ne.clock_name || '');
+            trig.value = Number(ne.clock_value || 100);
+          }
+          existingEvents.push({
+            id: ne.id,
+            title: String(ne.title || ne.id),
+            type: String(ne.type || 'crew_report'),
+            status: 'pending',
+            trigger: trig,
+            payload: {
+              speaker: String(ne.speaker || ''),
+              text: String(ne.text || ''),
+              actions: Array.isArray(ne.actions) ? ne.actions : []
+            },
+            priority: String(ne.priority || 'medium'),
+            just_created: true,
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+      const { ready, updated } = processPendingEvents(existingEvents, newWorldState);
+      flags.pending_events = updated;
+      readyEvents = ready;
+    }
+
     newWorldState.quest_flags = flags;
 
     // ═══ UPDATE CAMPAIGN ═══
@@ -1127,6 +1289,8 @@ ${CANON.response_format}`;
       future_echo_public_use: result.future_echo_public_use || false,
       echo_cooldown: flags.echo_cooldown || 0,
       active_operations: flags.active_operations || [],
+      ready_events: readyEvents,
+      pending_events: (flags.pending_events || []).filter(e => e && e.status === 'pending'),
       discovery_effects: discoveryEffects || [],
       player_runtime_hours: timeline ? timeline.runtimeHours : 0,
       in_world_day: campaignUpdates.in_world_day || (campaign.in_world_day || 0),
