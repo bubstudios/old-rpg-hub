@@ -424,35 +424,6 @@ export const GAME_SYSTEMS = [
     icon: "scroll",
     enterLabel: "Gather Your Party"
   },
-  {
-    id: "thepull",
-    name: "The Pull",
-    short: "The Pull",
-    tagline: "Solo dark fantasy survival mystery",
-    description:
-      "You are Bullet — a wounded amnesiac with a circular scar over your heart, an etched shard, and a supernatural force dragging you through nightmare Provinces. Survive, scavenge, meet lost souls, make moral choices, and follow — or resist — the Pull. An original solo AI-GM survival horror RPG with hidden clocks, guilt tracking, and a truth that waits at Province 1.",
-    dashboardTitle: "THE PULL",
-    dashboardSubtitle:
-      "A solo dark fantasy survival mystery RPG. Wake as Bullet with no memory, a scar over your heart, and a force in your chest dragging you forward. Survive the Provinces. Discover what the Pull is for. The truth waits at Province 1.",
-    cardImage: null,
-    icon: "compass",
-    enterLabel: "Wake in the Sand"
-  },
-  {
-    id: "pathfinder",
-    name: "Pathfinder Journeys",
-    short: "Pathfinder Journeys",
-    tagline: "Solo sandbox sci-fi resistance",
-    description:
-      "Captain Bub Stellar commands the UES Pathfinder, returned from a 473-year future war with encoded memories of how The Confluence fell. Now the galaxy is open: save New Titan, expose Admiral Chen, rescue Novara, build the resistance, and start the cascade that topples an empire. A solo sandbox sci-fi RPG with d100 roll-under mechanics, ship combat, future-memory flashes, and a living galaxy that reacts to your choices.",
-    dashboardTitle: "PATHFINDER JOURNEYS",
-    dashboardSubtitle:
-      "A solo sandbox sci-fi resistance campaign. Take the helm of the UES Pathfinder, build the resistance, and start the cascade that topples The Confluence. The future proved they can fall — now make it happen.",
-    cardImage:
-      "https://media.base44.com/images/public/6a4af4087166276674b33cf8/a52699fbc_generated_image.png",
-    icon: "orbit",
-    enterLabel: "Board the Pathfinder"
-  }
 ];
 
 export const CATEGORY_MAP = {
@@ -475,11 +446,9 @@ export const CATEGORY_MAP = {
   ghostbusters: "Classic Adventure", jamesbond: "Classic Adventure",
   // Sword & Sorcery
   conan: "Sword & Sorcery", redsonja: "Sword & Sorcery",
-  pathfinder: "Science Fiction",
-  thepull: "Original Games"
 };
 
-export const CATEGORIES = ["TSR Classics", "Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery", "Original Games"];
+export const CATEGORIES = ["TSR Classics", "Dungeons & Dragons", "Science Fiction", "Superhero", "Classic Adventure", "Sword & Sorcery"];
 
 export const DEFAULT_GAME = "add1e";
 

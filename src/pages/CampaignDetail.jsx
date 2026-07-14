@@ -22,43 +22,17 @@ import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
-import PJCampaignStatus from '@/components/PJCampaignStatus';
-import StorySoFarModal from '@/components/pj/StorySoFarModal';
-import CodexDialog from '@/components/pj/CodexDialog';
-import MissionsPanel from '@/components/pj/MissionsPanel';
-import OperationsPanel from '@/components/pj/OperationsPanel';
-import KimelonScanner from '@/components/pj/KimelonScanner';
-import CommandBurdenLog from '@/components/pj/CommandBurdenLog';
-import { isArc3Unlocked } from '@/lib/pjArc3';
-import CrewAdviceDialog from '@/components/pj/CrewAdviceDialog';
-import PendingEventInterrupt from '@/components/pj/PendingEventInterrupt';
-import PendingEventsPanel from '@/components/pj/PendingEventsPanel';
-import { detectCrewAdviceIntent, getAdvisorAdvice, formatCrewAdvice } from '@/lib/pjCrewAdvice';
-import { detectStatusQuery, buildStatusResponse, buildMissionResponse, buildOperationStatusResponse } from '@/lib/pjStatusQuery';
-import DecisionImpactPopup from '@/components/pj/DecisionImpactPopup';
-import DecisionLogPanel from '@/components/pj/DecisionLogPanel';
-import FutureEchoPopup from '@/components/pj/FutureEchoPopup';
-import FutureEchoLog from '@/components/pj/FutureEchoLog';
-import { buildDecisionImpact } from '@/lib/pjDecisionImpact';
-import PullStatusPanel from '@/components/pull/PullStatusPanel';
-import PullCodex from '@/components/pull/PullCodex';
-import PullDecisionImpact from '@/components/pull/PullDecisionImpact';
-import PullUnlockNotifications from '@/components/pull/PullUnlockNotifications';
-import PullWorldState from '@/components/pull/PullWorldState';
-import ChapterCompleteScreen from '@/components/pull/ChapterCompleteScreen';
-import BattlePanel from '@/components/pull/BattlePanel';
-import CombatImpactPopup from '@/components/pull/CombatImpactPopup';
-import { getNextChapter } from '@/lib/pullChapters';
-import { buildUnlockNotifications } from '@/lib/pullUnlockNotifications';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Loader2, Send, ScrollText, Swords, Skull, BookOpen, Users, MessageCircle,
-  MapPin, Copy, ChevronLeft, Swords as SwordIcon, Flame, Dices, Video, Flag, UserPlus,
-  Check, RefreshCw, Gift, Library, Target, Gavel, Lightbulb, Sparkles, Crosshair, ScanLine, Scale
+  MapPin, ChevronLeft, Flame, Dices, Video, Flag, UserPlus,
+  Check, RefreshCw, Gift
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const DM2_SYSTEMS = ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'];
 
 export default function CampaignDetail() {
   const { id: campaignId } = useParams();
@@ -86,49 +60,18 @@ export default function CampaignDetail() {
   const [hasBillingAccess, setHasBillingAccess] = useState(true);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
-  const [storyOpen, setStoryOpen] = useState(false);
-  const [codexOpen, setCodexOpen] = useState(false);
-  const [codexSection, setCodexSection] = useState(null);
-  const [codexEntryKey, setCodexEntryKey] = useState(null);
-  const [missionsOpen, setMissionsOpen] = useState(false);
-  const [operationsOpen, setOperationsOpen] = useState(false);
-  const [scannerOpen, setScannerOpen] = useState(false);
-  const [burdenOpen, setBurdenOpen] = useState(false);
-  const [crewAdviceOpen, setCrewAdviceOpen] = useState(false);
-  const [decisionImpact, setDecisionImpact] = useState(null);
-  const [decisionLogOpen, setDecisionLogOpen] = useState(false);
-  const [futureEcho, setFutureEcho] = useState(null);
-  const [futureEchoLogOpen, setFutureEchoLogOpen] = useState(false);
-  const [popupSetting, setPopupSetting] = useState(() => localStorage.getItem('pj_decision_popup_setting') || 'normal');
-  const [narrationStyle, setNarrationStyle] = useState(() => localStorage.getItem('pj_narration_style') || 'cinematic_simple');
-  const [pendingInterrupts, setPendingInterrupts] = useState([]);
-  const [pullCodexOpen, setPullCodexOpen] = useState(false);
-  const [pullImpact, setPullImpact] = useState(null);
-  const [pullUnlocks, setPullUnlocks] = useState([]);
-  const [chapterComplete, setChapterComplete] = useState(null);
-  const [continuingChapter, setContinuingChapter] = useState(false);
-  const [combatResult, setCombatResult] = useState(null);
-  const [combatProcessing, setCombatProcessing] = useState(false);
+  const [narrationStyle, setNarrationStyle] = useState(() => localStorage.getItem('narration_style') || 'cinematic_simple');
   const feedRef = useRef(null);
 
   useEffect(() => {
     loadData();
   }, [campaignId]);
 
-  // Pre-fill action from character sheet special actions (Remember a Name, Accept Help)
-  useEffect(() => {
-    const pending = localStorage.getItem('pull_pending_action');
-    if (pending) {
-      setAction(pending);
-      localStorage.removeItem('pull_pending_action');
-    }
-  }, [campaignId]);
-
   useEffect(() => {
     if (feedRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
-  }, [entries, latestResult, processing, pendingInterrupts]);
+  }, [entries, latestResult, processing]);
 
   // Live-sync journal entries (discussion, narration, and declared actions) across the party
   useEffect(() => {
@@ -141,9 +84,6 @@ export default function CampaignDetail() {
   }, [campaignId]);
 
   // Live-sync the full campaign state from the database (single source of truth).
-  // The GM saves updated clocks, world_state, and round state to the DB; this
-  // subscription merges ALL of it into the local campaign so the sidebar,
-  // popups, and clock panels always read the same live values.
   useEffect(() => {
     const unsubscribe = base44.entities.Campaign.subscribe((event) => {
       if (event.data?.id === campaignId) {
@@ -152,180 +92,6 @@ export default function CampaignDetail() {
     });
     return () => unsubscribe();
   }, [campaignId]);
-
-  // Show Story So Far onboarding for new Pathfinder campaigns
-  useEffect(() => {
-    if (campaign?.game_system === 'pathfinder' && !localStorage.getItem(`pj_story_${campaignId}`)) {
-      setStoryOpen(true);
-    }
-  }, [campaign, campaignId]);
-
-  // Real-time pending events timer — checks for real_time events every 15s
-  useEffect(() => {
-    if (campaign?.game_system !== 'pathfinder') return;
-    const interval = setInterval(() => {
-      const pendingEvents = campaign?.world_state?.quest_flags?.pending_events || [];
-      const now = Date.now();
-      const readyRealTime = pendingEvents.filter(e =>
-        e && e.status === 'pending' &&
-        e.trigger?.mode === 'real_time' &&
-        e.trigger?.fire_at &&
-        now >= new Date(e.trigger.fire_at).getTime()
-      );
-      if (readyRealTime.length) {
-        setPendingInterrupts(prev => {
-          const existing = new Set(prev.map(e => e.id));
-          const newOnes = readyRealTime.filter(e => !existing.has(e.id));
-          return newOnes.length ? [...prev, ...newOnes] : prev;
-        });
-      }
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [campaign]);
-
-  function openCodex(section, entryKey) {
-    setStoryOpen(false);
-    setCodexSection(section);
-    setCodexEntryKey(entryKey || null);
-    setCodexOpen(true);
-  }
-
-  function handleBeginAdventure() {
-    localStorage.setItem(`pj_story_${campaignId}`, '1');
-    setStoryOpen(false);
-  }
-
-  function handleSuggestAction(command) {
-    setAction(command);
-    setCodexOpen(false);
-    setStoryOpen(false);
-    toast.success('Command ready — review and send when ready.');
-  }
-
-  function handleInterruptAction(event, action) {
-    setPendingInterrupts(prev => prev.filter(e => e.id !== event.id));
-    submitTurn(action, false);
-  }
-
-  async function handleCrewAction(advisor, actionText) {
-    if (processing || posting) return;
-    if (!hasBillingAccess) {
-      setPurchaseOpen(true);
-      return;
-    }
-    setPosting(true);
-    // Post the crew member's advice as a discussion entry for journal context
-    const advice = getAdvisorAdvice(campaign, advisor.key);
-    if (advice && typeof advice !== 'string') {
-      const adviceText = formatCrewAdvice(advisor, advice);
-      const tempEntry = {
-        entry_type: 'discussion',
-        narration: adviceText,
-        acting_character_name: advisor.name
-      };
-      setEntries(prev => [...prev, tempEntry]);
-      try {
-        await base44.functions.invoke('campaignData', {
-          op: 'postDiscussion',
-          campaign_id: campaignId,
-          message: adviceText,
-          acting_character_name: advisor.name
-        });
-      } catch (e) {
-        // Continue even if advice posting fails
-      }
-    }
-    setPosting(false);
-    // Submit the chosen action as a regular game command
-    await submitTurn(actionText, false);
-  }
-
-  function handleDiscuss(advisor, questionText) {
-    handleSuggestAction(questionText);
-  }
-
-  function processDecisionImpact(dmData, decisionText) {
-    // The Pull: GM returns decision_impact directly + unlock notifications
-    if (campaign?.game_system === 'thepull') {
-      const impact = dmData?.decision_impact;
-      const oldFlags = campaign?.world_state?.quest_flags || {};
-      const oldUf = oldFlags.unlock_flags || {};
-
-      // Build unlock notifications from the GM response (spoiler-gated)
-      const unlocks = buildUnlockNotifications(dmData, oldFlags, popupSetting);
-      if (unlocks.length > 0) {
-        setPullUnlocks(unlocks);
-      }
-
-      if (impact && impact.is_meaningful) {
-        // Suppress duplicate "Task Completed" popup if the task was already completed
-        const isTaskCompleteDupe = oldUf.task_complete && (impact.impacts || []).some(imp =>
-          /task\s*(complet|done|finish)/i.test(imp.label || '') ||
-          /task\s*(complet|done|finish)/i.test(imp.change_label || '') ||
-          /task\s*(complet|done|finish)/i.test(imp.reason || '')
-        );
-        if (!isTaskCompleteDupe) {
-          base44.functions.invoke('campaignData', {
-            op: 'saveDecisionLog',
-            campaign_id: campaignId,
-            chapter: campaign?.current_chapter || 1,
-            decision: decisionText || '',
-            impacts: impact.impacts || [],
-            future_consequence: impact.future_consequence || ''
-          }).catch(() => {});
-          if (popupSetting !== 'off') {
-            setPullImpact(impact);
-          }
-        }
-      }
-      return;
-    }
-    // Pathfinder: the LLM returns a curated decision_impact directly — use it
-    // when available. Fall back to building from state-change arrays.
-    let impact = null;
-    if (dmData?.decision_impact && dmData.decision_impact.is_meaningful && (dmData.decision_impact.impacts || []).length) {
-      impact = dmData.decision_impact;
-    } else {
-      impact = buildDecisionImpact(dmData);
-    }
-
-    // Enemy countermove — show a toast when the enemy responds to a success
-    if (dmData?.enemy_countermove?.faction) {
-      const ec = dmData.enemy_countermove;
-      toast.warning(`⚠ ENEMY COUNTERMOVE — ${ec.faction.toUpperCase()}`, {
-        description: ec.action || ec.narration || 'The enemy has responded.',
-        duration: 8000,
-      });
-    }
-    // Future Echo — show popup when GM triggers one
-    if (dmData?.future_echo?.memory_fragment) {
-      setFutureEcho(dmData.future_echo);
-    }
-    // Future Echo public use — show secrecy warning
-    if (dmData?.future_echo_public_use === true) {
-      toast.error('CREW SECRET VIOLATED', {
-        description: 'Future Memories cannot be verified. Credibility damaged — Chen Countermeasures +8, Temporal Instability +3, Public Truth -5, New Titan Trust -4.',
-        duration: 10000,
-      });
-    }
-    if (!impact) return;
-    base44.functions.invoke('campaignData', {
-      op: 'saveDecisionLog',
-      campaign_id: campaignId,
-      chapter: campaign?.current_chapter || 1,
-      decision: decisionText || '',
-      impacts: impact.impacts || [],
-      future_consequence: impact.future_consequence || ''
-    }).catch(() => {});
-    if (popupSetting !== 'off') {
-      setDecisionImpact(impact);
-    }
-  }
-
-  function handlePopupSettingChange(value) {
-    setPopupSetting(value);
-    localStorage.setItem('pj_decision_popup_setting', value);
-  }
 
   async function loadData() {
     try {
@@ -370,7 +136,7 @@ export default function CampaignDetail() {
     setProcessing(true);
     setLatestResult(null);
     try {
-      const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : campaign?.game_system === 'pathfinder' ? 'pathfinderTurn' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const dmFunc = DM2_SYSTEMS.includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
       const res = await base44.functions.invoke(dmFunc, {
         campaign_id: campaignId,
         action: rollResult.summary,
@@ -378,40 +144,8 @@ export default function CampaignDetail() {
         is_roll_result: true,
         narration_style: narrationStyle
       });
-      // Apply GM response state changes immediately (same as submitTurn)
-      // Use the FINAL clock values returned by the GM, not LLM deltas
-      setCampaign(prev => {
-        if (!prev) return prev;
-        const ws = prev.world_state || {};
-        const flags = ws.quest_flags || {};
-        const localClocks = res.data?.local_clocks || { ...(flags.local_clocks || {}) };
-        return {
-          ...prev,
-          world_state: {
-            ...ws,
-            quest_flags: {
-              ...flags,
-              local_clocks: localClocks,
-              ...(res.data?.pull_intensity !== undefined ? { pull_intensity: res.data.pull_intensity } : {}),
-              ...(res.data?.scar_state ? { scar_state: res.data.scar_state } : {}),
-              ...(res.data?.current_objective ? { current_objective: res.data.current_objective } : {})
-            }
-          }
-        };
-      });
-      processDecisionImpact(res.data, rollResult?.summary);
       setLatestResult(res.data);
-      if (res.data?.ready_events?.length) {
-        setPendingInterrupts(prev => {
-          const existing = new Set(prev.map(e => e.id));
-          return [...prev, ...res.data.ready_events.filter(e => !existing.has(e.id))];
-        });
-      }
       setProcessing(false);
-      if (res.data?.chapter_complete && res.data?.handoff && res.data?.chapter1_stage === 'water_wall_reached') {
-        const completedNum = parseInt((res.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
-        setChapterComplete({ handoff: res.data.handoff, chapterNumber: completedNum });
-      }
       await loadData();
       setLatestResult(null);
     } catch (e) {
@@ -428,30 +162,6 @@ export default function CampaignDetail() {
     return false;
   }
 
-  async function handleStatusQuery(responseText) {
-    setPosting(true);
-    const tempEntry = {
-      entry_type: 'discussion',
-      narration: responseText,
-      acting_character_name: 'Status Report'
-    };
-    setEntries(prev => [...prev, tempEntry]);
-    try {
-      await base44.functions.invoke('campaignData', {
-        op: 'postDiscussion',
-        campaign_id: campaignId,
-        message: responseText,
-        acting_character_name: 'Status Report'
-      });
-      await reloadEntries();
-    } catch (e) {
-      toast.error('Failed to generate status response');
-      setEntries(prev => prev.slice(0, -1));
-    } finally {
-      setPosting(false);
-    }
-  }
-
   async function handleAction() {
     if (!action.trim() || processing || posting || processingRef.current) return;
     if (!hasBillingAccess) {
@@ -463,30 +173,6 @@ export default function CampaignDetail() {
 
     // Duplicate submission protection
     if (isDuplicateInput(submittedAction)) return;
-
-    // Status query — answer from game state, don't echo as dialogue or send to DM
-    if (campaign?.game_system === 'pathfinder') {
-      const statusType = detectStatusQuery(submittedAction);
-      if (statusType === 'status_query') {
-        await handleStatusQuery(buildStatusResponse(campaign));
-        return;
-      }
-      if (statusType === 'mission_query') {
-        await handleStatusQuery(buildMissionResponse(campaign));
-        return;
-      }
-      if (statusType === 'operation_query') {
-        await handleStatusQuery(buildOperationStatusResponse(campaign));
-        return;
-      }
-
-      // Crew advice — open the crew advice dialog with action buttons
-      const intent = detectCrewAdviceIntent(submittedAction);
-      if (intent.isAdvice) {
-        setCrewAdviceOpen(true);
-        return;
-      }
-    }
 
     if (discussMode) {
       setPosting(true);
@@ -573,7 +259,7 @@ export default function CampaignDetail() {
               dm_processing: !!retryData.should_invoke_dm
             } : prev);
             if (retryData.should_invoke_dm) {
-              const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : campaign?.game_system === 'pathfinder' ? 'pathfinderTurn' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+              const dmFunc = DM2_SYSTEMS.includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
               const dmRes = await base44.functions.invoke(dmFunc, {
                 campaign_id: campaignId,
                 action: retryData.combined_action,
@@ -582,36 +268,12 @@ export default function CampaignDetail() {
                 narration_style: narrationStyle
               });
               await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-              setCampaign(prev => {
-                if (!prev) return prev;
-                const ws = prev.world_state || {};
-                const flags = ws.quest_flags || {};
-                const campaignClocks = { ...(flags.campaign_clocks || {}) };
-                for (const cc of (dmRes.data?.clock_changes || [])) {
-                  campaignClocks[cc.clock] = Math.max(0, Math.min(100, (campaignClocks[cc.clock] || 0) + (cc.change || 0)));
-                }
-                return {
-                  ...prev,
-                  pending_actions: [],
-                  dm_processing: false,
-                  world_state: {
-                    ...ws,
-                    quest_flags: {
-                      ...flags,
-                      campaign_clocks: campaignClocks,
-                      ...(dmRes.data?.active_operations ? { active_operations: dmRes.data.active_operations } : {})
-                    }
-                  }
-                };
-              });
-              processDecisionImpact(dmRes.data, actionText);
+              setCampaign(prev => prev ? {
+                ...prev,
+                pending_actions: [],
+                dm_processing: false
+              } : prev);
               setLatestResult(dmRes.data);
-              if (dmRes.data?.ready_events?.length) {
-                setPendingInterrupts(prev => {
-                  const existing = new Set(prev.map(e => e.id));
-                  return [...prev, ...dmRes.data.ready_events.filter(e => !existing.has(e.id))];
-                });
-              }
               dmCompleted = true;
               await loadData();
               setLatestResult(null);
@@ -631,7 +293,7 @@ export default function CampaignDetail() {
       }
 
       if (data.should_invoke_dm) {
-        const dmFunc = campaign?.game_system === 'thepull' ? 'pullGM' : campaign?.game_system === 'pathfinder' ? 'pathfinderTurn' : ['starwars','marvel','dcheroes','jamesbond','shadowrun','cyberpunk','traveller','ravenloft','oddnd','bxdnd','add2e','dnd35','dnd4e','dnd5e'].includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+        const dmFunc = DM2_SYSTEMS.includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
         const dmRes = await base44.functions.invoke(dmFunc, {
           campaign_id: campaignId,
           action: data.combined_action,
@@ -641,130 +303,12 @@ export default function CampaignDetail() {
         });
         await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
         dmCompleted = true; // DM call succeeded — don't restore action text on post-DM errors
-        // Apply GM response state changes to the local campaign immediately so
-        // the sidebar (clocks, pull intensity, conditions) updates without
-        // waiting for loadData(). The DB is the source of truth — loadData()
-        // confirms these values, and the subscription keeps them in sync.
-        // We use the FINAL clock values returned by the GM (after code-enforced
-        // trust floor, stage cap, rest recovery) — NOT the LLM delta changes,
-        // which may not match what was actually saved to the DB.
-        setCampaign(prev => {
-          if (!prev) return prev;
-          const ws = prev.world_state || {};
-          const flags = ws.quest_flags || {};
-          // Use final clock values from the GM response (authoritative)
-          const localClocks = dmRes.data?.local_clocks || { ...(flags.local_clocks || {}) };
-          // Apply hidden clock changes
-          const campaignClocks = { ...(flags.campaign_clocks || {}) };
-          for (const cc of (dmRes.data?.clock_changes || [])) {
-            campaignClocks[cc.clock] = Math.max(0, Math.min(100, (campaignClocks[cc.clock] || 0) + (cc.change || 0)));
-          }
-          if (dmRes.data?.enemy_turn) {
-            if (dmRes.data.enemy_turn.province_1_alert_change) campaignClocks.province_1_alert = Math.max(0, Math.min(100, (campaignClocks.province_1_alert || 0) + dmRes.data.enemy_turn.province_1_alert_change));
-            if (dmRes.data.enemy_turn.hunter_proximity_change) campaignClocks.hunter_proximity = Math.max(0, Math.min(100, (campaignClocks.hunter_proximity || 0) + dmRes.data.enemy_turn.hunter_proximity_change));
-          }
-          return {
-            ...prev,
-            pending_actions: [],
-            dm_processing: false,
-            world_state: {
-              ...ws,
-              quest_flags: {
-                ...flags,
-                local_clocks: localClocks,
-                campaign_clocks: campaignClocks,
-                ...(dmRes.data?.pull_intensity !== undefined ? { pull_intensity: dmRes.data.pull_intensity } : {}),
-                ...(dmRes.data?.scar_state ? { scar_state: dmRes.data.scar_state } : {}),
-                ...(dmRes.data?.shard_resonance !== undefined ? { shard_resonance: dmRes.data.shard_resonance } : {}),
-                ...(dmRes.data?.current_objective ? { current_objective: dmRes.data.current_objective } : {}),
-                ...(dmRes.data?.bullet_named ? { bullet_named: true } : {}),
-                ...(dmRes.data?.camp_arc_complete !== undefined ? { camp_arc_complete: dmRes.data.camp_arc_complete } : {}),
-                ...(dmRes.data?.chapter1_sequence ? { chapter1_sequence: dmRes.data.chapter1_sequence } : {}),
-                ...(dmRes.data?.chapter1_stage ? { chapter1_stage: dmRes.data.chapter1_stage } : {}),
-                ...(dmRes.data?.pipe_state ? { pipe_state: dmRes.data.pipe_state } : {}),
-                ...(dmRes.data?.equipped_weapon ? { equipped_weapon: dmRes.data.equipped_weapon } : {}),
-                ...(dmRes.data?.discovered_clocks?.length ? { discovered_clocks: [...new Set([...(flags.discovered_clocks || []), ...dmRes.data.discovered_clocks])] } : {}),
-                ...(dmRes.data?.active_operations ? { active_operations: dmRes.data.active_operations } : {})
-              }
-            }
-          };
-        });
-        // Apply enemy countermove clock effects to local state
-        if (dmRes.data?.enemy_countermove?.clock_effects) {
-          setCampaign(prev => {
-            if (!prev) return prev;
-            const ws = prev.world_state || {};
-            const flags = ws.quest_flags || {};
-            const campaignClocks = { ...(flags.campaign_clocks || {}) };
-            for (const ce of dmRes.data.enemy_countermove.clock_effects) {
-              if (ce.clock && typeof ce.delta === 'number') {
-                campaignClocks[ce.clock] = Math.max(0, Math.min(100, (campaignClocks[ce.clock] || 0) + ce.delta));
-              }
-            }
-            return {
-              ...prev,
-              world_state: {
-                ...ws,
-                quest_flags: { ...flags, campaign_clocks: campaignClocks }
-              }
-            };
-          });
-        }
-        // Apply rendezvous team tracking to local state
-        if (dmRes.data?.rendezvous_team) {
-          setCampaign(prev => {
-            if (!prev) return prev;
-            const ws = prev.world_state || {};
-            const flags = ws.quest_flags || {};
-            return {
-              ...prev,
-              world_state: {
-                ...ws,
-                quest_flags: { ...flags, rendezvous_team: dmRes.data.rendezvous_team }
-              }
-            };
-          });
-        }
-        // Apply future echo state to local campaign
-        if (dmRes.data?.future_echo || dmRes.data?.echo_cooldown !== undefined) {
-          setCampaign(prev => {
-            if (!prev) return prev;
-            const ws = prev.world_state || {};
-            const flags = ws.quest_flags || {};
-            const echoLog = Array.isArray(flags.future_echoes) ? [...flags.future_echoes] : [];
-            if (dmRes.data?.future_echo?.memory_fragment) {
-              echoLog.push({
-                ...dmRes.data.future_echo,
-                acted_on: false,
-                timestamp: new Date().toISOString()
-              });
-            }
-            return {
-              ...prev,
-              world_state: {
-                ...ws,
-                quest_flags: {
-                  ...flags,
-                  future_echoes: echoLog.slice(-30),
-                  echo_cooldown: dmRes.data?.echo_cooldown ?? flags.echo_cooldown
-                }
-              }
-            };
-          });
-        }
-        processDecisionImpact(dmRes.data, actionText);
+        setCampaign(prev => prev ? {
+          ...prev,
+          pending_actions: [],
+          dm_processing: false
+        } : prev);
         setLatestResult(dmRes.data);
-        if (dmRes.data?.ready_events?.length) {
-          setPendingInterrupts(prev => {
-            const existing = new Set(prev.map(e => e.id));
-            return [...prev, ...dmRes.data.ready_events.filter(e => !existing.has(e.id))];
-          });
-        }
-        setProcessing(false);
-        if (dmRes.data?.chapter_complete && dmRes.data?.handoff && dmRes.data?.chapter1_stage === 'water_wall_reached') {
-          const completedNum = parseInt((dmRes.data.handoff.completedChapter || 'chapter_001').replace('chapter_', '')) || 1;
-          setChapterComplete({ handoff: dmRes.data.handoff, chapterNumber: completedNum });
-        }
         await loadData();
         setLatestResult(null);
       }
@@ -797,47 +341,6 @@ export default function CampaignDetail() {
       toast.success('Round reset.');
     } catch (e) {
       toast.error('Failed to reset round');
-    }
-  }
-
-  async function handleContinueToNextChapter() {
-    if (!chapterComplete) return;
-    setContinuingChapter(true);
-    try {
-      const nextCh = getNextChapter(chapterComplete.chapterNumber);
-      if (nextCh?.openingNarration) {
-        await base44.entities.JournalEntry.create({
-          campaign_id: campaignId,
-          entry_type: 'narration',
-          narration: nextCh.openingNarration,
-          chapter: chapterComplete.chapterNumber + 1
-        });
-      }
-      await loadData();
-      setChapterComplete(null);
-    } catch (e) {
-      toast.error('Failed to start next chapter');
-    } finally {
-      setContinuingChapter(false);
-    }
-  }
-
-  async function handleCombatResolve(intentKey) {
-    if (combatProcessing) return;
-    setCombatProcessing(true);
-    try {
-      const res = await base44.functions.invoke('pullBattle', {
-        campaign_id: campaignId,
-        intent_key: intentKey,
-      });
-      const data = res.data;
-      setCombatResult(data.result);
-      await reloadEntries();
-      await loadData();
-    } catch (e) {
-      toast.error('Combat resolution failed: ' + (e.response?.data?.error || e.message));
-    } finally {
-      setCombatProcessing(false);
     }
   }
 
@@ -910,107 +413,26 @@ export default function CampaignDetail() {
           <h1 className="font-heading font-700 text-xl sm:text-2xl text-foreground tracking-wide truncate">
             {campaign.name}
           </h1>
-          {campaign.current_scene && campaign.game_system !== 'thepull' && (
+          {campaign.current_scene && (
             <p className="text-xs text-muted-foreground font-body italic mt-0.5 line-clamp-1">
               {campaign.current_scene}
             </p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {campaign?.game_system === 'pathfinder' && (
-            <button
-              onClick={() => openCodex('story')}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Library className="w-3.5 h-3.5" strokeWidth={1.5} /> Codex
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <button
-              onClick={() => setMissionsOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Target className="w-3.5 h-3.5" strokeWidth={1.5} /> Missions
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <button
-              onClick={() => setOperationsOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Crosshair className="w-3.5 h-3.5" strokeWidth={1.5} /> Ops
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && isArc3Unlocked(campaign) && (
-            <button
-              onClick={() => setScannerOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ScanLine className="w-3.5 h-3.5" strokeWidth={1.5} /> Scanner
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && isArc3Unlocked(campaign) && (
-            <button
-              onClick={() => setBurdenOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Scale className="w-3.5 h-3.5" strokeWidth={1.5} /> Burden
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <button
-              onClick={() => setCrewAdviceOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Lightbulb className="w-3.5 h-3.5" strokeWidth={1.5} /> Crew
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <button
-              onClick={() => setFutureEchoLogOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-purple-500/40 text-muted-foreground hover:text-purple-400 transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Echoes
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <button
-              onClick={() => setDecisionLogOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Gavel className="w-3.5 h-3.5" strokeWidth={1.5} /> Decisions
-            </button>
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <select
-              value={narrationStyle}
-              onChange={(e) => { setNarrationStyle(e.target.value); localStorage.setItem('pj_narration_style', e.target.value); }}
-              className="text-[10px] font-heading tracking-wider border border-border/50 bg-card/60 text-muted-foreground hover:text-foreground rounded px-2 py-1.5 cursor-pointer"
-              title="Narration Style"
-            >
-              <option value="cinematic_simple">Cinematic</option>
-              <option value="technical_sci_fi">Technical</option>
-              <option value="brief_command">Brief</option>
-              <option value="novel_mode">Novel</option>
-            </select>
-          )}
-          {campaign?.game_system !== 'thepull' && (
-            <button
-              onClick={() => setVideoOpen((o) => !o)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
-              title="Toggle party video call"
-            >
-              <Video className="w-3.5 h-3.5" strokeWidth={1.5} /> Video
-            </button>
-          )}
-          {campaign?.game_system !== 'thepull' && (
-            <button
-              onClick={() => setInviteOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <UserPlus className="w-3.5 h-3.5" strokeWidth={1.5} /> Invite
-            </button>
-          )}
+          <button
+            onClick={() => setVideoOpen((o) => !o)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border transition-colors ${videoOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground'}`}
+            title="Toggle party video call"
+          >
+            <Video className="w-3.5 h-3.5" strokeWidth={1.5} /> Video
+          </button>
+          <button
+            onClick={() => setInviteOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] font-heading tracking-wider border border-border/50 hover:border-primary/40 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" strokeWidth={1.5} /> Invite
+          </button>
           {isOwner && (
             <Button variant="ghost" size="sm" onClick={() => setBriefOpen(true)} className="text-muted-foreground hover:text-foreground h-8">
               <ScrollText className="w-3.5 h-3.5 mr-1" /> DM Brief
@@ -1073,14 +495,6 @@ export default function CampaignDetail() {
             {latestResult && !processing && (
               <DMNarration narration={latestResult.narration} diceRolls={latestResult.dice_rolls} />
             )}
-            {pendingInterrupts.map((event, i) => (
-              <PendingEventInterrupt
-                key={event.id || i}
-                event={event}
-                onAction={handleInterruptAction}
-                onDismiss={(ev) => setPendingInterrupts(prev => prev.filter(e => e.id !== ev.id))}
-              />
-            ))}
           </div>
 
           {/* Action input */}
@@ -1088,9 +502,7 @@ export default function CampaignDetail() {
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
-                {campaign?.game_system === 'pathfinder'
-                  ? `${myCharacter?.name?.toUpperCase()} · UES PATHFINDER`
-                  : `${((campaign?.game_system === 'thepull' && !campaign?.world_state?.quest_flags?.bullet_named) ? 'The Stranger' : myCharacter?.name)?.toUpperCase()} · ${(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters' || campaign?.game_system === 'legionofdoom') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL ${myCharacter?.level}`}
+                {`${myCharacter?.name?.toUpperCase()} · ${(campaign?.game_system === 'gammaworld' || campaign?.game_system === 'boothill' || campaign?.game_system === 'indianajones' || campaign?.game_system === 'topsecret' || campaign?.game_system === 'conan' || campaign?.game_system === 'redsonja' || campaign?.game_system === 'ghostbusters' || campaign?.game_system === 'gangbusters' || campaign?.game_system === 'legionofdoom') ? myCharacter?.race : `${myCharacter?.race} ${myCharacter?.character_class}`} · LVL ${myCharacter?.level}`}
               </span>
               <button
                 onClick={() => setDiscussMode((m) => !m)}
@@ -1099,14 +511,12 @@ export default function CampaignDetail() {
               >
                 <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.5} /> {discussMode ? 'Discussing' : 'Discuss'}
               </button>
-              {campaign?.game_system !== 'thepull' && campaign?.game_system !== 'pathfinder' && (
-                <button
-                  onClick={() => setDiceOpen((o) => !o)}
-                  className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
-                >
-                  <Dices className="w-3.5 h-3.5" strokeWidth={1.5} /> Dice
-                </button>
-              )}
+              <button
+                onClick={() => setDiceOpen((o) => !o)}
+                className={`flex items-center gap-1 text-[10px] font-heading tracking-wider px-2 py-1 rounded border transition-colors ${diceOpen ? 'border-primary/50 text-primary bg-primary/10' : 'border-border/50 text-muted-foreground hover:text-foreground'}`}
+              >
+                <Dices className="w-3.5 h-3.5" strokeWidth={1.5} /> Dice
+              </button>
             </div>
             {diceOpen && myCharacter && (
               campaign?.game_system === 'starfrontiers' ? (
@@ -1247,8 +657,6 @@ export default function CampaignDetail() {
                     ? (isSetup ? "e.g. We walk into the speakeasy, hats low, looking for the boss..." : "What does your character do?")
                     : campaign?.game_system === 'legionofdoom'
                     ? (isSetup ? "e.g. We gather in the Hall of Doom, the hologram of the target spinning between us..." : "What does your villain do?")
-                    : campaign?.game_system === 'pathfinder'
-                    ? (isSetup ? "e.g. Open communications. New Titan Control is requesting identification..." : "What are your orders, Captain?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
                 className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
                 rows={1}
@@ -1266,7 +674,7 @@ export default function CampaignDetail() {
                 Out-of-character discussion — your message will be seen by the party, but the Dungeon Master will not respond.
               </p>
             )}
-            {!discussMode && campaign?.game_system !== 'thepull' && campaign?.game_system !== 'pathfinder' && (
+            {!discussMode && (
               <button
                 onClick={handleAgree}
                 disabled={processing || posting}
@@ -1280,68 +688,39 @@ export default function CampaignDetail() {
           </div>
         </div>
 
-        {/* Party sidebar (or Pull status for solo) */}
+        {/* Party sidebar */}
         <aside className="space-y-4">
-          {campaign?.game_system === 'thepull' ? (
-            <>
-              <PullStatusPanel campaign={campaign} onOpenCodex={() => setPullCodexOpen(true)} />
-              <BattlePanel campaign={campaign} onResolve={handleCombatResolve} processing={combatProcessing} />
-              <button
-                onClick={() => {
-                  const order = ['minimal', 'normal', 'detailed', 'off'];
-                  const next = order[(order.indexOf(popupSetting) + 1) % order.length];
-                  handlePopupSettingChange(next);
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-border/40 bg-card/30 text-[10px] font-heading tracking-wide text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors"
-              >
-                <span>IMPACT DETAIL</span>
-                <span className="text-primary/80 capitalize">{popupSetting}</span>
-              </button>
-            </>
-          ) : (
           <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-3">
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-              <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">{campaign?.game_system === 'pathfinder' ? 'BRIDGE COMMAND' : 'THE PARTY'}</h3>
-              <span className="text-[10px] text-muted-foreground/50 ml-auto">{campaign?.game_system === 'pathfinder' ? 'Captain' : `${characters.length} heroes`}</span>
+              <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">THE PARTY</h3>
+              <span className="text-[10px] text-muted-foreground/50 ml-auto">{characters.length} heroes</span>
             </div>
             <PartyOverview characters={characters} campaignId={campaignId} gameSystem={campaign.game_system} />
           </div>
-          )}
 
-          {/* World state — Pull reads live from campaign flags; other systems use entity dossiers */}
-          {campaign?.game_system === 'thepull' ? (
-            <PullWorldState campaign={campaign} />
-          ) : (
-            <div className="border border-border/50 rounded-lg bg-card/40 p-3">
-              <div className="flex items-center gap-2 mb-2.5">
-                <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
-                <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">WORLD STATE</h3>
-              </div>
-              <div className="space-y-2 text-[11px] font-body">
-                <LocationDossier campaignId={campaignId} legacyLocations={campaign.world_state?.locations_explored || []} />
-                <NpcDossier campaignId={campaignId} />
-                <div className="flex items-center justify-between pt-1 border-t border-border/30">
-                  <span className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">REPUTATION</span>
-                  <span className={`font-heading font-600 ${campaign.world_state?.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {campaign.world_state?.reputation || 0 >= 0 ? '+' : ''}{campaign.world_state?.reputation || 0}
-                  </span>
-                </div>
+          {/* World state */}
+          <div className="border border-border/50 rounded-lg bg-card/40 p-3">
+            <div className="flex items-center gap-2 mb-2.5">
+              <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
+              <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">WORLD STATE</h3>
+            </div>
+            <div className="space-y-2 text-[11px] font-body">
+              <LocationDossier campaignId={campaignId} legacyLocations={campaign.world_state?.locations_explored || []} />
+              <NpcDossier campaignId={campaignId} />
+              <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                <span className="text-muted-foreground/60 text-[10px] font-heading tracking-wide">REPUTATION</span>
+                <span className={`font-heading font-600 ${campaign.world_state?.reputation >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {campaign.world_state?.reputation || 0 >= 0 ? '+' : ''}{campaign.world_state?.reputation || 0}
+                </span>
               </div>
             </div>
-          )}
-
-          {campaign?.game_system === 'pathfinder' && (
-            <PJCampaignStatus campaign={campaign} onOpenCodex={openCodex} />
-          )}
-          {campaign?.game_system === 'pathfinder' && (
-            <PendingEventsPanel events={campaign?.world_state?.quest_flags?.pending_events || []} />
-          )}
+          </div>
 
           {myCharacter && (
             <Link to={`/campaign/${campaignId}/character/${myCharacter.id}`}>
               <Button variant="outline" className="w-full border-border/50 text-muted-foreground hover:text-foreground h-9">
-                <ScrollText className="w-3.5 h-3.5 mr-1.5" /> {campaign?.game_system === 'pathfinder' ? "Captain's File" : 'My Character Sheet'}
+                <ScrollText className="w-3.5 h-3.5 mr-1.5" /> My Character Sheet
               </Button>
             </Link>
           )}
@@ -1364,9 +743,6 @@ export default function CampaignDetail() {
             className="min-h-[320px] font-body text-sm"
           />
           <DialogFooter>
-            <Button variant="ghost" onClick={() => { setBriefOpen(false); setStoryOpen(true); }} className="text-muted-foreground hover:text-foreground">
-              <BookOpen className="w-3.5 h-3.5 mr-1.5" /> Story So Far
-            </Button>
             <Button variant="ghost" onClick={() => setBriefOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveBrief} disabled={savingBrief} className="bg-primary text-primary-foreground hover:bg-primary/90">
               {savingBrief ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Brief'}
@@ -1379,110 +755,6 @@ export default function CampaignDetail() {
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} campaign={campaign} />
       <PurchaseSessionDialog open={purchaseOpen} onOpenChange={setPurchaseOpen} campaignId={campaignId} />
       <FreeFriendsManager open={friendsOpen} onOpenChange={setFriendsOpen} campaignId={campaignId} />
-      {campaign?.game_system === 'pathfinder' && (
-        <>
-          <StorySoFarModal
-            open={storyOpen}
-            onBegin={handleBeginAdventure}
-            onNavigate={(section) => openCodex(section)}
-          />
-          <CodexDialog
-            open={codexOpen}
-            onOpenChange={setCodexOpen}
-            initialSection={codexSection}
-            initialEntryKey={codexEntryKey}
-            campaign={campaign}
-            onSuggestAction={handleSuggestAction}
-          />
-          <MissionsPanel
-            open={missionsOpen}
-            onOpenChange={setMissionsOpen}
-            campaign={campaign}
-            onSuggestAction={handleSuggestAction}
-          />
-          <OperationsPanel
-            open={operationsOpen}
-            onOpenChange={setOperationsOpen}
-            campaign={campaign}
-            onSuggestAction={handleSuggestAction}
-          />
-          <KimelonScanner
-            open={scannerOpen}
-            onOpenChange={setScannerOpen}
-            campaign={campaign}
-            onSuggestAction={handleSuggestAction}
-          />
-          <CommandBurdenLog
-            open={burdenOpen}
-            onOpenChange={setBurdenOpen}
-            campaign={campaign}
-          />
-          <CrewAdviceDialog
-            open={crewAdviceOpen}
-            onOpenChange={setCrewAdviceOpen}
-            campaign={campaign}
-            onCrewAction={handleCrewAction}
-            onDiscuss={handleDiscuss}
-          />
-        </>
-      )}
-      {campaign?.game_system === 'thepull' && (
-        <>
-          <PullCodex
-            open={pullCodexOpen}
-            onOpenChange={setPullCodexOpen}
-            campaign={campaign}
-          />
-          <PullDecisionImpact
-            impact={pullImpact}
-            onDismiss={() => setPullImpact(null)}
-            setting={popupSetting}
-          />
-          <CombatImpactPopup
-            result={combatResult}
-            onDismiss={() => setCombatResult(null)}
-          />
-          <PullUnlockNotifications
-            notifications={pullUnlocks}
-            onDismiss={() => setPullUnlocks([])}
-          />
-          <ChapterCompleteScreen
-            open={!!chapterComplete}
-            handoff={chapterComplete?.handoff}
-            chapterNumber={chapterComplete?.chapterNumber || 1}
-            onContinue={handleContinueToNextChapter}
-            continuing={continuingChapter}
-          />
-        </>
-      )}
-      {campaign?.game_system === 'pathfinder' && (
-        <>
-          <DecisionImpactPopup
-            impact={decisionImpact}
-            onDismiss={() => setDecisionImpact(null)}
-            onOpenLog={() => { setDecisionImpact(null); setDecisionLogOpen(true); }}
-            setting={popupSetting}
-          />
-          <DecisionLogPanel
-            open={decisionLogOpen}
-            onOpenChange={setDecisionLogOpen}
-            campaignId={campaignId}
-            setting={popupSetting}
-            onSettingChange={handlePopupSettingChange}
-          />
-          <FutureEchoPopup
-            echo={futureEcho}
-            onDismiss={() => setFutureEcho(null)}
-            onOpenLog={() => setFutureEchoLogOpen(true)}
-          />
-          <FutureEchoLog
-            open={futureEchoLogOpen}
-            onOpenChange={setFutureEchoLogOpen}
-            campaignId={campaignId}
-            campaign={campaign}
-          />
-        </>
-      )}
     </div>
   );
 }

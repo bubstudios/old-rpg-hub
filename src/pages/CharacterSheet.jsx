@@ -16,8 +16,6 @@ import HyCharacterSheet from '@/pages/HyCharacterSheet';
 import GBCharacterSheet from '@/pages/GBCharacterSheet';
 import GangCharacterSheet from '@/pages/GangCharacterSheet';
 import LODCharacterSheet from '@/pages/LODCharacterSheet';
-import PJCharacterSheet from '@/pages/PJCharacterSheet';
-import PullCharacterSheet from '@/pages/PullCharacterSheet';
 import ExportCharacterButton from '@/components/ExportCharacterButton';
 
 export default function CharacterSheet() {
@@ -120,14 +118,6 @@ export default function CharacterSheet() {
 
   if (campaign?.game_system === 'gangbusters') {
     return <GangCharacterSheet character={character} campaignId={campaignId} />;
-  }
-
-  if (campaign?.game_system === 'thepull') {
-    return <PullCharacterSheet character={character} campaignId={campaignId} campaign={campaign} />;
-  }
-
-  if (campaign?.game_system === 'pathfinder') {
-    return <PJCharacterSheet character={character} campaignId={campaignId} campaign={campaign} />;
   }
 
   if (campaign?.game_system === 'legionofdoom') {

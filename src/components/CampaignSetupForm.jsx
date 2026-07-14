@@ -165,10 +165,6 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const isGB = gameSystem === 'ghostbusters';
   const isGang = gameSystem === 'gangbusters';
   const isLOD = gameSystem === 'legionofdoom';
-  const isPJ = gameSystem === 'pathfinder';
-  const isPull = gameSystem === 'thepull';
-  const [playMode, setPlayMode] = useState('original');
-  const showFullSetup = !isPJ || playMode === 'original';
   const tones = isTS ? TS_TONES : isDS ? DS_TONES : isSJ ? SJ_TONES : isIJ ? IJ_TONES : isBH ? BH_TONES : isGW ? GW_TONES : isSF ? SF_TONES : isHW ? HW_TONES : isGang ? GANG_TONES : isGB ? GB_TONES : isBR ? BR_TONES : isHY ? HY_TONES : isLOD ? LOD_TONES : DND_TONES;
   const worlds = isTS ? TS_WORLDS : isDS ? DS_WORLDS : isSJ ? SJ_WORLDS : isIJ ? IJ_WORLDS : isBH ? BH_WORLDS : isGW ? GW_WORLDS : isSF ? SF_WORLDS : isHW ? HW_WORLDS : isGang ? GANG_WORLDS : isGB ? GB_WORLDS : isBR ? BR_WORLDS : isHY ? HY_WORLDS : isLOD ? LOD_WORLDS : isFR ? FR_WORLDS : isGH ? GH_WORLDS : DND_WORLDS;
   const setup = isTS ? TS_SETUP : isDS ? DS_SETUP : isSJ ? SJ_SETUP : isIJ ? IJ_SETUP : isBH ? BH_SETUP : isGW ? GW_SETUP : isSF ? SF_SETUP : isHW ? HW_SETUP : isGang ? GANG_SETUP : isGB ? GB_SETUP : isBR ? BR_SETUP : isHY ? HY_SETUP : isLOD ? LOD_SETUP : isFR ? FR_SETUP : isGH ? GH_SETUP : DND_SETUP;
@@ -188,9 +184,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   async function handleCreate(overrideName) {
     const world = worldSetting.trim();
     const fallbackName = world ? (isTS ? `Operation ${world}` : isDS ? `Blood Beneath ${world}` : isSJ ? `Voyage to ${world}` : isIJ ? `Expedition to ${world}` : isBH ? `Legends of ${world}` : isGW ? `Wastes of ${world}` : isSF ? `Voyage to ${world}` : isHW ? `Descent into ${world}` : isBR ? `Run to ${world}` : isGB ? `Ghosts of ${world}` : isGang ? `The ${world} Outfit` : isLOD ? `The ${world} Legion` : `Tales of ${world}`) : '';
-    const canonName = isPJ && playMode === 'canon' ? 'The Pathfinder Journeys' : '';
-    const pullName = isPull ? 'The Pull' : '';
-    const finalName = (overrideName || name.trim() || fallbackName || canonName || pullName || 'New Campaign').trim();
+    const finalName = (overrideName || name.trim() || fallbackName || 'New Campaign').trim();
     if (creating) return;
     setCreating(true);
     try {
@@ -202,8 +196,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
         world_setting: worldSetting.trim(),
         setting_notes: settingNotes.trim(),
         module_id: moduleId,
-        game_system: gameSystem,
-        play_mode: isPJ ? playMode : undefined
+        game_system: gameSystem
       });
       toast.success('Campaign forged!');
       onCreated(res.data.campaign);
@@ -214,68 +207,8 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
     }
   }
 
-  // ─── The Pull: simplified setup (early return) ───
-  if (isPull) {
-    return (
-      <div className="space-y-4">
-        <div className="border border-primary/30 rounded-lg bg-primary/5 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Compass className="w-4 h-4 text-primary" strokeWidth={1.5} />
-            <h3 className="font-heading text-xs tracking-[0.15em] text-primary">THE PULL</h3>
-          </div>
-          <p className="text-xs text-muted-foreground font-body leading-relaxed">
-            You wake face-down in red sand with no memory, a circular scar over your heart, and an etched shard in your pocket. Something called the Pull drags you forward through nightmare Provinces. Survive. Discover. Decide who you are.
-          </p>
-          <p className="text-[10px] text-muted-foreground/60 font-body italic">
-            This is a solo game. You play as Bullet — a predefined character. The AI GM controls the world, NPCs, enemies, and hidden clocks.
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">CAMPAIGN NAME (OPTIONAL)</label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="The Pull"
-            className="bg-background/60 font-body"
-          />
-        </div>
-
-        <div className="flex gap-2 pt-1">
-          <Button onClick={() => handleCreate()} disabled={creating} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Begin'}
-          </Button>
-          <Button onClick={onCancel} variant="ghost" className="text-muted-foreground">Cancel</Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      {/* Story Mode (Pathfinder only) */}
-      {isPJ && (
-        <div>
-          <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-2">STORY MODE</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onClick={() => setPlayMode('canon')} className={`text-left p-3 rounded-lg border transition-all ${playMode === 'canon' ? 'border-primary bg-primary/10' : 'border-border/50 bg-card/30 hover:border-primary/30'}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <BookOpen className="w-4 h-4 text-primary" strokeWidth={1.5} />
-                <p className={`text-xs font-heading tracking-wide ${playMode === 'canon' ? 'text-primary' : 'text-foreground'}`}>Canon Mode</p>
-              </div>
-              <p className="text-[10px] text-muted-foreground font-body leading-snug">Play as Captain Bub Stellar after Arc 1. The crew, the future memories, and the galaxy are yours.</p>
-            </button>
-            <button onClick={() => setPlayMode('original')} className={`text-left p-3 rounded-lg border transition-all ${playMode === 'original' ? 'border-primary bg-primary/10' : 'border-border/50 bg-card/30 hover:border-primary/30'}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <UserPlus className="w-4 h-4 text-primary" strokeWidth={1.5} />
-                <p className={`text-xs font-heading tracking-wide ${playMode === 'original' ? 'text-primary' : 'text-foreground'}`}>Original Mode</p>
-              </div>
-              <p className="text-[10px] text-muted-foreground font-body leading-snug">Create your own officer aboard the Pathfinder.</p>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Name */}
       <div>
         <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">CAMPAIGN NAME</label>
