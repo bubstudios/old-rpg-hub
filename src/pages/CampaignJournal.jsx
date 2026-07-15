@@ -45,29 +45,44 @@ export default function CampaignJournal() {
     }
   }
 
+  const STOP_WORDS = new Set(['the','and','for','are','but','not','you','all','can','had','her','was','one','our','out','has','his','how','its','may','new','now','old','see','way','who','did','get','let','say','she','too','use','where','what','when','why','this','that','with','from','they','have','were','been','will','would','could','should','any','into','them','then','than','over','down','only','your','some','such']);
+
+  function getSearchWords(term) {
+    return term.toLowerCase().split(/\s+/).filter(w => w.length >= 3 && !STOP_WORDS.has(w));
+  }
+
+  function getEntryText(entry) {
+    return [entry.narration, entry.player_action, entry.acting_character_name,
+      ...(entry.dice_rolls || []).map(r => r.description || '')].join(' ').toLowerCase();
+  }
+
+  const searchWords = searchTerm.trim() ? getSearchWords(searchTerm) : [];
+
   const filteredEntries = searchTerm.trim()
     ? entries.map((e, i) => ({ entry: e, originalIndex: i })).filter(({ entry }) => {
-        const term = searchTerm.toLowerCase();
-        const text = [entry.narration, entry.player_action, entry.acting_character_name,
-          ...(entry.dice_rolls || []).map(r => r.description || '')].join(' ').toLowerCase();
-        return text.includes(term);
+        const text = getEntryText(entry);
+        if (searchWords.length > 0) return searchWords.every(w => text.includes(w));
+        return text.includes(searchTerm.toLowerCase());
       })
     : entries.map((e, i) => ({ entry: e, originalIndex: i }));
 
   function getMatchSnippet(entry, term) {
     const fields = [entry.narration, entry.player_action, entry.acting_character_name,
       ...(entry.dice_rolls || []).map(r => r.description || '')].filter(Boolean);
-    const lower = term.toLowerCase();
+    const words = getSearchWords(term);
+    const targets = words.length > 0 ? words : [term.toLowerCase()];
     for (const text of fields) {
-      const idx = text.toLowerCase().indexOf(lower);
-      if (idx >= 0) {
-        const start = Math.max(0, idx - 35);
-        const end = Math.min(text.length, idx + term.length + 35);
-        return {
-          before: (start > 0 ? '…' : '') + text.slice(start, idx),
-          match: text.slice(idx, idx + term.length),
-          after: text.slice(idx + term.length, end) + (end < text.length ? '…' : '')
-        };
+      for (const target of targets) {
+        const idx = text.toLowerCase().indexOf(target);
+        if (idx >= 0) {
+          const start = Math.max(0, idx - 35);
+          const end = Math.min(text.length, idx + target.length + 35);
+          return {
+            before: (start > 0 ? '…' : '') + text.slice(start, idx),
+            match: text.slice(idx, idx + target.length),
+            after: text.slice(idx + target.length, end) + (end < text.length ? '…' : '')
+          };
+        }
       }
     }
     return null;
