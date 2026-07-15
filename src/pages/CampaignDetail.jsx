@@ -220,8 +220,9 @@ export default function CampaignDetail() {
     await submitTurn(submittedAction, false);
   }
 
-  // Submit an action or agreement to the round. When all party members have acted,
-  // the DM is invoked with everyone's actions combined.
+  // Submit an action or agreement to the round. The backend function atomically
+  // appends the action and checks if all party members have acted. When all have
+  // acted, the DM is invoked with everyone's actions combined.
   async function submitTurn(actionText, isAgree) {
     if (processing || processingRef.current) return;
     processingRef.current = true;
@@ -234,71 +235,50 @@ export default function CampaignDetail() {
     setLatestResult(null);
     let dmCompleted = false;
     try {
-      const user = await base44.auth.me();
+      // Call the backend function to atomically submit the action and check party status
+      const res = await base44.functions.invoke('submitRoundAction', {
+        campaign_id: campaignId,
+        action: actionText,
+        character_id: myCharacter.id,
+        is_agree: isAgree
+      });
 
-      // Check dm_processing with 90s auto-reset (mirrors the backend logic)
-      let camp = await base44.entities.Campaign.get(campaignId);
-      if (camp.dm_processing) {
-        const updatedAt = camp.updated_date ? new Date(camp.updated_date).getTime() : 0;
-        if (updatedAt && Date.now() - updatedAt > 90000) {
-          await base44.entities.Campaign.update(campaignId, { dm_processing: false, pending_actions: [] });
-          camp = await base44.entities.Campaign.get(campaignId);
-        } else {
-          setCampaign(prev => prev ? { ...prev, dm_processing: true } : prev);
-          let cleared = false;
-          for (let attempt = 0; attempt < 8; attempt++) {
-            await new Promise(r => setTimeout(r, 3000));
-            camp = await base44.entities.Campaign.get(campaignId);
-            if (!camp.dm_processing) { cleared = true; break; }
-          }
-          if (!cleared) {
-            await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
-            setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
-            if (!isAgree) setAction(actionText);
-            toast.error('The DM was still processing. Please try sending your command again.');
-            return;
-          }
+      const data = res.data;
+
+      // DM is busy — wait for it to clear, then retry
+      if (data.status === 'dm_busy') {
+        setCampaign(prev => prev ? { ...prev, dm_processing: true, pending_actions: data.pending_actions } : prev);
+        let cleared = false;
+        for (let attempt = 0; attempt < 8; attempt++) {
+          await new Promise(r => setTimeout(r, 3000));
+          const camp = await base44.entities.Campaign.get(campaignId);
+          if (!camp.dm_processing) { cleared = true; break; }
         }
+        if (!cleared) {
+          await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
+          setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+          if (!isAgree) setAction(actionText);
+          toast.error('The DM was still processing. Please try sending your command again.');
+          return;
+        }
+        // Retry after DM clears
+        return submitTurn(actionText, isAgree);
       }
 
-      const characters = await base44.entities.Character.filter({ campaign_id: campaignId, status: 'active' });
-      const myChar = characters.find(c => c.id === myCharacter.id && c.created_by_id === user.id);
-      if (!myChar) throw new Error('Character not found');
+      // Update local state with the latest pending_actions from the backend
+      setCampaign(prev => prev ? {
+        ...prev,
+        pending_actions: data.pending_actions,
+        dm_processing: data.status === 'all_in'
+      } : prev);
 
-      const newEntry = {
-        character_id: myCharacter.id,
-        character_name: myChar.name,
-        action: actionText,
-        is_agree: !!isAgree,
-        submitted_at: new Date().toISOString()
-      };
+      // Still waiting for other party members
+      if (data.status === 'waiting') return;
 
-      // Append the action to pending_actions (re-read first to avoid overwriting others)
-      const beforeSubmit = await base44.entities.Campaign.get(campaignId);
-      const existingPending = Array.isArray(beforeSubmit.pending_actions) ? beforeSubmit.pending_actions : [];
-      const pending = [...existingPending, newEntry];
-      await base44.entities.Campaign.update(campaignId, { pending_actions: pending });
-      const submittedIds = pending.map(a => a.character_id);
-      const missing = characters.filter(c => !submittedIds.includes(c.id));
-
-      setCampaign(prev => prev ? { ...prev, pending_actions: pending, dm_processing: false } : prev);
-
-      if (missing.length > 0) return; // Waiting for other party members
-
-      // All party members have acted — claim the DM invocation
-      await base44.entities.Campaign.update(campaignId, { dm_processing: true });
-      setCampaign(prev => prev ? { ...prev, dm_processing: true } : prev);
-
-      const combined = pending.map(a =>
-        a.is_agree
-          ? `${a.character_name} agrees and stands ready (no specific action this turn).`
-          : `${a.character_name}: ${a.action}`
-      ).join('\n');
-
-      const dmFunc = DM2_SYSTEMS.includes(camp.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
-      const dmRes = await base44.functions.invoke(dmFunc, {
+      // All party members have acted — invoke the DM
+      const dmRes = await base44.functions.invoke(data.dm_function, {
         campaign_id: campaignId,
-        action: combined,
+        action: data.combined_action,
         acting_character_id: myCharacter.id,
         skip_action_log: true,
         narration_style: narrationStyle
