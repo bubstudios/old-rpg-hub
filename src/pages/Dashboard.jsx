@@ -105,6 +105,33 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* My Campaigns */}
+      {campaigns.length > 1 && (
+        <Panel icon={ScrollText} title="My Campaigns" count={campaigns.length} className="mb-8">
+          <div className="space-y-2">
+            {campaigns.map((c) => {
+              const sys = getGameSystem(c.game_system || 'add1e');
+              const dead = c.combat_active;
+              return (
+                <Link key={c.id} to={`/campaign/${c.id}`} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/40 bg-card/30 hover:border-primary/40 hover:bg-secondary/20 transition-all group">
+                  <div className="w-9 h-9 rounded-full bg-secondary/60 flex items-center justify-center shrink-0">
+                    <ScrollText className="w-4 h-4 text-primary/70" strokeWidth={1.5} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-heading font-600 text-sm text-foreground group-hover:text-primary transition-colors truncate">{c.name}</p>
+                    <p className="text-[11px] text-muted-foreground font-body truncate">
+                      {sys.short} · Ch. {c.current_chapter} · {c.party_count} {c.party_count === 1 ? 'hero' : 'heroes'}
+                    </p>
+                  </div>
+                  {dead && <span className="text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded bg-destructive/20 text-destructive shrink-0">COMBAT</span>}
+                  <span className="text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded bg-secondary/60 text-muted-foreground shrink-0">{sys.short}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </Panel>
+      )}
+
       {/* Quick actions */}
       <div className="grid sm:grid-cols-3 gap-3 mb-8">
         <ActionCard icon={KeyRound} title="Join by Code" desc="Enter a party invite code">
