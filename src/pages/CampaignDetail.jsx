@@ -691,7 +691,7 @@ export default function CampaignDetail() {
               <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">THE PARTY</h3>
               <span className="text-[10px] text-muted-foreground/50 ml-auto">{characters.length} heroes</span>
             </div>
-            <PartyOverview characters={characters} campaignId={campaignId} gameSystem={campaign.game_system} />
+            <PartyOverview characters={characters} campaignId={campaignId} gameSystem={campaign.game_system} submittedIds={submittedIds} />
           </div>
 
           {/* World state */}

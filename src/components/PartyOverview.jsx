@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, Shield } from 'lucide-react';
+import { Heart, Shield, Check, Loader2 } from 'lucide-react';
 
 function hpColor(current, max) {
   const pct = max > 0 ? current / max : 0;
@@ -8,7 +8,7 @@ function hpColor(current, max) {
   return 'bg-red-800';
 }
 
-export default function PartyOverview({ characters, campaignId, gameSystem }) {
+export default function PartyOverview({ characters, campaignId, gameSystem, submittedIds }) {
   if (!characters || !characters.length) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm font-body italic">
@@ -54,6 +54,13 @@ export default function PartyOverview({ characters, campaignId, gameSystem }) {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {submittedIds && (
+                  <div className="flex items-center">
+                    {submittedIds.includes(c.id)
+                      ? <Check className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                      : <Loader2 className="w-3 h-3 text-muted-foreground/50 animate-spin" strokeWidth={1.5} />}
+                  </div>
+                )}
                 {gameSystem !== 'pathfinder' && gameSystem !== 'starfrontiers' && gameSystem !== 'gammaworld' && gameSystem !== 'boothill' && gameSystem !== 'indianajones' && gameSystem !== 'topsecret' && gameSystem !== 'conan' && gameSystem !== 'redsonja' && gameSystem !== 'ghostbusters' && gameSystem !== 'gangbusters' && gameSystem !== 'legionofdoom' && (
                   <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Shield className="w-3 h-3" strokeWidth={1.5} />
