@@ -96,21 +96,25 @@ export default function CampaignDetail() {
   async function loadData() {
     try {
       setLoading(true);
-      const res = await base44.functions.invoke('campaignData', { op: 'load', campaign_id: campaignId });
-      const data = res.data;
-      setCampaign(data.campaign);
-      setCharacters(data.characters);
-      setMyCharacter(data.my_character);
-      setIsOwner(!!data.is_owner);
-      setBriefText(data.campaign?.dm_brief || '');
+      const user = await base44.auth.me();
+      const [campaign, characters] = await Promise.all([
+        base44.entities.Campaign.get(campaignId),
+        base44.entities.Character.filter({ campaign_id: campaignId }, '-created_date', 50)
+      ]);
+      const myChar = characters.find(c => c.created_by_id === user.id && c.status === 'active');
+      setCampaign(campaign);
+      setCharacters(characters);
+      setMyCharacter(myChar);
+      setIsOwner(campaign.created_by_id === user.id);
+      setBriefText(campaign.dm_brief || '');
 
-      if (!data.my_character) {
+      if (!myChar) {
         navigate(`/campaign/${campaignId}/create-character`);
         return;
       }
 
-      const entriesRes = await base44.functions.invoke('campaignData', { op: 'recentEntries', campaign_id: campaignId, limit: 30 });
-      setEntries(entriesRes.data.entries || []);
+      const entries = await base44.entities.JournalEntry.filter({ campaign_id: campaignId }, '-created_date', 30);
+      setEntries(entries.reverse());
     } catch (e) {
       toast.error('Failed to load campaign');
     } finally {
@@ -120,8 +124,8 @@ export default function CampaignDetail() {
 
   async function reloadEntries() {
     try {
-      const entriesRes = await base44.functions.invoke('campaignData', { op: 'recentEntries', campaign_id: campaignId, limit: 30 });
-      setEntries(entriesRes.data.entries || []);
+      const entries = await base44.entities.JournalEntry.filter({ campaign_id: campaignId }, '-created_date', 30);
+      setEntries(entries.reverse());
     } catch (e) { /* ignore */ }
   }
 
@@ -183,10 +187,10 @@ export default function CampaignDetail() {
       };
       setEntries(prev => [...prev, tempEntry]);
       try {
-        await base44.functions.invoke('campaignData', {
-          op: 'postDiscussion',
+        await base44.entities.JournalEntry.create({
           campaign_id: campaignId,
-          message: submittedAction,
+          entry_type: 'discussion',
+          narration: submittedAction,
           acting_character_name: myCharacter.name
         });
         await reloadEntries();
@@ -218,106 +222,86 @@ export default function CampaignDetail() {
     setLatestResult(null);
     let dmCompleted = false;
     try {
-      const res = await base44.functions.invoke('campaignData', {
-        op: 'submitAction',
-        campaign_id: campaignId,
-        acting_character_id: myCharacter.id,
-        action: actionText,
-        is_agree: isAgree
-      });
-      const data = res.data;
+      const user = await base44.auth.me();
 
-      // Reflect the round state immediately (avoids flicker before the subscription fires)
-      setCampaign(prev => prev ? {
-        ...prev,
-        pending_actions: data.pending_actions || prev.pending_actions,
-        dm_processing: !!data.should_invoke_dm
-      } : prev);
-
-      if (data.dm_processing) {
-        // The DM is still processing the previous turn. Wait and retry
-        // instead of clearing the round (which would interfere with the
-        // in-progress DM call). The submitAction backend has a 90s auto-reset
-        // for truly stuck flags, so we just need to be patient.
-        setCampaign(prev => prev ? { ...prev, dm_processing: true } : prev);
-        let retried = false;
-        for (let attempt = 0; attempt < 8; attempt++) {
-          await new Promise(r => setTimeout(r, 3000));
-          const retryRes = await base44.functions.invoke('campaignData', {
-            op: 'submitAction',
-            campaign_id: campaignId,
-            acting_character_id: myCharacter.id,
-            action: actionText,
-            is_agree: isAgree
-          });
-          const retryData = retryRes.data;
-          if (!retryData.dm_processing) {
-            // DM finished — re-enter the normal flow with the retry data
-            setCampaign(prev => prev ? {
-              ...prev,
-              pending_actions: retryData.pending_actions || prev.pending_actions,
-              dm_processing: !!retryData.should_invoke_dm
-            } : prev);
-            if (retryData.should_invoke_dm) {
-              const dmFunc = DM2_SYSTEMS.includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
-              const dmRes = await base44.functions.invoke(dmFunc, {
-                campaign_id: campaignId,
-                action: retryData.combined_action,
-                acting_character_id: myCharacter.id,
-                skip_action_log: true,
-                narration_style: narrationStyle
-              });
-              await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-              setCampaign(prev => prev ? {
-                ...prev,
-                pending_actions: [],
-                dm_processing: false
-              } : prev);
-              setLatestResult(dmRes.data);
-              dmCompleted = true;
-              await loadData();
-              setLatestResult(null);
-              retried = true;
-            }
-            break;
+      // Check dm_processing with 90s auto-reset (mirrors the backend logic)
+      let camp = await base44.entities.Campaign.get(campaignId);
+      if (camp.dm_processing) {
+        const updatedAt = camp.updated_date ? new Date(camp.updated_date).getTime() : 0;
+        if (updatedAt && Date.now() - updatedAt > 90000) {
+          await base44.entities.Campaign.update(campaignId, { dm_processing: false, pending_actions: [] });
+          camp = await base44.entities.Campaign.get(campaignId);
+        } else {
+          setCampaign(prev => prev ? { ...prev, dm_processing: true } : prev);
+          let cleared = false;
+          for (let attempt = 0; attempt < 8; attempt++) {
+            await new Promise(r => setTimeout(r, 3000));
+            camp = await base44.entities.Campaign.get(campaignId);
+            if (!camp.dm_processing) { cleared = true; break; }
+          }
+          if (!cleared) {
+            await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
+            setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+            if (!isAgree) setAction(actionText);
+            toast.error('The DM was still processing. Please try sending your command again.');
+            return;
           }
         }
-        if (!retried) {
-          // Still stuck after 24 seconds — force-clear and restore the action
-          await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-          setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
-          if (!isAgree) setAction(actionText);
-          toast.error('The DM was still processing. Please try sending your command again.');
-        }
-        return;
       }
 
-      if (data.should_invoke_dm) {
-        const dmFunc = DM2_SYSTEMS.includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
-        const dmRes = await base44.functions.invoke(dmFunc, {
-          campaign_id: campaignId,
-          action: data.combined_action,
-          acting_character_id: myCharacter.id,
-          skip_action_log: true,
-          narration_style: narrationStyle
-        });
-        await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
-        dmCompleted = true; // DM call succeeded — don't restore action text on post-DM errors
-        setCampaign(prev => prev ? {
-          ...prev,
-          pending_actions: [],
-          dm_processing: false
-        } : prev);
-        setLatestResult(dmRes.data);
-        await loadData();
-        setLatestResult(null);
-      }
-      // else: waiting for other party members — the pending state updates via subscription
+      const characters = await base44.entities.Character.filter({ campaign_id: campaignId, status: 'active' });
+      const myChar = characters.find(c => c.id === myCharacter.id && c.created_by_id === user.id);
+      if (!myChar) throw new Error('Character not found');
+
+      const newEntry = {
+        character_id: myCharacter.id,
+        character_name: myChar.name,
+        action: actionText,
+        is_agree: !!isAgree,
+        submitted_at: new Date().toISOString()
+      };
+
+      // Atomically append the action to pending_actions
+      await base44.entities.Campaign.updateMany({ id: campaignId }, { $push: { pending_actions: newEntry } });
+
+      // Re-read to evaluate the full pending list
+      const updated = await base44.entities.Campaign.get(campaignId);
+      const pending = Array.isArray(updated.pending_actions) ? updated.pending_actions : [];
+      const submittedIds = pending.map(a => a.character_id);
+      const missing = characters.filter(c => !submittedIds.includes(c.id));
+
+      setCampaign(prev => prev ? { ...prev, pending_actions: pending, dm_processing: false } : prev);
+
+      if (missing.length > 0) return; // Waiting for other party members
+
+      // All party members have acted — claim the DM invocation
+      await base44.entities.Campaign.update(campaignId, { dm_processing: true });
+      setCampaign(prev => prev ? { ...prev, dm_processing: true } : prev);
+
+      const combined = pending.map(a =>
+        a.is_agree
+          ? `${a.character_name} agrees and stands ready (no specific action this turn).`
+          : `${a.character_name}: ${a.action}`
+      ).join('\n');
+
+      const dmFunc = DM2_SYSTEMS.includes(camp.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
+      const dmRes = await base44.functions.invoke(dmFunc, {
+        campaign_id: campaignId,
+        action: combined,
+        acting_character_id: myCharacter.id,
+        skip_action_log: true,
+        narration_style: narrationStyle
+      });
+      await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
+      dmCompleted = true;
+      setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+      setLatestResult(dmRes.data);
+      await loadData();
+      setLatestResult(null);
     } catch (e) {
-      // If the DM call failed after dm_processing was claimed, reset the round so the campaign doesn't get stuck
       if (!dmCompleted) {
         try {
-          await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+          await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
           setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
         } catch { /* ignore */ }
         toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
@@ -336,7 +320,7 @@ export default function CampaignDetail() {
 
   async function handleResetRound() {
     try {
-      await base44.functions.invoke('campaignData', { op: 'clearRound', campaign_id: campaignId });
+      await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
       setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
       toast.success('Round reset.');
     } catch (e) {
@@ -360,7 +344,7 @@ export default function CampaignDetail() {
   async function handleSaveBrief() {
     setSavingBrief(true);
     try {
-      await base44.functions.invoke('campaignData', { op: 'updateDmBrief', campaign_id: campaignId, dm_brief: briefText });
+      await base44.entities.Campaign.update(campaignId, { dm_brief: briefText.trim() });
       setCampaign(prev => prev ? { ...prev, dm_brief: briefText } : prev);
       toast.success('DM Brief saved — the DM will follow it from the next turn.');
       setBriefOpen(false);
