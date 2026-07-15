@@ -22,6 +22,7 @@ import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
+import NarrationPlayer from '@/components/NarrationPlayer';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -473,7 +474,14 @@ export default function CampaignDetail() {
             )}
 
             {latestResult && !processing && (
-              <DMNarration narration={latestResult.narration} diceRolls={latestResult.dice_rolls} />
+              <>
+                <DMNarration narration={latestResult.narration} diceRolls={latestResult.dice_rolls} />
+                {isOwner && campaign.game_system === 'add1e' && (
+                  <div className="flex justify-end -mt-2">
+                    <NarrationPlayer narration={latestResult.narration} />
+                  </div>
+                )}
+              </>
             )}
           </div>
 
