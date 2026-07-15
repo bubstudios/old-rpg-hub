@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Library, Plus, Upload, Loader2, Globe, Lock, Trash2, BookOpen, X } from 'lucide-react';
@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/AuthContext';
 export default function ModuleLibrary() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const navigate = useNavigate();
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
@@ -97,7 +98,11 @@ export default function ModuleLibrary() {
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
             {modules.map((m) => (
-              <div key={m.id} className="group p-4 rounded-lg border border-border/50 bg-card/40 hover:border-primary/40 transition-all">
+              <div
+                key={m.id}
+                onClick={() => navigate(`/game/${m.game_system || 'add1e'}?module=${m.id}`)}
+                className="group p-4 rounded-lg border border-border/50 bg-card/40 hover:border-primary/40 hover:bg-secondary/20 transition-all cursor-pointer"
+              >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="font-heading font-600 text-base text-foreground">{m.title}</h3>
                   {m.visibility === 'shared' ? (

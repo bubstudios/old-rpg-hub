@@ -139,7 +139,7 @@ const LOD_TONES = [
 const LOD_WORLDS = ['Metropolis', 'Gotham City', 'The Hall of Doom', 'A custom hero city of my own'];
 const LOD_SETUP = { worldLabel: 'CITY / BASE OF OPERATIONS', worldPlaceholder: 'Name the city or lair (or pick one above)', visionPlaceholder: "Describe the tone, themes, starting situation, or details you want the GM to weave in. e.g. 'The Legion of Doom has just formed — a cabal of supervillains united to pull off the heist of the century: stealing the power core from the heroes headquarters. Rivalries simmer, heroes patrol, and the world doesn't yet know their names.'", namePlaceholder: 'e.g. The Doom Heist', forgeLabel: 'Enter the Hall of Doom' };
 
-export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onCancel }) {
+export default function CampaignSetupForm({ gameSystem = 'add1e', preselectModuleId, onCreated, onCancel }) {
   const [name, setName] = useState('');
   const [mode, setMode] = useState('async');
   const [tone, setTone] = useState('balanced');
@@ -147,7 +147,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', onCreated, onC
   const [settingNotes, setSettingNotes] = useState('');
   const [creating, setCreating] = useState(false);
   const [modules, setModules] = useState([]);
-  const [moduleId, setModuleId] = useState(null);
+  const [moduleId, setModuleId] = useState(preselectModuleId || null);
   const [loadingModules, setLoadingModules] = useState(false);
 
   const isSF = gameSystem === 'starfrontiers';

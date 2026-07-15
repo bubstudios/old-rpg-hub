@@ -20,8 +20,15 @@ export default function Home() {
   const [joinCode, setJoinCode] = useState('');
   const [joining, setJoining] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [preselectModule, setPreselectModule] = useState(null);
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const moduleId = urlParams.get('module');
+    if (moduleId) {
+      setPreselectModule(moduleId);
+      setShowCreate(true);
+    }
     loadCampaigns();
   }, []);
 
@@ -107,7 +114,7 @@ export default function Home() {
             <h2 className="font-heading text-sm tracking-[0.15em] text-foreground">BEGIN A CAMPAIGN</h2>
           </div>
           {showCreate ? (
-            <CampaignSetupForm gameSystem={game.id} onCreated={handleCreated} onCancel={() => setShowCreate(false)} />
+            <CampaignSetupForm gameSystem={game.id} preselectModuleId={preselectModule} onCreated={handleCreated} onCancel={() => setShowCreate(false)} />
           ) : showImport ? (
             <ImportCampaignForm gameSystem={game.id} onCreated={handleImported} onCancel={() => setShowImport(false)} />
           ) : (
