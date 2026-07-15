@@ -17,6 +17,7 @@ import GBCharacterSheet from '@/pages/GBCharacterSheet';
 import GangCharacterSheet from '@/pages/GangCharacterSheet';
 import LODCharacterSheet from '@/pages/LODCharacterSheet';
 import ExportCharacterButton from '@/components/ExportCharacterButton';
+import ItemInfoDialog from '@/components/ItemInfoDialog';
 
 export default function CharacterSheet() {
   const { id: campaignId, charId } = useParams();
@@ -25,6 +26,7 @@ export default function CharacterSheet() {
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [resting, setResting] = useState(false);
+  const [infoItem, setInfoItem] = useState(null);
 
   useEffect(() => {
     load();
@@ -253,12 +255,16 @@ export default function CharacterSheet() {
           {character.equipment && character.equipment.length ? (
             <div className="space-y-1.5">
               {character.equipment.map((e, i) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground font-body">
+                <button
+                  key={i}
+                  onClick={() => setInfoItem({ name: e.name, type: 'equipment' })}
+                  className="w-full flex items-center justify-between text-xs group hover:bg-secondary/30 -mx-1 px-1 py-0.5 rounded transition-colors"
+                >
+                  <span className="text-muted-foreground font-body group-hover:text-foreground text-left">
                     {e.qty > 1 ? `${e.qty}× ` : ''}{e.name}
                   </span>
                   {e.notes && <span className="text-[10px] text-muted-foreground/50">{e.notes}</span>}
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -279,9 +285,13 @@ export default function CharacterSheet() {
           {character.spells && character.spells.length ? (
             <div className="flex gap-1.5 flex-wrap">
               {character.spells.map((s, i) => (
-                <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/40 text-muted-foreground font-body border border-border/30">
+                <button
+                  key={i}
+                  onClick={() => setInfoItem({ name: s, type: 'spell' })}
+                  className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/40 text-muted-foreground font-body border border-border/30 hover:bg-secondary/60 hover:text-foreground transition-colors"
+                >
                   {s}
-                </span>
+                </button>
               ))}
             </div>
           ) : (
@@ -303,6 +313,17 @@ export default function CharacterSheet() {
           </div>
           <p className="text-sm text-muted-foreground font-body italic leading-relaxed">{character.appearance}</p>
         </div>
+      )}
+
+      {infoItem && (
+        <ItemInfoDialog
+          item={infoItem.name}
+          type={infoItem.type}
+          gameSystem={campaign?.game_system}
+          characterClass={character.character_class}
+          open={!!infoItem}
+          onOpenChange={(open) => { if (!open) setInfoItem(null); }}
+        />
       )}
     </div>
   );
