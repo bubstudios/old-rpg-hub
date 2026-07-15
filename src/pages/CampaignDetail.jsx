@@ -101,7 +101,7 @@ export default function CampaignDetail() {
         const camp = await base44.entities.Campaign.get(campaignId);
         if (camp) setCampaign(prev => prev ? { ...prev, ...camp } : camp);
       } catch { /* ignore */ }
-    }, 3000);
+    }, 2000);
     return () => clearInterval(interval);
   }, [campaignId]);
 
@@ -273,12 +273,11 @@ export default function CampaignDetail() {
         submitted_at: new Date().toISOString()
       };
 
-      // Atomically append the action to pending_actions
-      await base44.entities.Campaign.updateMany({ id: campaignId }, { $push: { pending_actions: newEntry } });
-
-      // Re-read to evaluate the full pending list
-      const updated = await base44.entities.Campaign.get(campaignId);
-      const pending = Array.isArray(updated.pending_actions) ? updated.pending_actions : [];
+      // Append the action to pending_actions (re-read first to avoid overwriting others)
+      const beforeSubmit = await base44.entities.Campaign.get(campaignId);
+      const existingPending = Array.isArray(beforeSubmit.pending_actions) ? beforeSubmit.pending_actions : [];
+      const pending = [...existingPending, newEntry];
+      await base44.entities.Campaign.update(campaignId, { pending_actions: pending });
       const submittedIds = pending.map(a => a.character_id);
       const missing = characters.filter(c => !submittedIds.includes(c.id));
 
