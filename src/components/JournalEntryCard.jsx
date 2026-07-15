@@ -1,6 +1,5 @@
 import { Coins, Package, MessageCircle } from 'lucide-react';
 import DiceRoller from '@/components/DiceRoller';
-import NarrationPlayer from '@/components/NarrationPlayer';
 import { enforceReadableNarration } from '@/lib/pjNarrationFilter';
 
 export default function JournalEntryCard({ entry }) {
@@ -42,9 +41,6 @@ export default function JournalEntryCard({ entry }) {
       <div className="animate-ink">
         <div className="tome-surface rounded-lg rounded-tl-sm p-5">
           <p className="tome-text text-sm whitespace-pre-wrap">{enforceReadableNarration(entry.narration)}</p>
-          {entry.audio_urls && entry.audio_urls.length > 0 && (
-            <NarrationPlayer audioUrls={entry.audio_urls} />
-          )}
           {entry.dice_rolls && entry.dice_rolls.length > 0 && (
             <div className="mt-4 pt-3 border-t border-amber-900/20 space-y-1.5">
               {entry.dice_rolls.map((r, i) => (
