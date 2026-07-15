@@ -93,6 +93,18 @@ export default function CampaignDetail() {
     return () => unsubscribe();
   }, [campaignId]);
 
+  // Poll campaign pending_actions every 3s while waiting for the party to act,
+  // so green checks appear in real time without a page refresh.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const camp = await base44.entities.Campaign.get(campaignId);
+        if (camp) setCampaign(prev => prev ? { ...prev, ...camp } : camp);
+      } catch { /* ignore */ }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [campaignId]);
+
   async function loadData() {
     try {
       setLoading(true);
