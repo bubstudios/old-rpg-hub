@@ -188,6 +188,24 @@
     "arc2_unlocks": {
       "type": "object",
       "description": "Tracks which Arc 2 metaplot elements have been introduced into the campaign. Keys: first_echo, suspicious_order, unity, new_titan, harvester_word, chen_wrong, black_site. Values are true when introduced."
+    },
+    "shared_item": {
+      "type": "object",
+      "description": "Item or spell currently shared with the party for info display. When updated, all party members see the item info dialog.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "shared_by": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "number"
+        }
+      }
     }
   },
   "required": [

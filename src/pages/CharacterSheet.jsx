@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ export default function CharacterSheet() {
   const [loading, setLoading] = useState(true);
   const [resting, setResting] = useState(false);
   const [infoItem, setInfoItem] = useState(null);
+  const lastSharedItemTs = useRef(0);
 
   useEffect(() => {
     load();
@@ -61,6 +62,31 @@ export default function CharacterSheet() {
       toast.error('Failed to load character');
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Listen for items shared by other party members
+  useEffect(() => {
+    const unsubscribe = base44.entities.Campaign.subscribe((event) => {
+      if (event.data?.id === campaignId && event.data?.shared_item?.timestamp) {
+        const shared = event.data.shared_item;
+        if (shared.timestamp !== lastSharedItemTs.current && shared.shared_by !== character?.name) {
+          lastSharedItemTs.current = shared.timestamp;
+          setInfoItem({ name: shared.name, type: shared.type });
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [campaignId, character]);
+
+  function handleItemClick(name, type) {
+    setInfoItem({ name, type });
+    if (campaignId && character) {
+      const ts = Date.now();
+      lastSharedItemTs.current = ts;
+      base44.entities.Campaign.update(campaignId, {
+        shared_item: { name, type, shared_by: character.name, timestamp: ts }
+      }).catch(() => {});
     }
   }
 
@@ -257,7 +283,7 @@ export default function CharacterSheet() {
               {character.equipment.map((e, i) => (
                 <button
                   key={i}
-                  onClick={() => setInfoItem({ name: e.name, type: 'equipment' })}
+                  onClick={() => handleItemClick(e.name, 'equipment')}
                   className="w-full flex items-center justify-between text-xs group hover:bg-secondary/30 -mx-1 px-1 py-0.5 rounded transition-colors"
                 >
                   <span className="text-muted-foreground font-body group-hover:text-foreground text-left">
@@ -287,7 +313,7 @@ export default function CharacterSheet() {
               {character.spells.map((s, i) => (
                 <button
                   key={i}
-                  onClick={() => setInfoItem({ name: s, type: 'spell' })}
+                  onClick={() => handleItemClick(s, 'spell')}
                   className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/40 text-muted-foreground font-body border border-border/30 hover:bg-secondary/60 hover:text-foreground transition-colors"
                 >
                   {s}
