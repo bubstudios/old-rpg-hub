@@ -22,7 +22,6 @@ import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
-import ItemInfoDialog from '@/components/ItemInfoDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,8 +46,6 @@ export default function CampaignDetail() {
   const [processing, setProcessing] = useState(false);
   const processingRef = useRef(false);
   const lastInputRef = useRef({ text: '', timestamp: 0 });
-  const lastSharedItemTs = useRef(0);
-  const [sharedItem, setSharedItem] = useState(null);
   const [latestResult, setLatestResult] = useState(null);
   const [diceOpen, setDiceOpen] = useState(false);
   const [discussMode, setDiscussMode] = useState(false);
@@ -91,12 +88,6 @@ export default function CampaignDetail() {
     const unsubscribe = base44.entities.Campaign.subscribe((event) => {
       if (event.data?.id === campaignId) {
         setCampaign(prev => prev ? { ...prev, ...event.data } : event.data);
-        // Show shared item info to all party members
-        const shared = event.data?.shared_item;
-        if (shared?.timestamp && shared.timestamp !== lastSharedItemTs.current) {
-          lastSharedItemTs.current = shared.timestamp;
-          setSharedItem(shared);
-        }
       }
     });
     return () => unsubscribe();
@@ -744,16 +735,6 @@ export default function CampaignDetail() {
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} campaign={campaign} />
       <PurchaseSessionDialog open={purchaseOpen} onOpenChange={setPurchaseOpen} campaignId={campaignId} />
       <FreeFriendsManager open={friendsOpen} onOpenChange={setFriendsOpen} campaignId={campaignId} />
-      {sharedItem && (
-        <ItemInfoDialog
-          item={sharedItem.name}
-          type={sharedItem.type}
-          gameSystem={campaign?.game_system}
-          characterClass={myCharacter?.character_class}
-          open={!!sharedItem}
-          onOpenChange={(open) => { if (!open) setSharedItem(null); }}
-        />
-      )}
     </div>
   );
 }
