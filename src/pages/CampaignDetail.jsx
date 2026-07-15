@@ -257,6 +257,13 @@ export default function CampaignDetail() {
       // Still waiting for other party members
       if (data.status === 'waiting') return;
 
+      // Everyone agreed and stood ready — no action to resolve, clear the round
+      if (data.status === 'all_agreed') {
+        await base44.entities.Campaign.update(campaignId, { pending_actions: [], dm_processing: false });
+        setCampaign(prev => prev ? { ...prev, pending_actions: [], dm_processing: false } : prev);
+        return;
+      }
+
       // Safety check: re-fetch campaign + characters to verify ALL active party
       // members have truly submitted before invoking the DM. This prevents race
       // conditions where submitRoundAction saw fewer characters than expected.

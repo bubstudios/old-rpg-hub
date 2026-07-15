@@ -1318,7 +1318,8 @@ Rules for the JSON:
 
 Remember: be the Game Master. Make rulings. Roll dice. Narrate. Keep the Legion of Doom scheming, spectacular, and dangerous.`;
 
-    const systemPrompt = isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : isHY ? hyPrompt : isBR ? brPrompt : isGB ? gbPrompt : isGang ? gangPrompt : isLOD ? lodPrompt : dndPrompt;
+    const narrationLengthDirective = '\n\n## Narration Length (CRITICAL)\nKeep narration CONCISE — roughly HALF the length of typical DM narration. Aim for 2-3 short paragraphs maximum. Focus on action, outcome, and immediate sensory detail. Cut lengthy descriptions, redundant flavor text, and purple prose. Every sentence must move the scene forward. Do not repeat what the player already said.';
+    const systemPrompt = (isTS ? tsPrompt : isDS ? dsPrompt : isSJ ? sjPrompt : isIJ ? ijPrompt : isBH ? bhPrompt : isGW ? gwPrompt : isSF ? sfPrompt : isHW ? hwPrompt : isHY ? hyPrompt : isBR ? brPrompt : isGB ? gbPrompt : isGang ? gangPrompt : isLOD ? lodPrompt : dndPrompt) + narrationLengthDirective;
 
     const charTag = isSF
       ? `${actingChar.name} the ${actingChar.race} ${actingChar.character_class} operative (STA ${actingChar.hp_current}/${actingChar.hp_max})`

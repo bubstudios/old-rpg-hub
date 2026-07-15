@@ -82,6 +82,16 @@ Deno.serve(async (req) => {
       });
     }
 
+    // All party members have acted. But if EVERYONE just agreed (no actual
+    // actions), there's nothing for the DM to resolve — clear the round.
+    const allAgreed = pending.every(a => a.is_agree);
+    if (allAgreed) {
+      await base44.asServiceRole.entities.Campaign.update(campaign_id, {
+        dm_processing: false, pending_actions: []
+      });
+      return Response.json({ status: 'all_agreed', pending_actions: [] });
+    }
+
     // All party members have acted — claim the DM invocation
     await base44.asServiceRole.entities.Campaign.update(campaign_id, { dm_processing: true });
 
