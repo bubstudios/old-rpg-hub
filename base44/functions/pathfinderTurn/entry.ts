@@ -735,6 +735,11 @@ Deno.serve(async (req) => {
     // Build small turn packet
     const userPrompt = buildTurnPacket(campaign, characters, npcList, locList, worldState, action, history, timeline, is_roll_result);
 
+    // DM Brief: the group's custom instructions for how the DM should run the table
+    const dmBriefBlock = campaign.dm_brief && String(campaign.dm_brief).trim()
+      ? `\n## DM Brief — House Style (follow this over your defaults)\nThe group has provided the following instructions for how you should run this table. Treat it as authoritative for tone, pacing, narration length, dice philosophy, NPC portrayal, and table discipline. Follow it over any generic instinct about "helpful" AI behavior. When it conflicts with your default style, the brief wins.\n\n${String(campaign.dm_brief).trim()}`
+      : '';
+
     // Compact system prompt
     const narrationStyle = narration_style || 'cinematic_simple';
     const styleDirectives = {
@@ -795,6 +800,7 @@ ${styleDirectives[narrationStyle] || styleDirectives.cinematic_simple}
 
 ## Pending Events System
 ${CANON.pendingEvents}
+${dmBriefBlock}
 
 ## Response Format
 ${CANON.response_format}`;
