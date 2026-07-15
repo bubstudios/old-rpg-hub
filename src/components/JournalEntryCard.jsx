@@ -1,8 +1,9 @@
 import { Coins, Package, MessageCircle } from 'lucide-react';
 import DiceRoller from '@/components/DiceRoller';
+import NarrationPlayer from '@/components/NarrationPlayer';
 import { enforceReadableNarration } from '@/lib/pjNarrationFilter';
 
-export default function JournalEntryCard({ entry }) {
+export default function JournalEntryCard({ entry, gameSystem }) {
   const isAction = entry.entry_type === 'action';
   const isNarration = entry.entry_type === 'narration';
 
@@ -56,6 +57,15 @@ export default function JournalEntryCard({ entry }) {
             <div className="mt-3 flex items-center gap-1.5 text-[11px] text-amber-900/70">
               <span className="font-heading">✦</span>
               <span>{entry.xp_awarded} XP awarded</span>
+            </div>
+          )}
+          {gameSystem === 'add1e' && entry.id && (
+            <div className="mt-3 pt-3 border-t border-amber-900/20 flex justify-end">
+              <NarrationPlayer
+                narration={entry.narration}
+                journalEntryId={entry.id}
+                existingAudioUrl={entry.audio_urls?.[0]}
+              />
             </div>
           )}
         </div>
