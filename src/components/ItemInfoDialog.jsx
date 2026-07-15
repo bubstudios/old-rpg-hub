@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2, Package, ScrollText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -7,64 +7,57 @@ export default function ItemInfoDialog({ item, type, gameSystem, characterClass,
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  async function fetchInfo() {
-    if (!item || info) return;
+  useEffect(() => {
+    if (!open || !item) return;
+    let cancelled = false;
     setLoading(true);
-    try {
-      const isSpell = type === 'spell';
-      const systemLabel = gameSystem === 'starfrontiers' ? 'Star Frontiers'
-        : gameSystem === 'gammaworld' ? 'Gamma World'
-        : gameSystem === 'boothill' ? 'Boot Hill'
-        : gameSystem === 'indianajones' ? 'Indiana Jones RPG'
-        : gameSystem === 'topsecret' ? 'Top Secret'
-        : gameSystem === 'ghostbusters' ? 'Ghostbusters RPG'
-        : gameSystem === 'gangbusters' ? 'Gangbusters'
-        : gameSystem === 'legionofdoom' ? 'Legion of Doom'
-        : gameSystem === 'conan' || gameSystem === 'redsonja' ? 'Hyborian RPG'
-        : 'AD&D 1st Edition';
+    setInfo(null);
 
-      const prompt = isSpell
-        ? `You are an expert RPG rules reference. In the ${systemLabel} tabletop RPG system, a ${characterClass || 'spellcaster'} has the spell "${item}" on their character sheet. Provide a concise, accurate description of this spell as it works in ${systemLabel}. Include: spell level, range, duration, area of effect, components (if applicable), and a brief plain-language description of what the spell does. If the spell name is ambiguous or does not exist in ${systemLabel}, provide the closest match. Keep it to 3-5 short paragraphs.`
-        : `You are an expert RPG rules reference. In the ${systemLabel} tabletop RPG system, a character carries "${item}" in their equipment. Provide a concise, accurate description of this item as it works in ${systemLabel}. Include: what the item is, what it does, any notable properties or magical effects, approximate value in the system's currency, and weight/encumbrance if relevant. If the item name is ambiguous or does not exist in ${systemLabel}, provide the closest match or a reasonable interpretation. Keep it to 3-5 short paragraphs.`;
+    const isSpell = type === 'spell';
+    const systemLabel = gameSystem === 'starfrontiers' ? 'Star Frontiers'
+      : gameSystem === 'gammaworld' ? 'Gamma World'
+      : gameSystem === 'boothill' ? 'Boot Hill'
+      : gameSystem === 'indianajones' ? 'Indiana Jones RPG'
+      : gameSystem === 'topsecret' ? 'Top Secret'
+      : gameSystem === 'ghostbusters' ? 'Ghostbusters RPG'
+      : gameSystem === 'gangbusters' ? 'Gangbusters'
+      : gameSystem === 'legionofdoom' ? 'Legion of Doom'
+      : gameSystem === 'conan' || gameSystem === 'redsonja' ? 'Hyborian RPG'
+      : 'AD&D 1st Edition';
 
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            description: { type: "string" },
-            properties: { type: "string" },
-            value: { type: "string" },
-            extra: { type: "string" }
-          }
+    const prompt = isSpell
+      ? `You are an expert RPG rules reference. In the ${systemLabel} tabletop RPG system, a ${characterClass || 'spellcaster'} has the spell "${item}". Explain what this spell does, how it works in play, and its key stats (level, range, duration, area of effect, components if applicable). Use plain language a player can quickly understand. If this exact spell does not exist in ${systemLabel}, use the closest match. Format your response with these fields: "description" (2-3 sentences explaining what the spell does and how it plays at the table), "properties" (key stats: level, range, duration, area of effect, components), "value" (leave empty), "extra" (any special notes or limitations).`
+      : `You are an expert RPG rules reference. In the ${systemLabel} tabletop RPG system, a character carries "${item}" in their equipment. Explain what this item is, what it does, and any notable properties or magical effects. Use plain language a player can quickly understand. Format your response with these fields: "description" (2-3 sentences explaining what the item is and what it does), "properties" (key properties: type, magical effects, bonuses, weight/encumbrance if relevant), "value" (approximate value in the system's currency), "extra" (any special notes or limitations).`;
+
+    base44.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          properties: { type: "string" },
+          value: { type: "string" },
+          extra: { type: "string" }
         }
-      });
-
-      setInfo(res);
-    } catch (e) {
-      setInfo({
+      }
+    }).then((res) => {
+      if (!cancelled) setInfo(res);
+    }).catch(() => {
+      if (!cancelled) setInfo({
         title: item,
         description: 'Unable to retrieve information at this time.',
         properties: '', value: '', extra: ''
       });
-    } finally {
-      setLoading(false);
-    }
-  }
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
 
-  function handleOpenChange(open) {
-    if (open && !info && !loading) {
-      fetchInfo();
-    }
-    if (!open) {
-      setTimeout(() => { setInfo(null); }, 200);
-    }
-    onOpenChange(open);
-  }
+    return () => { cancelled = true; };
+  }, [open, item]);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading tracking-wide flex items-center gap-2">
@@ -84,7 +77,9 @@ export default function ItemInfoDialog({ item, type, gameSystem, characterClass,
           <div className="space-y-4">
             {info.description && (
               <div>
-                <p className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1">DESCRIPTION</p>
+                <p className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1">
+                  {type === 'spell' ? 'WHAT IT DOES' : 'DESCRIPTION'}
+                </p>
                 <p className="text-sm text-foreground font-body leading-relaxed whitespace-pre-wrap">{info.description}</p>
               </div>
             )}
