@@ -10,10 +10,17 @@ Deno.serve(async (req) => {
 
     const { campaign_id, action, character_id, is_agree } = await req.json();
 
-    // Read all active characters using service role (bypasses any RLS, ensures full party)
-    const characters = await base44.asServiceRole.entities.Character.filter(
-      { campaign_id, status: 'active' }
+    // Read ALL characters for this campaign using service role (bypasses any RLS).
+    // We filter by status in code (not in the query) because some characters may
+    // have a missing/null status field that wouldn't match a DB-level filter.
+    const allCharacters = await base44.asServiceRole.entities.Character.filter(
+      { campaign_id }
     );
+    const characters = allCharacters.filter(c =>
+      c.status === 'active' || c.status === undefined || c.status === null
+    );
+
+    console.log('[submitRoundAction] campaign:', campaign_id, 'total chars:', allCharacters.length, 'active chars:', characters.length, 'active names:', characters.map(c => c.name).join(', '));
 
     const myChar = characters.find(c => c.id === character_id && c.created_by_id === user.id);
     if (!myChar) return Response.json({ error: 'Character not found' }, { status: 404 });
@@ -63,6 +70,8 @@ Deno.serve(async (req) => {
 
     const submittedIds = pending.map(a => a.character_id);
     const missing = characters.filter(c => !submittedIds.includes(c.id));
+
+    console.log('[submitRoundAction] submitted:', submittedIds.length, 'of', characters.length, 'missing:', missing.map(c => c.name).join(', '));
 
     if (missing.length > 0) {
       return Response.json({

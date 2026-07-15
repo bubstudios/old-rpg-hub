@@ -149,26 +149,8 @@ export default function CampaignDetail() {
       return;
     }
     setDiceOpen(false);
-    setProcessing(true);
-    setLatestResult(null);
-    try {
-      const dmFunc = DM2_SYSTEMS.includes(campaign?.game_system) ? 'dungeonMaster2' : 'dungeonMaster';
-      const res = await base44.functions.invoke(dmFunc, {
-        campaign_id: campaignId,
-        action: rollResult.summary,
-        acting_character_id: myCharacter.id,
-        is_roll_result: true,
-        narration_style: narrationStyle
-      });
-      setLatestResult(res.data);
-      setProcessing(false);
-      await loadData();
-      setLatestResult(null);
-    } catch (e) {
-      toast.error('The Dungeon Master falters... ' + (e.response?.data?.error || e.message));
-    } finally {
-      setProcessing(false);
-    }
+    // Route dice rolls through the round system — the DM waits for all party members
+    await submitTurn(rollResult.summary, false);
   }
 
   function isDuplicateInput(text) {
@@ -274,6 +256,22 @@ export default function CampaignDetail() {
 
       // Still waiting for other party members
       if (data.status === 'waiting') return;
+
+      // Safety check: re-fetch campaign + characters to verify ALL active party
+      // members have truly submitted before invoking the DM. This prevents race
+      // conditions where submitRoundAction saw fewer characters than expected.
+      const [freshCamp, freshChars] = await Promise.all([
+        base44.entities.Campaign.get(campaignId),
+        base44.entities.Character.filter({ campaign_id: campaignId }, '-created_date', 50)
+      ]);
+      const freshActive = freshChars.filter(c => c.status === 'active');
+      const freshSubmittedIds = (freshCamp.pending_actions || []).map(a => a.character_id);
+      const freshMissing = freshActive.filter(c => !freshSubmittedIds.includes(c.id));
+      if (freshMissing.length > 0) {
+        // Not everyone has submitted — update local state and wait
+        setCampaign(prev => prev ? { ...prev, pending_actions: freshCamp.pending_actions || [], dm_processing: false } : freshCamp);
+        return;
+      }
 
       // All party members have acted — invoke the DM
       const dmRes = await base44.functions.invoke(data.dm_function, {
