@@ -141,7 +141,6 @@ const LOD_SETUP = { worldLabel: 'CITY / BASE OF OPERATIONS', worldPlaceholder: '
 
 export default function CampaignSetupForm({ gameSystem = 'add1e', preselectModuleId, onCreated, onCancel }) {
   const [name, setName] = useState('');
-  const [mode, setMode] = useState('async');
   const [tone, setTone] = useState('balanced');
   const [worldSetting, setWorldSetting] = useState('');
   const [settingNotes, setSettingNotes] = useState('');
@@ -191,7 +190,7 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', preselectModul
       const res = await base44.functions.invoke('campaignData', {
         op: 'createCampaign',
         name: finalName,
-        mode,
+        mode: 'async',
         tone,
         world_setting: worldSetting.trim(),
         setting_notes: settingNotes.trim(),
@@ -218,29 +217,6 @@ export default function CampaignSetupForm({ gameSystem = 'add1e', preselectModul
           placeholder={setup.namePlaceholder}
           className="bg-background/60 font-body"
         />
-      </div>
-
-      {/* Play mode */}
-      <div>
-        <label className="block text-[10px] font-heading tracking-[0.15em] text-muted-foreground mb-1.5">PLAY MODE</label>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setMode('async')}
-            className={`flex-1 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${
-              mode === 'async' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            ASYNC (Play-by-post)
-          </button>
-          <button
-            onClick={() => setMode('live')}
-            className={`flex-1 px-3 py-2 rounded text-xs font-heading tracking-wide border transition-colors ${
-              mode === 'live' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            LIVE SESSION
-          </button>
-        </div>
       </div>
 
       {/* Tone */}
