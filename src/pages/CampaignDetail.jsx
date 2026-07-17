@@ -479,7 +479,7 @@ export default function CampaignDetail() {
           </div>
 
           {/* Action input */}
-          <div className="mt-4 border-t border-border/40 pt-4">
+          <div className="mt-4 rpg-card rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <Swords className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <span className="text-[10px] font-heading tracking-[0.15em] text-muted-foreground">
@@ -671,7 +671,7 @@ export default function CampaignDetail() {
 
         {/* Party sidebar */}
         <aside className="space-y-4">
-          <div className="border border-border/50 rounded-lg bg-card/40 panel-glow p-3">
+          <div className="ornate-frame rounded-lg bg-card/40 p-3">
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">THE PARTY</h3>
@@ -681,7 +681,7 @@ export default function CampaignDetail() {
           </div>
 
           {/* World state */}
-          <div className="border border-border/50 rounded-lg bg-card/40 p-3">
+          <div className="ornate-frame rounded-lg bg-card/40 p-3">
             <div className="flex items-center gap-2 mb-2.5">
               <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
               <h3 className="font-heading text-[11px] tracking-[0.15em] text-foreground">WORLD STATE</h3>
