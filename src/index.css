@@ -135,6 +135,46 @@
       0 4px 24px hsl(0 0% 0% / 0.35);
   }
 
+  /* Blurred dark library background for the command center */
+  .library-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    background-image: url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+    filter: blur(10px) brightness(0.25);
+  }
+
+  /* Gold glowing circular button (continue journey) */
+  .gold-glow {
+    background: radial-gradient(circle at 35% 30%, hsl(45 75% 58%) 0%, hsl(38 70% 45%) 60%, hsl(35 65% 32%) 100%);
+    box-shadow:
+      0 0 24px hsl(38 65% 48% / 0.45),
+      inset 0 1px 0 hsl(50 80% 70% / 0.6),
+      inset 0 -2px 6px hsl(30 50% 20% / 0.5);
+    transition: all 0.2s ease;
+  }
+  .gold-glow:hover {
+    box-shadow:
+      0 0 36px hsl(38 70% 52% / 0.65),
+      inset 0 1px 0 hsl(50 80% 72% / 0.7),
+      inset 0 -2px 6px hsl(30 50% 20% / 0.5);
+  }
+
+  /* Small parchment card for quick-action squares */
+  .parchment-card {
+    background-color: hsl(38 25% 85%);
+    background-image: radial-gradient(ellipse at 30% 20%, hsl(35 30% 80%) 0%, transparent 50%);
+    border: 1px solid hsl(35 40% 40% / 0.35);
+    box-shadow: inset 0 1px 0 hsl(38 40% 60% / 0.15), 0 2px 8px hsl(0 0% 0% / 0.15);
+    transition: all 0.2s ease;
+  }
+  .parchment-card:hover {
+    border-color: hsl(35 50% 45% / 0.55);
+    box-shadow: inset 0 1px 0 hsl(38 40% 60% / 0.2), 0 4px 14px hsl(0 0% 0% / 0.22);
+  }
+
   /* Ornamental divider */
   .divider-rune::before,
   .divider-rune::after {

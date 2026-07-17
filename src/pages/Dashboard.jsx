@@ -5,10 +5,37 @@ import { getGameSystem } from '@/lib/gameSystems';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import moment from 'moment';
 import {
-  ScrollText, Play, KeyRound, Plus, Library, Users, Compass, HelpCircle,
-  ChevronRight, Loader2, Skull, MapPin, Swords, Sparkles, ArrowRight, BookOpen
+  ScrollText, Play, KeyRound, Plus, Library, Users, Compass,
+  Loader2, Skull, MapPin, Swords, Settings, Lock, BookOpen
 } from 'lucide-react';
+
+const SYSTEM_THUMBS = {
+  add1e: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=300&q=80',
+  starfrontiers: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=300&q=80',
+  gammaworld: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80',
+  boothill: 'https://images.unsplash.com/photo-1544819075-5dbb73f17b87?w=300&q=80',
+  indianajones: 'https://images.unsplash.com/photo-1582058091505-f87a2e55885?w=300&q=80',
+  topsecret: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=300&q=80',
+  conan: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=300&q=80',
+  redsonja: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=300&q=80',
+  ghostbusters: 'https://images.unsplash.com/photo-1509248961158-e54f69343a14?w=300&q=80',
+  gangbusters: 'https://images.unsplash.com/photo-1544819075-5dbb73f17b87?w=300&q=80',
+  legionofdoom: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80',
+  pathfinder: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=300&q=80',
+};
+
+function thumbFor(system) {
+  return SYSTEM_THUMBS[system] || SYSTEM_THUMBS.add1e;
+}
+
+const STATUS_STYLES = {
+  active: 'bg-emerald-200/50 text-emerald-800 border-emerald-600/30',
+  paused: 'bg-red-200/50 text-red-800 border-red-600/30',
+  completed: 'bg-emerald-200/50 text-emerald-800 border-emerald-600/30',
+  setup: 'bg-amber-200/50 text-amber-800 border-amber-600/30',
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -95,235 +122,215 @@ export default function Dashboard() {
 
   const campaigns = data?.campaigns || [];
   const characters = data?.characters || [];
-  const featured = data?.featured || [];
   const lastCampaign = campaigns[0] || null;
   const invites = campaigns.filter(c => !c.has_character);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      {/* Hero */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded wax-seal flex items-center justify-center shrink-0 animate-flicker">
-            <Compass className="w-5 h-5 text-primary-foreground" strokeWidth={1.4} />
-          </div>
-          <div>
-            <h1 className="font-heading font-700 text-2xl sm:text-3xl tracking-[0.08em] text-foreground">
+    <div className="min-h-screen relative">
+      <div className="library-bg" />
+
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10">
+        {/* Central parchment panel */}
+        <div className="parchment-ornate rounded-xl p-5 sm:p-7">
+          {/* Header — centered */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full wax-seal mb-3 animate-flicker">
+              <Compass className="w-5 h-5 text-primary-foreground" strokeWidth={1.4} />
+            </div>
+            <h1 className="font-heading font-700 text-xl sm:text-2xl tracking-[0.18em] text-amber-950">
               COMMAND CENTER
             </h1>
-            <p className="font-tome italic text-sm text-muted-foreground">
-              Your saga awaits — resume a tale, join a party, or begin anew.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Resume last campaign */}
-      {lastCampaign ? (
-        <button
-          onClick={() => navigate(`/campaign/${lastCampaign.id}`)}
-          className="group w-full text-left mb-6 relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card/60 to-background ornate-frame hover:border-primary/60 transition-all p-5"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full wax-seal flex items-center justify-center shrink-0">
-              <Play className="w-5 h-5 text-primary-foreground" strokeWidth={1.5} />
+            <div className="flex items-center gap-3 mt-2.5">
+              <span className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-700/40" />
+              <span className="text-amber-700/50 text-xs">◆</span>
+              <span className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-700/40" />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-heading tracking-[0.2em] text-primary/80 uppercase mb-0.5">RESUME LAST CAMPAIGN</p>
-              <h2 className="font-heading font-700 text-lg sm:text-xl text-foreground truncate group-hover:text-primary transition-colors">{lastCampaign.name}</h2>
-              <div className="flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground font-body mt-1">
-                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Ch. {lastCampaign.current_chapter}</span>
-                <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {lastCampaign.party_count} {lastCampaign.party_count === 1 ? 'hero' : 'heroes'}</span>
-                <span>{getGameSystem(lastCampaign.game_system || 'add1e').short}</span>
-                {lastCampaign.combat_active && <span className="flex items-center gap-1 text-red-400"><Skull className="w-3 h-3" /> COMBAT</span>}
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+            <p className="font-tome italic text-xs text-amber-900/50 mt-2">Your saga awaits</p>
           </div>
-        </button>
-      ) : (
-        <div className="mb-6 rounded-xl border border-dashed border-border/50 p-5 text-center">
-          <p className="font-tome italic text-sm text-muted-foreground">No campaigns yet — begin your first tale below.</p>
-        </div>
-      )}
 
-      {/* My Campaigns */}
-      {campaigns.length > 1 && (
-        <Panel icon={ScrollText} title="My Campaigns" count={campaigns.length} className="mb-8">
-          <div className="space-y-2">
-            {campaigns.map((c) => {
-              const sys = getGameSystem(c.game_system || 'add1e');
-              const dead = c.combat_active;
-              return (
-                <Link key={c.id} to={`/campaign/${c.id}`} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/40 bg-card/30 hover:border-primary/40 hover:bg-secondary/20 transition-all group">
-                  <div className="w-9 h-9 rounded-full bg-secondary/60 flex items-center justify-center shrink-0">
-                    <ScrollText className="w-4 h-4 text-primary/70" strokeWidth={1.5} />
+          {/* Resume Last Campaign */}
+          {lastCampaign ? (
+            <button
+              onClick={() => navigate(`/campaign/${lastCampaign.id}`)}
+              className="w-full text-left mb-5 group"
+            >
+              <div className="ornate-frame rounded-xl p-3 bg-gradient-to-br from-amber-950/10 to-amber-900/5 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 border-amber-700/40 shadow-lg bg-amber-800/20">
+                    <img src={thumbFor(lastCampaign.game_system)} className="w-full h-full object-cover" alt="" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-heading font-600 text-sm text-foreground group-hover:text-primary transition-colors truncate">{c.name}</p>
-                    <p className="text-[11px] text-muted-foreground font-body truncate">
-                      {sys.short} · Ch. {c.current_chapter} · {c.party_count} {c.party_count === 1 ? 'hero' : 'heroes'}
-                    </p>
+                    <p className="text-[9px] font-heading tracking-[0.2em] text-amber-700/70 uppercase mb-0.5">Resume Last Campaign</p>
+                    <h2 className="font-heading font-700 text-base sm:text-lg text-amber-950 truncate group-hover:text-amber-800 transition-colors">{lastCampaign.name}</h2>
+                    <div className="flex items-center gap-2 flex-wrap text-[10px] text-amber-900/50 font-body mt-0.5">
+                      <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" /> Ch.{lastCampaign.current_chapter}</span>
+                      <span className="flex items-center gap-0.5"><Users className="w-2.5 h-2.5" /> {lastCampaign.party_count} {lastCampaign.party_count === 1 ? 'hero' : 'heroes'}</span>
+                      {lastCampaign.combat_active && <span className="flex items-center gap-0.5 text-red-700"><Skull className="w-2.5 h-2.5" /> Combat</span>}
+                    </div>
                   </div>
-                  {dead && <span className="text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded bg-destructive/20 text-destructive shrink-0">COMBAT</span>}
-                  <span className="text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded bg-secondary/60 text-muted-foreground shrink-0">{sys.short}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </Panel>
-      )}
-
-      {/* Quick actions */}
-      <div className="grid sm:grid-cols-3 gap-3 mb-8">
-        <ActionCard icon={KeyRound} title="Join by Code" desc="Enter a party invite code">
-          <div className="flex gap-2 mt-2">
-            <Input value={joinCode} onChange={(e) => setJoinCode(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }} placeholder="K7MP2Q" className="bg-background/60 font-heading tracking-wider uppercase" maxLength={6} />
-            <Button onClick={handleJoin} disabled={joining || !joinCode.trim()} className="bg-primary text-primary-foreground hover:bg-primary/90 px-3">
-              {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-            </Button>
-          </div>
-        </ActionCard>
-        <ActionCard icon={Plus} title="Create New Campaign" desc="Pick a realm and begin" to="/games" />
-        <ActionCard icon={Library} title="Browse Adventures" desc="The shared module library" to="/modules" />
-      </div>
-
-      {/* My Characters + Recent Invites */}
-      <div className="grid lg:grid-cols-2 gap-5 mb-8">
-        <Panel icon={Swords} title="My Characters" count={characters.length}>
-          {characters.length === 0 ? (
-            <Empty text="No characters yet. Create or join a campaign to roll one." />
+                  <div className="w-11 h-11 rounded-full gold-glow flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Play className="w-4 h-4 text-amber-50" strokeWidth={2} fill="currentColor" />
+                  </div>
+                </div>
+              </div>
+            </button>
           ) : (
-            <div className="space-y-2">
-              {characters.map((ch) => {
-                const sys = getGameSystem(ch.game_system || 'add1e');
-                const dead = ch.status === 'dead';
+            <div className="mb-5 text-center py-6">
+              <p className="font-tome italic text-sm text-amber-900/50">No campaigns yet — your saga awaits below.</p>
+            </div>
+          )}
+
+          {/* Quick Actions — 3 parchment squares */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
+            {/* Join by Code */}
+            <div className="parchment-card rounded-lg p-2.5 text-center">
+              <KeyRound className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-amber-800/70" strokeWidth={1.5} />
+              <p className="text-[8px] sm:text-[9px] font-heading tracking-wider text-amber-900/70 mb-1.5">JOIN BY CODE</p>
+              <Input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleJoin(); }}
+                placeholder="CODE"
+                className="bg-amber-50/50 font-heading tracking-wider uppercase text-center text-[10px] h-7 border-amber-700/30 text-amber-900 placeholder:text-amber-700/30"
+                maxLength={6}
+              />
+              <Button
+                onClick={handleJoin}
+                disabled={joining || !joinCode.trim()}
+                className="w-full mt-1.5 h-7 text-[9px] bg-amber-800/80 text-amber-50 hover:bg-amber-800"
+              >
+                {joining ? <Loader2 className="w-3 h-3 animate-spin" /> : 'JOIN'}
+              </Button>
+            </div>
+            {/* Create New Campaign */}
+            <Link to="/games" className="parchment-card rounded-lg p-2.5 text-center flex flex-col items-center justify-start hover:brightness-105 transition-all">
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-amber-800/70" strokeWidth={1.5} />
+              <p className="text-[8px] sm:text-[9px] font-heading tracking-wider text-amber-900/70 leading-tight">CREATE NEW<br />CAMPAIGN</p>
+            </Link>
+            {/* Browse Adventures */}
+            <Link to="/modules" className="parchment-card rounded-lg p-2.5 text-center flex flex-col items-center justify-start hover:brightness-105 transition-all">
+              <Library className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-amber-800/70" strokeWidth={1.5} />
+              <p className="text-[8px] sm:text-[9px] font-heading tracking-wider text-amber-900/70 leading-tight">BROWSE<br />ADVENTURES</p>
+            </Link>
+          </div>
+
+          {/* Your Chronicles */}
+          <SectionHeader title="YOUR CHRONICLES" />
+          {campaigns.length === 0 ? (
+            <p className="font-tome italic text-xs text-amber-900/40 text-center py-3">No chronicles yet.</p>
+          ) : (
+            <div>
+              {campaigns.map((c) => {
+                const sys = getGameSystem(c.game_system || 'add1e');
                 return (
-                  <Link key={ch.id} to={`/campaign/${ch.campaign_id}/character/${ch.id}`} className={`flex items-center gap-3 p-2.5 rounded-lg border border-border/40 bg-card/30 hover:border-primary/40 hover:bg-secondary/20 transition-all group ${dead ? 'opacity-50' : ''}`}>
-                    <div className="w-9 h-9 rounded-full bg-secondary/60 flex items-center justify-center shrink-0">
-                      <ScrollText className="w-4 h-4 text-primary/70" strokeWidth={1.5} />
+                  <Link key={c.id} to={`/campaign/${c.id}`} className="flex items-center gap-2.5 py-2 border-b border-amber-800/15 hover:bg-amber-700/5 transition-colors group">
+                    <div className="w-9 h-9 rounded overflow-hidden shrink-0 border border-amber-700/25 bg-amber-800/20">
+                      <img src={thumbFor(c.game_system)} className="w-full h-full object-cover" alt="" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-heading font-600 text-sm text-foreground group-hover:text-primary transition-colors truncate">{ch.name}</p>
-                      <p className="text-[11px] text-muted-foreground font-body truncate">
-                        {ch.race} {ch.character_class} · Lvl {ch.level} · {ch.campaign_name || 'Unknown campaign'}
-                      </p>
+                      <p className="font-heading font-600 text-sm text-amber-950 group-hover:text-amber-800 transition-colors truncate">{c.name}</p>
+                      <p className="text-[10px] text-amber-900/45 font-body truncate">{sys.short} · Ch.{c.current_chapter} · {c.party_count} {c.party_count === 1 ? 'hero' : 'heroes'}</p>
                     </div>
-                    {dead ? (
-                      <span className="text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded bg-destructive/20 text-destructive shrink-0">FALLEN</span>
-                    ) : (
-                      <span className="text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded bg-secondary/60 text-muted-foreground shrink-0">{sys.short}</span>
-                    )}
+                    <span className={`text-[8px] sm:text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded border ${STATUS_STYLES[c.status] || STATUS_STYLES.setup}`}>
+                      {(c.status || 'setup').toUpperCase()}
+                    </span>
+                    <span className="hidden sm:block text-[10px] text-amber-900/35 font-body whitespace-nowrap w-20 text-right">{moment(c.updated_date).fromNow()}</span>
+                    <Settings className="w-3.5 h-3.5 text-amber-800/25 shrink-0" strokeWidth={1.5} />
+                    {!c.is_owner && <Lock className="w-3.5 h-3.5 text-amber-800/25 shrink-0" strokeWidth={1.5} />}
                   </Link>
                 );
               })}
             </div>
           )}
-        </Panel>
 
-        <Panel icon={Sparkles} title="Recent Invites" count={invites.length}>
-          {invites.length === 0 ? (
-            <Empty text="No pending invites. Share your campaign codes to gather a party." />
-          ) : (
-            <div className="space-y-2">
-              {invites.map((c) => (
-                <button key={c.id} onClick={() => navigate(`/campaign/${c.id}/create-character`)} className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-border/40 bg-card/30 hover:border-primary/40 hover:bg-secondary/20 transition-all group text-left">
-                  <div className="w-9 h-9 rounded-full bg-amber-900/30 flex items-center justify-center shrink-0">
-                    <KeyRound className="w-4 h-4 text-amber-400" strokeWidth={1.5} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-heading font-600 text-sm text-foreground group-hover:text-primary transition-colors truncate">{c.name}</p>
-                    <p className="text-[11px] text-muted-foreground font-body truncate">
-                      {getGameSystem(c.game_system || 'add1e').short} · {c.is_owner ? 'You created · awaiting your hero' : 'Awaiting your character'}
-                    </p>
-                  </div>
-                  <span className="text-[10px] font-heading tracking-wide text-amber-400 shrink-0">JOIN</span>
-                </button>
-              ))}
-            </div>
+          {/* My Characters */}
+          {characters.length > 0 && (
+            <>
+              <SectionHeader title="MY CHARACTERS" className="mt-5" />
+              <div>
+                {characters.map((ch) => {
+                  const sys = getGameSystem(ch.game_system || 'add1e');
+                  const dead = ch.status === 'dead';
+                  return (
+                    <Link key={ch.id} to={`/campaign/${ch.campaign_id}/character/${ch.id}`} className={`flex items-center gap-2.5 py-2 border-b border-amber-800/15 hover:bg-amber-700/5 transition-colors group ${dead ? 'opacity-50' : ''}`}>
+                      <div className="w-9 h-9 rounded-full bg-amber-200/40 border border-amber-700/25 flex items-center justify-center shrink-0">
+                        <ScrollText className="w-4 h-4 text-amber-800/60" strokeWidth={1.5} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-heading font-600 text-sm text-amber-950 group-hover:text-amber-800 transition-colors truncate">{ch.name}</p>
+                        <p className="text-[10px] text-amber-900/45 font-body truncate">{ch.race} {ch.character_class} · Lvl {ch.level}</p>
+                      </div>
+                      {dead ? (
+                        <span className="text-[8px] sm:text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded border bg-red-200/50 text-red-800 border-red-600/30">FALLEN</span>
+                      ) : (
+                        <span className="text-[8px] sm:text-[9px] font-heading tracking-wider px-1.5 py-0.5 rounded border bg-amber-200/40 text-amber-800/60 border-amber-700/25">{sys.short}</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
           )}
-        </Panel>
-      </div>
 
-      {/* Featured adventures */}
-      <Panel icon={Compass} title="Featured Public Adventures" count={featured.length} className="mb-8">
-        {featured.length === 0 ? (
-          <Empty text="No shared adventures yet. Upload a module to the library to feature it." />
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {featured.map((m) => (
-              <Link key={m.id} to="/modules" className="block p-3 rounded-lg border border-border/40 bg-card/30 hover:border-primary/40 hover:bg-secondary/20 transition-all group">
-                <p className="font-heading font-600 text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1">{m.title}</p>
-                {m.author && <p className="text-[10px] text-muted-foreground font-body">by {m.author}</p>}
-                <p className="text-[11px] text-muted-foreground/80 font-body mt-1 line-clamp-2 leading-relaxed">{m.description || 'No description.'}</p>
-                <p className="text-[9px] font-heading tracking-wider text-primary/70 mt-2">{getGameSystem(m.game_system || 'add1e').short}</p>
-              </Link>
-            ))}
+          {/* Pending Invites */}
+          {invites.length > 0 && (
+            <>
+              <SectionHeader title="PENDING INVITES" className="mt-5" />
+              <div>
+                {invites.map((c) => (
+                  <button key={c.id} onClick={() => navigate(`/campaign/${c.id}/create-character`)} className="w-full flex items-center gap-2.5 py-2 border-b border-amber-800/15 hover:bg-amber-700/5 transition-colors group text-left">
+                    <div className="w-9 h-9 rounded-full bg-amber-200/40 border border-amber-700/25 flex items-center justify-center shrink-0">
+                      <KeyRound className="w-4 h-4 text-amber-800/60" strokeWidth={1.5} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-heading font-600 text-sm text-amber-950 group-hover:text-amber-800 transition-colors truncate">{c.name}</p>
+                      <p className="text-[10px] text-amber-900/45 font-body truncate">{c.is_owner ? 'Awaiting your hero' : 'Join the party'}</p>
+                    </div>
+                    <span className="text-[10px] font-heading tracking-wide text-amber-700/60">JOIN</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* How It Works */}
+          <SectionHeader title="HOW IT WORKS" className="mt-5" />
+          <div className="space-y-1">
+            <StepRow icon={Compass} title="Pick a Realm" desc="Choose from AD&D, Star Frontiers, Gamma World, Boot Hill, and more." />
+            <StepRow icon={Plus} title="Create or Join a Campaign" desc="Start fresh, import an ongoing game, or enter an invite code." />
+            <StepRow icon={ScrollText} title="Roll a Character" desc="Generate stats by the system's rules, or import a sheet." />
+            <StepRow icon={Swords} title="Declare Your Actions" desc="The AI GM narrates, enforces rules, tracks HP, XP, loot, and story." />
           </div>
-        )}
-      </Panel>
-
-      {/* Learn how it works */}
-      <Panel icon={HelpCircle} title="Learn How It Works">
-        <div className="grid sm:grid-cols-2 gap-3">
-          <Step n={1} title="Pick a realm" desc="Choose from AD&D, Star Frontiers, Gamma World, and many more classic systems." />
-          <Step n={2} title="Create or join a campaign" desc="Start fresh with a custom world, import an ongoing game, or enter an invite code." />
-          <Step n={3} title="Roll a character" desc="Generate stats by the system's rules, or import an existing character sheet." />
-          <Step n={4} title="Declare your actions" desc="The AI Game Master narrates the world, enforces the rules, and tracks HP, XP, loot, NPCs, and the story." />
+          <div className="flex gap-2 mt-3 flex-wrap justify-center">
+            <Link to="/games"><Button variant="outline" size="sm" className="border-amber-700/30 text-amber-800 hover:bg-amber-700/10"><Plus className="w-3.5 h-3.5 mr-1" /> Choose a Realm</Button></Link>
+            <Link to="/modules"><Button variant="ghost" size="sm" className="text-amber-800/50 hover:text-amber-800"><Library className="w-3.5 h-3.5 mr-1" /> Library</Button></Link>
+            <Link to="/how-to-use"><Button variant="ghost" size="sm" className="text-amber-800/50 hover:text-amber-800"><BookOpen className="w-3.5 h-3.5 mr-1" /> How to Use</Button></Link>
+          </div>
         </div>
-        <div className="flex gap-2 mt-4 flex-wrap">
-          <Link to="/games"><Button variant="outline" className="border-primary/40 text-primary hover:bg-primary/10"><Plus className="w-4 h-4 mr-1.5" /> Choose a Realm</Button></Link>
-          <Link to="/modules"><Button variant="ghost" className="text-muted-foreground hover:text-foreground"><Library className="w-4 h-4 mr-1.5" /> Browse Library</Button></Link>
-          <Link to="/how-to-use"><Button variant="ghost" className="text-muted-foreground hover:text-foreground"><BookOpen className="w-4 h-4 mr-1.5" /> How to Use</Button></Link>
-        </div>
-      </Panel>
-    </div>
-  );
-}
-
-function ActionCard({ icon: Icon, title, desc, to, children }) {
-  const content = (
-    <div className="h-full rpg-card rounded-lg p-4 hover:border-primary/50 transition-all">
-      <div className="flex items-center gap-2 mb-1">
-        <Icon className="w-4 h-4 text-primary" strokeWidth={1.5} />
-        <h3 className="font-heading text-xs tracking-[0.15em] text-foreground">{title.toUpperCase()}</h3>
       </div>
-      <p className="text-[11px] text-muted-foreground font-body mb-2">{desc}</p>
-      {children}
     </div>
   );
-  if (to) return <Link to={to} className="block h-full">{content}</Link>;
-  return content;
 }
 
-function Panel({ icon: Icon, title, count, children, className = '' }) {
+function SectionHeader({ title, className = '' }) {
   return (
-    <div className={`ornate-frame rounded-lg bg-card/30 p-4 ${className}`}>
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-4 h-4 text-primary" strokeWidth={1.5} />
-        <h3 className="font-heading text-xs tracking-[0.15em] text-foreground">{title.toUpperCase()}</h3>
-        {count != null && <span className="text-[10px] text-muted-foreground/50 ml-auto">{count}</span>}
+    <div className={`flex items-center gap-3 mb-1 ${className}`}>
+      <span className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-700/30" />
+      <h3 className="font-heading text-[11px] tracking-[0.2em] text-amber-800/60">{title}</h3>
+      <span className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-700/30" />
+    </div>
+  );
+}
+
+function StepRow({ icon: Icon, title, desc }) {
+  return (
+    <div className="flex items-start gap-2.5 py-1.5">
+      <div className="w-7 h-7 rounded-full wax-seal flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="w-3.5 h-3.5 text-primary-foreground" strokeWidth={1.5} />
       </div>
-      {children}
-    </div>
-  );
-}
-
-function Empty({ text }) {
-  return (
-    <div className="text-center py-6">
-      <p className="font-tome italic text-xs text-muted-foreground/70 leading-relaxed">{text}</p>
-    </div>
-  );
-}
-
-function Step({ n, title, desc }) {
-  return (
-    <div className="flex gap-3">
-      <div className="w-6 h-6 rounded-full wax-seal flex items-center justify-center shrink-0 text-[11px] font-heading font-700 text-primary-foreground">{n}</div>
       <div>
-        <p className="font-heading font-600 text-sm text-foreground">{title}</p>
-        <p className="text-[11px] text-muted-foreground font-body leading-relaxed mt-0.5">{desc}</p>
+        <p className="font-heading font-600 text-sm text-amber-950">{title}</p>
+        <p className="text-[11px] text-amber-900/45 font-body leading-relaxed">{desc}</p>
       </div>
     </div>
   );
