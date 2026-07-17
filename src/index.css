@@ -210,6 +210,52 @@
       0 4px 24px hsl(0 0% 0% / 0.35);
   }
 
+  /* Cathedral Dark — gothic stone background for the command center */
+  .cathedral-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    background-image: url('https://media.base44.com/images/public/6a4af4087166276674b33cf8/421622c63_generated_image.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+
+  /* Cathedral arched panel — dark stone with gold leading */
+  .cathedral-panel {
+    background:
+      radial-gradient(ellipse at top, rgba(102, 10, 18, 0.12) 0%, transparent 60%),
+      linear-gradient(180deg, #12100d 0%, #0d0a08 100%);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 16px;
+    box-shadow:
+      inset 0 1px 0 rgba(212, 175, 55, 0.12),
+      inset 0 0 40px rgba(0, 0, 0, 0.5),
+      0 20px 60px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Stained-glass crimson arch banner */
+  .crimson-arch {
+    background:
+      radial-gradient(ellipse at top, rgba(102, 10, 18, 0.6) 0%, rgba(60, 5, 10, 0.8) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 8px 8px 4px 4px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(102, 10, 18, 0.2);
+  }
+
+  /* Dark inset panel with gold leading lines — for cards/rows */
+  .gothic-inset {
+    background: linear-gradient(180deg, #1a1612 0%, #12100d 100%);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 8px;
+    box-shadow: inset 0 1px 0 rgba(212, 175, 55, 0.06), inset 0 0 16px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Candlelight amber glow */
+  .candle-glow {
+    box-shadow: 0 0 24px rgba(212, 175, 55, 0.15), inset 0 1px 0 rgba(212, 175, 55, 0.2);
+  }
+
   /* Blurred dark library background for the command center */
   .library-bg {
     position: fixed;
