@@ -40,7 +40,7 @@ export default function JournalEntryCard({ entry, gameSystem }) {
   if (isNarration) {
     return (
       <div className="animate-ink">
-        <div className="tome-surface rounded-lg rounded-tl-sm p-5">
+        <div className="parchment-ornate rounded-lg rounded-tl-sm p-5">
           <p className="tome-text text-sm whitespace-pre-wrap">{enforceReadableNarration(entry.narration)}</p>
           {entry.dice_rolls && entry.dice_rolls.length > 0 && (
             <div className="mt-4 pt-3 border-t border-amber-900/20 space-y-1.5">

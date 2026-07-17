@@ -7,7 +7,7 @@ export default function DMNarration({ narration, diceRolls }) {
 
   return (
     <div className="animate-ink">
-      <div className="tome-surface rounded-lg p-6 sm:p-8 relative overflow-hidden">
+      <div className="parchment-ornate rounded-lg p-6 sm:p-8 relative overflow-hidden">
         {/* Corner flourishes */}
         <div className="absolute top-3 left-3 text-primary/30">
           <ScrollText className="w-4 h-4" strokeWidth={1} />

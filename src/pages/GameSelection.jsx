@@ -90,7 +90,7 @@ export default function GameSelection() {
                     <button
                       key={game.id}
                       onClick={() => navigate(`/game/${game.id}`)}
-                      className="group relative overflow-hidden rounded-xl border border-border/60 text-left h-[26rem] flex flex-col justify-end panel-glow hover:border-primary/50 transition-all"
+                      className="group relative overflow-hidden rounded-xl border border-border/60 text-left h-[26rem] flex flex-col justify-end ornate-frame hover:border-primary/50 transition-all"
                     >
                       {game.cardImage ? (
                         <img

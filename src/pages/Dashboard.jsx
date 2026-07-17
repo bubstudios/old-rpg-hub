@@ -122,7 +122,7 @@ export default function Dashboard() {
       {lastCampaign ? (
         <button
           onClick={() => navigate(`/campaign/${lastCampaign.id}`)}
-          className="group w-full text-left mb-6 relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card/60 to-background panel-glow hover:border-primary/60 transition-all p-5"
+          className="group w-full text-left mb-6 relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card/60 to-background ornate-frame hover:border-primary/60 transition-all p-5"
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full wax-seal flex items-center justify-center shrink-0">
@@ -283,7 +283,7 @@ export default function Dashboard() {
 
 function ActionCard({ icon: Icon, title, desc, to, children }) {
   const content = (
-    <div className="h-full border border-border/50 rounded-lg p-4 bg-card/40 panel-glow hover:border-primary/40 hover:bg-secondary/20 transition-all">
+    <div className="h-full rpg-card rounded-lg p-4 hover:border-primary/50 transition-all">
       <div className="flex items-center gap-2 mb-1">
         <Icon className="w-4 h-4 text-primary" strokeWidth={1.5} />
         <h3 className="font-heading text-xs tracking-[0.15em] text-foreground">{title.toUpperCase()}</h3>
@@ -298,7 +298,7 @@ function ActionCard({ icon: Icon, title, desc, to, children }) {
 
 function Panel({ icon: Icon, title, count, children, className = '' }) {
   return (
-    <div className={`border border-border/50 rounded-lg bg-card/30 panel-glow p-4 ${className}`}>
+    <div className={`ornate-frame rounded-lg bg-card/30 p-4 ${className}`}>
       <div className="flex items-center gap-2 mb-3">
         <Icon className="w-4 h-4 text-primary" strokeWidth={1.5} />
         <h3 className="font-heading text-xs tracking-[0.15em] text-foreground">{title.toUpperCase()}</h3>

@@ -22,6 +22,7 @@ import InviteDialog from '@/components/InviteDialog';
 import RoundStatus from '@/components/RoundStatus';
 import PurchaseSessionDialog from '@/components/PurchaseSessionDialog';
 import FreeFriendsManager from '@/components/FreeFriendsManager';
+import DmBriefDialog from '@/components/DmBriefDialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -708,28 +709,12 @@ export default function CampaignDetail() {
       </div>
 
       {/* DM Brief editor (owner only) */}
-      <Dialog open={briefOpen} onOpenChange={setBriefOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-heading tracking-wide">Dungeon Master Brief</DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-muted-foreground font-body leading-relaxed">
-            Custom instructions for how the DM runs this table — tone, pacing, narration length, dice philosophy, NPCs, and table discipline. The DM reads this every turn and follows it over its defaults.
-          </p>
-          <Textarea
-            value={briefText}
-            onChange={(e) => setBriefText(e.target.value)}
-            placeholder="Paste your DM Brief here..."
-            className="min-h-[320px] font-body text-sm"
-          />
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setBriefOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveBrief} disabled={savingBrief} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              {savingBrief ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Brief'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DmBriefDialog
+        open={briefOpen}
+        onOpenChange={setBriefOpen}
+        campaignId={campaignId}
+        initialBrief={campaign.dm_brief}
+      />
 
       <EndSessionDialog open={endSessionOpen} onOpenChange={setEndSessionOpen} campaignId={campaignId} />
       <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} campaign={campaign} />
