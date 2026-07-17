@@ -80,16 +80,16 @@ export default function DmBriefDialog({ open, onOpenChange, campaignId, initialB
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto parchment-panel">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto ornate-frame bg-card/95 backdrop-blur-sm">
         <DialogHeader>
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full wax-seal flex items-center justify-center shrink-0">
               <ScrollText className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
             </div>
-            <DialogTitle className="font-heading tracking-wide text-lg text-amber-950">Dungeon Master Brief</DialogTitle>
+            <DialogTitle className="font-heading tracking-wide text-lg text-foreground">Dungeon Master Brief</DialogTitle>
           </div>
         </DialogHeader>
-        <p className="text-xs text-amber-900/60 font-body leading-relaxed">
+        <p className="text-xs text-muted-foreground font-body leading-relaxed">
           Customize how your AI Game Master runs this campaign. Set the tone, pacing, narration style, and story focus. The DM reads this every turn and follows it over its defaults.
         </p>
 
@@ -111,7 +111,7 @@ export default function DmBriefDialog({ open, onOpenChange, campaignId, initialB
               value={fields.npcBehavior}
               onChange={e => update('npcBehavior', e.target.value)}
               placeholder="e.g. NPCs should have distinct voices and act on their own motivations. Don't make all NPCs friendly."
-              className="min-h-[70px] font-body text-sm bg-amber-50/30 border-amber-700/25 text-amber-950 placeholder:text-amber-700/30 focus-visible:ring-amber-500/30"
+              className="min-h-[70px] font-body text-sm bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/30"
             />
           </Field>
 
@@ -120,7 +120,7 @@ export default function DmBriefDialog({ open, onOpenChange, campaignId, initialB
               value={fields.storyFocus}
               onChange={e => update('storyFocus', e.target.value)}
               placeholder="e.g. Keep the story focused on the main quest and current objectives. Each turn should advance the plot."
-              className="min-h-[70px] font-body text-sm bg-amber-50/30 border-amber-700/25 text-amber-950 placeholder:text-amber-700/30 focus-visible:ring-amber-500/30"
+              className="min-h-[70px] font-body text-sm bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/30"
             />
           </Field>
 
@@ -129,13 +129,13 @@ export default function DmBriefDialog({ open, onOpenChange, campaignId, initialB
               value={fields.customNotes}
               onChange={e => update('customNotes', e.target.value)}
               placeholder="e.g. Don't pull punches. If a character would die, let them die. Reward creative thinking."
-              className="min-h-[100px] font-body text-sm bg-amber-50/30 border-amber-700/25 text-amber-950 placeholder:text-amber-700/30 focus-visible:ring-amber-500/30"
+              className="min-h-[100px] font-body text-sm bg-background/60 border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/30"
             />
           </Field>
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-amber-800/60 hover:text-amber-800">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground">
             Cancel
           </Button>
           <Button
@@ -154,8 +154,8 @@ export default function DmBriefDialog({ open, onOpenChange, campaignId, initialB
 function Field({ label, hint, children }) {
   return (
     <div>
-      <Label className="text-[11px] font-heading tracking-wide text-amber-800/60">{label}</Label>
-      {hint && <p className="text-[10px] text-amber-900/50 font-body mb-1.5">{hint}</p>}
+      <Label className="text-[11px] font-heading tracking-wide text-muted-foreground">{label}</Label>
+      {hint && <p className="text-[10px] text-muted-foreground/60 font-body mb-1.5">{hint}</p>}
       {children}
     </div>
   );
@@ -171,8 +171,8 @@ function PillSelect({ options, value, onChange }) {
           onClick={() => onChange(opt)}
           className={`px-2.5 py-1 rounded text-[11px] font-heading border transition-colors ${
             value === opt
-              ? 'border-amber-500/50 text-amber-800 bg-amber-100/50'
-              : 'border-amber-700/25 text-amber-900/50 hover:text-amber-800 hover:border-amber-600/40'
+              ? 'border-primary/50 text-primary bg-primary/10'
+              : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30'
           }`}
         >
           {opt}
