@@ -42,6 +42,25 @@
     --sidebar-accent-foreground: 40 30% 86%;
     --sidebar-border: 30 12% 18%;
     --sidebar-ring: 38 65% 48%;
+
+    /* RPG Fantasy Design System — exact color tokens */
+    --rpg-bg: #120d0a;
+    --rpg-bg-soft: #1d1510;
+    --rpg-panel: rgba(37, 25, 18, 0.92);
+    --rpg-panel-dark: #17100c;
+    --rpg-parchment: #d8c49a;
+    --rpg-parchment-light: #ead9ae;
+    --rpg-parchment-dark: #8e7144;
+    --rpg-gold: #c99a3f;
+    --rpg-gold-bright: #f0c66d;
+    --rpg-gold-muted: #8d6a2e;
+    --rpg-red: #8f1f2d;
+    --rpg-red-glow: #c43345;
+    --rpg-text: #f3ead8;
+    --rpg-text-muted: #cbb99a;
+    --rpg-text-dark: #2b1b10;
+    --rpg-border: rgba(201, 154, 63, 0.45);
+    --rpg-shadow: rgba(0, 0, 0, 0.65);
   }
 }
 
@@ -121,6 +140,62 @@
     box-shadow:
       inset 0 1px 0 hsl(38 50% 55% / 0.18),
       0 6px 24px hsl(0 0% 0% / 0.4);
+  }
+
+  /* RPG card inner trim */
+  .rpg-card-inner {
+    border: 1px solid rgba(201, 154, 63, 0.25);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  /* Fantasy buttons */
+  .rpg-button {
+    background: linear-gradient(180deg, #5b3518, #2b160d);
+    color: var(--rpg-text);
+    border: 1px solid var(--rpg-gold);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 12px rgba(201, 154, 63, 0.18);
+    font-family: var(--font-heading);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+  .rpg-button:hover {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 18px rgba(201, 154, 63, 0.35);
+    border-color: var(--rpg-gold-bright);
+  }
+  .rpg-button:active {
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+  .rpg-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .rpg-button-primary {
+    background: radial-gradient(circle at top, #f1bf62, #8a4b18 55%, #32150a);
+    color: #fff5d7;
+    border: 1px solid #f0c66d;
+  }
+  .rpg-button-primary:hover {
+    background: radial-gradient(circle at top, #f5cc78, #9a5520 55%, #3a1b0e);
+    box-shadow: 0 0 24px rgba(240, 198, 109, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  .rpg-button-danger {
+    background: radial-gradient(circle at top, #c43345, #8f1f2d 55%, #3a0d14);
+    color: #ffe0e0;
+    border: 1px solid #c43345;
+  }
+
+  /* Full parchment panel — for narration, modals, character creation */
+  .parchment-panel {
+    background:
+      radial-gradient(circle at top left, rgba(255, 235, 180, 0.22), transparent 40%),
+      linear-gradient(180deg, #d7bf8d, #a9834e);
+    color: #2b1b10;
+    border: 2px solid #6e4a22;
+    border-radius: 18px;
+    box-shadow: inset 0 0 30px rgba(67, 36, 12, 0.35), 0 18px 36px rgba(0, 0, 0, 0.55);
   }
 
   /* Parchment panel with ornate border for narration */

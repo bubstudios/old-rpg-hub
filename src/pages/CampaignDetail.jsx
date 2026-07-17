@@ -639,13 +639,13 @@ export default function CampaignDetail() {
                     : campaign?.game_system === 'legionofdoom'
                     ? (isSetup ? "e.g. We gather in the Hall of Doom, the hologram of the target spinning between us..." : "What does your villain do?")
                     : (isSetup ? "e.g. We enter the tavern and look around..." : "What does your hero do?"))}
-                className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-input focus:ring-ring'}`}
+                className={`flex-1 bg-card/60 border rounded-lg px-3.5 py-2.5 text-sm font-body text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:ring-1 min-h-[44px] max-h-32 ${discussMode ? 'border-sky-700/50 focus:ring-sky-600/40' : 'border-amber-700/30 focus:ring-amber-500/30'}`}
                 rows={1}
               />
               <Button
                 onClick={handleAction}
                 disabled={!action.trim() || processing || posting}
-                className={`self-stretch px-4 ${discussMode ? 'bg-sky-700 text-white hover:bg-sky-600' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
+                className={`self-stretch px-4 font-heading tracking-wide ${discussMode ? 'bg-sky-700 text-white hover:bg-sky-600' : 'bg-gradient-to-b from-amber-500 to-amber-700 text-amber-50 hover:from-amber-400 hover:to-amber-600 shadow-lg'}`}
               >
                 {(processing || posting) ? <Loader2 className="w-4 h-4 animate-spin" /> : (discussMode ? <MessageCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />)}
               </Button>
@@ -659,7 +659,7 @@ export default function CampaignDetail() {
               <button
                 onClick={handleAgree}
                 disabled={processing || posting}
-                className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-border/50 text-[11px] font-heading tracking-wider text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-50"
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-amber-700/30 text-[11px] font-heading tracking-wider text-amber-600/60 hover:text-amber-400 hover:border-amber-500/40 transition-colors disabled:opacity-50"
               >
                 <Check className="w-3.5 h-3.5" strokeWidth={1.5} /> I Agree — Stand Ready
               </button>
