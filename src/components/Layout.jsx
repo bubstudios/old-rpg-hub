@@ -12,18 +12,19 @@ export default function Layout() {
   const activeGame = activeGameId ? getGameSystem(activeGameId) : null;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/90 backdrop-blur-sm">
+    <div className="min-h-screen flex flex-col relative">
+      <div className="cathedral-bg" />
+      <header className="sticky top-0 z-40 border-b border-[#d4af37]/20 bg-[#0d0a08]/90 backdrop-blur-sm candle-glow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded wax-seal flex items-center justify-center shrink-0">
-              <ScrollText className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
+              <ScrollText className="w-4 h-4 text-amber-50" strokeWidth={1.5} />
             </div>
             <div className="leading-none">
-              <span className="font-heading font-700 text-sm sm:text-base tracking-[0.15em] text-foreground">
+              <span className="font-heading font-700 text-sm sm:text-base tracking-[0.15em] text-[#d4af37]">
                 OLD RPG HUB
               </span>
-              <span className="hidden sm:block text-[10px] font-heading tracking-[0.2em] text-primary/70 mt-0.5">
+              <span className="hidden sm:block text-[10px] font-heading tracking-[0.2em] text-[#d4af37]/60 mt-0.5">
                 {activeGame ? `${activeGame.short.toUpperCase()} · AI GAME MASTER` : location.pathname === '/games' ? 'CHOOSE YOUR REALM' : 'COMMAND CENTER'}
               </span>
             </div>
@@ -32,7 +33,7 @@ export default function Layout() {
             <Link
               to="/"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
-                location.pathname === '/' || location.pathname.startsWith('/game/') ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                location.pathname === '/' || location.pathname.startsWith('/game/') ? 'text-[#d4af37] bg-[#d4af37]/10 border border-[#d4af37]/30' : 'text-[#e5d3b3]/50 hover:text-[#d4af37] hover:bg-[#d4af37]/5 border border-transparent'
               }`}
             >
               <HomeIcon className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -41,7 +42,7 @@ export default function Layout() {
             <Link
               to="/modules"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
-                location.pathname === '/modules' ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                location.pathname === '/modules' ? 'text-[#d4af37] bg-[#d4af37]/10 border border-[#d4af37]/30' : 'text-[#e5d3b3]/50 hover:text-[#d4af37] hover:bg-[#d4af37]/5 border border-transparent'
               }`}
             >
               <Library className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -51,7 +52,7 @@ export default function Layout() {
               <Link
                 to="/admin/usage"
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-heading tracking-wider transition-colors ${
-                  location.pathname === '/admin/usage' ? 'text-primary bg-secondary/60' : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                  location.pathname === '/admin/usage' ? 'text-[#d4af37] bg-[#d4af37]/10 border border-[#d4af37]/30' : 'text-[#e5d3b3]/50 hover:text-[#d4af37] hover:bg-[#d4af37]/5 border border-transparent'
                 }`}
               >
                 <Gauge className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -61,11 +62,11 @@ export default function Layout() {
           </nav>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 relative">
         <Outlet />
       </main>
-      <footer className="border-t border-border/40 py-3 px-6 text-center">
-        <span className="text-[10px] font-heading tracking-[0.2em] text-muted-foreground/60">
+      <footer className="border-t border-[#d4af37]/15 py-3 px-6 text-center relative">
+        <span className="text-[10px] font-heading tracking-[0.2em] text-[#d4af37]/30">
           ⚔ OLD RPG HUB · EST. IN DARKNESS ⚔
         </span>
       </footer>

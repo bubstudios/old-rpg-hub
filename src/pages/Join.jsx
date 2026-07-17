@@ -27,18 +27,20 @@ export default function Join() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4">
-        <ScrollText className="w-8 h-8 text-muted-foreground/40" strokeWidth={1} />
-        <p className="font-tome italic text-sm text-muted-foreground text-center">{error}</p>
-        <Button onClick={() => navigate('/')} variant="outline" className="border-border/50">Back to Dashboard</Button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4 relative">
+        <div className="cathedral-bg" />
+        <ScrollText className="w-8 h-8 text-[#d4af37]/30 relative" strokeWidth={1} />
+        <p className="font-tome italic text-sm text-[#e5d3b3]/50 text-center relative">{error}</p>
+        <Button onClick={() => navigate('/')} variant="outline" className="border-[#d4af37]/30 text-[#d4af37] hover:bg-[#d4af37]/10 relative">Back to Dashboard</Button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-      <Loader2 className="w-6 h-6 text-primary/50 animate-spin" />
-      <p className="font-tome italic text-sm text-muted-foreground">Joining the adventure...</p>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 relative">
+      <div className="cathedral-bg" />
+      <Loader2 className="w-6 h-6 text-[#d4af37]/50 animate-spin relative" />
+      <p className="font-tome italic text-sm text-[#e5d3b3]/50 relative">Joining the adventure...</p>
     </div>
   );
 }

@@ -40,7 +40,7 @@ export default function Login() {
       footer={
         <>
           Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
+          <Link to="/register" className="text-[#d4af37] font-medium hover:underline">
             Create one
           </Link>
         </>
@@ -48,7 +48,7 @@ export default function Login() {
     >
       <Button
         variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
+        className="w-full h-12 text-sm font-medium mb-6 bg-[#0d0a08] border-[#d4af37]/30 text-[#e5d3b3] hover:bg-[#d4af37]/10 hover:text-[#d4af37] hover:border-[#d4af37]/50"
         onClick={handleGoogle}
       >
         <GoogleIcon className="w-5 h-5 mr-2" />
@@ -57,15 +57,15 @@ export default function Login() {
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-[#d4af37]/20" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
+          <span className="bg-[#12100d] px-3 text-[#d4af37]/40 font-heading tracking-wider">or</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-red-950/30 text-red-400 text-sm border border-red-900/30">
           {error}
         </div>
       )}
@@ -74,7 +74,7 @@ export default function Login() {
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#d4af37]/40" aria-hidden="true" />
             <Input
               id="email"
               type="email"
@@ -83,7 +83,7 @@ export default function Login() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-12 bg-[#0d0a08] border-[#d4af37]/25 text-[#e5d3b3] placeholder:text-[#e5d3b3]/30 focus-visible:ring-[#d4af37]/30"
               required
             />
           </div>
@@ -91,12 +91,12 @@ export default function Login() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            <Link to="/forgot-password" className="text-xs text-[#d4af37] hover:underline">
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#d4af37]/40" aria-hidden="true" />
             <Input
               id="password"
               type="password"
@@ -104,12 +104,12 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-12 bg-[#0d0a08] border-[#d4af37]/25 text-[#e5d3b3] placeholder:text-[#e5d3b3]/30 focus-visible:ring-[#d4af37]/30"
               required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" className="w-full h-12 font-medium bg-gradient-to-b from-[#d4af37] to-[#8a6a1f] text-[#0d0a08] hover:from-[#f0c66d] hover:to-[#d4af37] border border-[#d4af37]/30 font-heading tracking-wide" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

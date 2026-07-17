@@ -24,16 +24,16 @@ export default function HowToUse() {
   const [openSection, setOpenSection] = useState('getting-started');
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 relative">
       {/* Hero */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full wax-seal mb-5 animate-flicker">
-          <BookOpen className="w-7 h-7 text-primary-foreground" strokeWidth={1.2} />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full wax-seal mb-5 animate-flicker ring-2 ring-[#3a0808] candle-glow">
+          <BookOpen className="w-7 h-7 text-amber-50" strokeWidth={1.2} />
         </div>
-        <h1 className="font-heading font-700 text-3xl sm:text-4xl tracking-[0.08em] text-foreground mb-3">
+        <h1 className="font-heading font-700 text-3xl sm:text-4xl tracking-[0.08em] text-[#d4af37] mb-3">
           HOW TO USE THIS SITE
         </h1>
-        <p className="font-tome text-sm sm:text-base text-muted-foreground italic max-w-2xl mx-auto leading-relaxed">
+        <p className="font-tome text-sm sm:text-base text-[#e5d3b3]/50 italic max-w-2xl mx-auto leading-relaxed">
           A visual walkthrough for adventurers new and old. Each section below shows you
           exactly what to expect, with illustrations of the screens you'll encounter.
           Tap any section to expand it.
@@ -44,8 +44,8 @@ export default function HowToUse() {
       </div>
 
       {/* Table of Contents */}
-      <div className="mb-10 rounded-xl border border-border/50 bg-card/30 panel-glow p-4">
-        <p className="font-heading text-[10px] tracking-[0.2em] text-muted-foreground mb-3">JUMP TO A SECTION</p>
+      <div className="mb-10 gothic-inset rounded-xl p-4">
+        <p className="font-heading text-[10px] tracking-[0.2em] text-[#d4af37]/50 mb-3">JUMP TO A SECTION</p>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {SECTIONS.map((s) => (
             <button
@@ -54,12 +54,12 @@ export default function HowToUse() {
                 setOpenSection(s.id);
                 document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
-              className="flex items-center gap-2 p-2 rounded-lg border border-border/40 bg-card/30 hover:border-primary/40 hover:bg-secondary/20 transition-all text-left"
+              className="flex items-center gap-2 p-2 rounded-lg border border-[#d4af37]/15 bg-[#0d0a08]/50 hover:border-[#d4af37]/40 hover:bg-[#d4af37]/5 transition-all text-left"
             >
-              <div className="w-6 h-6 rounded-full wax-seal flex items-center justify-center shrink-0 text-[10px] font-heading font-700 text-primary-foreground">
+              <div className="w-6 h-6 rounded-full wax-seal flex items-center justify-center shrink-0 text-[10px] font-heading font-700 text-amber-50">
                 {s.n}
               </div>
-              <span className="text-[10px] font-heading tracking-wide text-muted-foreground leading-tight">
+              <span className="text-[10px] font-heading tracking-wide text-[#e5d3b3]/50 leading-tight">
                 {s.title.toUpperCase()}
               </span>
             </button>
@@ -310,7 +310,7 @@ export default function HowToUse() {
       </div>
 
       {/* Footer CTA */}
-      <div className="mt-12 text-center rounded-xl border border-primary/40 bg-gradient-to-br from-primary/10 via-card/60 to-background panel-glow p-8">
+      <div className="mt-12 text-center cathedral-panel p-8">
         <h2 className="font-heading font-700 text-xl text-foreground mb-2">Ready to Begin?</h2>
         <p className="font-tome italic text-sm text-muted-foreground mb-5 max-w-md mx-auto">
           Your adventure is one click away. Choose a realm, forge a character, and let the Game Master guide your party into legend.
@@ -334,7 +334,7 @@ export default function HowToUse() {
 
 function Section({ id, n, title, icon: Icon, open, onToggle, children }) {
   return (
-    <div id={id} className="rounded-xl border border-border/50 bg-card/30 panel-glow overflow-hidden scroll-mt-20">
+    <div id={id} className="rounded-xl gothic-inset overflow-hidden scroll-mt-20">
       <button
         onClick={onToggle}
         className="w-full flex items-center gap-3 p-4 hover:bg-secondary/20 transition-colors text-left"
@@ -343,10 +343,10 @@ function Section({ id, n, title, icon: Icon, open, onToggle, children }) {
           <Icon className="w-4 h-4 text-primary-foreground" strokeWidth={1.5} />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-[10px] font-heading tracking-[0.2em] text-primary/70">STEP {n}</span>
-          <h3 className="font-heading font-700 text-base text-foreground">{title}</h3>
+          <span className="text-[10px] font-heading tracking-[0.2em] text-[#d4af37]/60">STEP {n}</span>
+          <h3 className="font-heading font-700 text-base text-[#e5d3b3]">{title}</h3>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
+        {open ? <ChevronUp className="w-4 h-4 text-[#e5d3b3]/40 shrink-0" /> : <ChevronDown className="w-4 h-4 text-[#e5d3b3]/40 shrink-0" />}
       </button>
       {open && (
         <div className="px-4 pb-5 animate-ink">
@@ -360,7 +360,7 @@ function Section({ id, n, title, icon: Icon, open, onToggle, children }) {
 function GuideImage({ src, alt, caption }) {
   return (
     <figure className="my-4">
-      <div className="rounded-lg overflow-hidden border border-border/50 bg-background/40">
+      <div className="rounded-lg overflow-hidden border border-[#d4af37]/15 bg-[#0d0a08]/40">
         <img src={src} alt={alt} className="w-full h-auto" />
       </div>
       {caption && (
@@ -374,7 +374,7 @@ function GuideImage({ src, alt, caption }) {
 
 function FeatureRow({ icon: Icon, title, desc }) {
   return (
-    <div className="flex gap-3 p-2.5 rounded-lg bg-card/20 border border-border/30">
+    <div className="flex gap-3 p-2.5 rounded-lg gothic-inset">
       <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
       <div className="min-w-0">
         <p className="font-heading font-600 text-xs text-foreground">{title}</p>
@@ -411,7 +411,7 @@ function Callout({ type = 'info', title, children }) {
   };
   const Icon = icons[type] || MessageCircle;
   return (
-    <div className={`mt-4 p-3.5 rounded-lg border ${styles[type]}`}>
+    <div className={`mt-4 p-3.5 rounded-lg gothic-inset ${styles[type]}`}>
       <div className="flex items-center gap-1.5 mb-2">
         <Icon className="w-3.5 h-3.5 text-primary" strokeWidth={1.5} />
         <p className="font-heading text-[11px] tracking-wide text-foreground">{title}</p>

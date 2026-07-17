@@ -49,8 +49,9 @@ export default function AdminUsage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <ScrollText className="w-8 h-8 text-primary/40 animate-pulse" />
+      <div className="min-h-[60vh] flex items-center justify-center relative">
+        <div className="cathedral-bg" />
+        <ScrollText className="w-8 h-8 text-[#d4af37]/40 animate-pulse relative" />
       </div>
     );
   }
@@ -66,7 +67,7 @@ export default function AdminUsage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-5 relative">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded wax-seal flex items-center justify-center shrink-0">
@@ -108,29 +109,29 @@ export default function AdminUsage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="bg-card/60 border-border/40">
+        <Card className="gothic-inset border-transparent">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-2 mb-1">
-              <Activity className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+              <Activity className="w-4 h-4 text-[#d4af37]/60" strokeWidth={1.5} />
               <span className="text-[11px] font-heading tracking-wider text-muted-foreground">DM TURNS THIS MONTH</span>
             </div>
             <p className="font-heading font-700 text-2xl text-foreground tabular-nums">{monthTurns}</p>
           </CardContent>
         </Card>
-        <Card className="bg-card/60 border-border/40">
+        <Card className="gothic-inset border-transparent">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-2 mb-1">
-              <Coins className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+              <Coins className="w-4 h-4 text-[#d4af37]/60" strokeWidth={1.5} />
               <span className="text-[11px] font-heading tracking-wider text-muted-foreground">EST. CREDITS USED</span>
             </div>
             <p className="font-heading font-700 text-2xl text-foreground tabular-nums">{monthCredits.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground/70 mt-0.5">of {plan.credits.toLocaleString()} ({plan.label})</p>
           </CardContent>
         </Card>
-        <Card className="bg-card/60 border-border/40">
+        <Card className="gothic-inset border-transparent">
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+              <Clock className="w-4 h-4 text-[#d4af37]/60" strokeWidth={1.5} />
               <span className="text-[11px] font-heading tracking-wider text-muted-foreground">EST. RUNWAY</span>
             </div>
             <p className="font-heading font-700 text-2xl text-foreground tabular-nums">{remainingTurns.toLocaleString()}</p>
@@ -139,7 +140,7 @@ export default function AdminUsage() {
         </Card>
       </div>
 
-      <Card className={`bg-card/60 border-border/40 ${isWarning ? 'border-destructive/50' : ''}`}>
+      <Card className={`gothic-inset border-transparent ${isWarning ? 'border-red-500/50' : ''}`}>
         <CardContent className="pt-5 pb-5 px-5 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-heading tracking-wider text-muted-foreground">PLAN CAPACITY</span>
@@ -157,10 +158,10 @@ export default function AdminUsage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card/60 border-border/40">
+      <Card className="gothic-inset border-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="font-heading text-sm tracking-wider text-foreground flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+            <Users className="w-4 h-4 text-[#d4af37]/60" strokeWidth={1.5} />
             PER-PLAYER USAGE — THIS MONTH
           </CardTitle>
         </CardHeader>
@@ -192,10 +193,10 @@ export default function AdminUsage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card/60 border-border/40">
+      <Card className="gothic-inset border-transparent">
         <CardContent className="pt-5 pb-4 px-5 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary/60" strokeWidth={1.5} />
+            <TrendingUp className="w-4 h-4 text-[#d4af37]/60" strokeWidth={1.5} />
             <span className="text-[11px] font-heading tracking-wider text-muted-foreground">ALL-TIME</span>
           </div>
           <div className="flex items-center gap-5">

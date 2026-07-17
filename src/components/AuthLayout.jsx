@@ -2,20 +2,28 @@ import React from "react";
 
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
-            <Icon className="w-7 h-7 text-primary-foreground" aria-hidden="true" />
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      <div className="cathedral-bg" />
+      <div className="w-full max-w-md relative">
+        <div className="cathedral-panel p-6 sm:p-8">
+          {/* Title — crimson arch with wax seal */}
+          <div className="flex items-stretch gap-0 mb-6">
+            <div className="flex items-center pl-1 pr-3">
+              <div className="w-11 h-11 rounded-full wax-seal flex items-center justify-center shrink-0 ring-2 ring-[#3a0808] candle-glow">
+                <Icon className="w-5 h-5 text-amber-50" strokeWidth={1.4} aria-hidden="true" />
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center crimson-arch py-2.5 px-4">
+              <h1 className="font-heading font-700 text-lg sm:text-xl tracking-[0.1em] text-[#d4af37] text-center leading-tight">{title}</h1>
+              {subtitle && <p className="text-[11px] text-[#e5d3b3]/50 font-tome italic mt-0.5 text-center">{subtitle}</p>}
+            </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">{title}</h1>
-          {subtitle && <p className="text-muted-foreground mt-2">{subtitle}</p>}
-        </div>
-        <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           {children}
         </div>
         {footer && (
-          <p className="text-center text-sm text-muted-foreground mt-6">{footer}</p>
+          <div className="gothic-inset mt-4 py-2.5 px-4 text-center">
+            <p className="text-sm text-[#e5d3b3]/50 font-body">{footer}</p>
+          </div>
         )}
       </div>
     </div>
