@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
   ScrollText, Play, KeyRound, Plus, Library, Users, Compass, HelpCircle,
-  ChevronRight, Loader2, Skull, MapPin, Swords, Sparkles, ArrowRight
+  ChevronRight, Loader2, Skull, MapPin, Swords, Sparkles, ArrowRight, BookOpen
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -274,6 +274,7 @@ export default function Dashboard() {
         <div className="flex gap-2 mt-4 flex-wrap">
           <Link to="/games"><Button variant="outline" className="border-primary/40 text-primary hover:bg-primary/10"><Plus className="w-4 h-4 mr-1.5" /> Choose a Realm</Button></Link>
           <Link to="/modules"><Button variant="ghost" className="text-muted-foreground hover:text-foreground"><Library className="w-4 h-4 mr-1.5" /> Browse Library</Button></Link>
+          <Link to="/how-to-use"><Button variant="ghost" className="text-muted-foreground hover:text-foreground"><BookOpen className="w-4 h-4 mr-1.5" /> How to Use</Button></Link>
         </div>
       </Panel>
     </div>
