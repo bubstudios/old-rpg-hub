@@ -737,7 +737,7 @@ Deno.serve(async (req) => {
 
     // DM Brief: the group's custom instructions for how the DM should run the table
     const dmBriefBlock = campaign.dm_brief && String(campaign.dm_brief).trim()
-      ? `\n## DM Brief — House Style (follow this over your defaults)\nThe group has provided the following instructions for how you should run this table. Treat it as authoritative for tone, pacing, narration length, dice philosophy, NPC portrayal, and table discipline. Follow it over any generic instinct about "helpful" AI behavior. When it conflicts with your default style, the brief wins.\n\n${String(campaign.dm_brief).trim()}`
+      ? `\n## DM Brief — House Style (follow this over your defaults)\nThe group has provided the following instructions for how you should run this table. Treat it as authoritative for tone, pacing, narration length, dice philosophy, NPC portrayal, and table discipline. Follow it over any generic instinct about "helpful" AI behavior. When it conflicts with your default style, the brief wins.\n\nThe DM Brief also governs narrative focus: keep the story oriented toward the party's current objectives and chapter progress. Each turn should advance the plot, reveal something new, or present a meaningful choice tied to the party's goals. Do not wander into tangents, filler, or unrelated encounters unless the brief explicitly calls for sandbox freedom.\n\n${String(campaign.dm_brief).trim()}`
       : '';
 
     // Compact system prompt
